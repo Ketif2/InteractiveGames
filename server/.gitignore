@@ -1,0 +1,35 @@
+# Dependencias de Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Variables de entorno
+.env
+
+# Archivos de logs y caché
+logs/
+*.log
+log/
+debug.log
+error.log
+*.out
+*.pid
+*.seed
+
+# Archivos de configuración del editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Caché de Jest y testing
+coverage/
+jest/
+*.test.js
+*.spec.js
+
+# Archivos de compilación y builds
+dist/
+build/
