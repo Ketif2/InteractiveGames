@@ -1,20 +1,29 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-
-dotenv.config();
+import pool from './config/db.js';
 
 import authRoutes from './routes/authRoutes.js';
-import pacienteRoutes from './routes/pacienteRoutes.js';
+
+dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
-app.use('/api/pacientes', pacienteRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
-});
+
+(async () => {
+    try {
+        await pool.getConnection();
+        console.log('✅ Database connected successfully');
+        app.listen(PORT, () => {
+            console.log(`🚀 Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('❌ Error connecting to database:', error.message);
+        process.exit(1);
+    }
+})();
