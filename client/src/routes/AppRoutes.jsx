@@ -1,3 +1,4 @@
+// routes/AppRoutes.jsx
 import { Routes, Route } from 'react-router-dom';
 import { PrivateRoute } from './PrivateRoute';
 import Layout from '../components/layout/Layout';
@@ -20,6 +21,7 @@ export const AppRoutes = () => {
           </Layout>
         </PrivateRoute>
       } />
+
     </Routes>
   );
 };

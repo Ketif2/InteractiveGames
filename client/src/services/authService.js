@@ -1,52 +1,42 @@
+// src/services/authService.js
+import axios from 'axios';
 
-import api from './api';
+const API_URL = 'http://localhost:5000/api'; // Ajusta según tu configuración de backend
 
 export const authService = {
-  login: async (credentials) => {
+  async login(credentials) {
     try {
-      const { email: username, password } = credentials;
-      const response = await api.post('/auth/login', {
-        username,
-        password
-      });
-      
-      if (response.token) {
-        localStorage.setItem('token', response.token);
+      const response = await axios.post(`${API_URL}/auth/login`, credentials);
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
       }
-      
-      return response;
+      return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Error en inicio de sesión');
+      throw new Error(error.response?.data?.message || 'Error al iniciar sesión');
     }
   },
 
-  register: async (userData) => {
+  async register(userData) {
     try {
-      const registerData = {
-        username: userData.email, // Usando email como username
-        password: userData.password,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        role: 'therapist' // Por defecto registramos terapeutas
-      };
-      
-      const response = await api.post('/auth/register', registerData);
-      return response;
+      const response = await axios.post(`${API_URL}/auth/register`, userData);
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+      return response.data;
     } catch (error) {
-      throw new Error(error.message || 'Error en registro');
+      throw new Error(error.response?.data?.message || 'Error al registrar usuario');
     }
   },
 
-  getUserProfile: async () => {
-    try {
-      const response = await api.get('/auth/profile');
-      return response;
-    } catch (error) {
-      throw new Error(error.message || 'Error al obtener perfil');
-    }
-  },
-
-  logout: () => {
+  logout() {
     localStorage.removeItem('token');
+  },
+
+  getToken() {
+    return localStorage.getItem('token');
+  },
+
+  isAuthenticated() {
+    return !!this.getToken();
   }
 };

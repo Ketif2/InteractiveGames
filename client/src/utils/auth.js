@@ -1,4 +1,4 @@
-import { jwtDecode } from 'jwt-decode'; // Cambiado de import jwt_decode
+import { jwtDecode } from 'jwt-decode'; 
 
 export const getToken = () => localStorage.getItem('token');
 
