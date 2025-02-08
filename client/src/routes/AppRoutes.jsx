@@ -6,6 +6,7 @@ import Register from '../pages/auth/Register';
 import Dashboard from '../pages/dashboard/Dashboard';
 import NewSession from '../pages/sessions/NewSession';
 import GameDashboard from '../pages/games/GameDashboard';
+import PuzzleConfig from '../pages/games/config/PuzzleConfig';
 
 export const AppRoutes = () => {
   return (
@@ -22,7 +23,6 @@ export const AppRoutes = () => {
           </Layout>
         </PrivateRoute>
       } />
-
 
       <Route path="/new-session" element={
        <PrivateRoute>
@@ -48,13 +48,13 @@ export const AppRoutes = () => {
        </PrivateRoute>
      } />
 
-     <Route path="/games/:gameId/config" element={
-       <PrivateRoute>
-         <Layout>
-           {/* Aquí irá el componente de configuración de juego cuando lo creemos */}
-         </Layout>
-       </PrivateRoute>
-     } />
+      <Route path="/games/puzzle/config" element={
+        <PrivateRoute>
+          <Layout>
+            <PuzzleConfig />
+          </Layout>
+        </PrivateRoute>
+      } />
 
      <Route path="/games/:gameId/play" element={
        <PrivateRoute>
