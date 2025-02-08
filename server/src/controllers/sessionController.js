@@ -1,13 +1,9 @@
-import { pool } from '../config/db.js';
+// server/src/controllers/sessionController.js
+import pool from '../config/db.js';
 
 export const getAllSessions = async (req, res) => {
   try {
-    const query = `
-      SELECT s.*, p.nombre, p.apellido 
-      FROM sesion s 
-      JOIN paciente p ON s.id_paciente = p.id_paciente
-    `;
-    const { rows } = await pool.query(query);
+    const [rows] = await pool.query('SELECT * FROM sesion');
     res.json(rows);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -15,40 +11,39 @@ export const getAllSessions = async (req, res) => {
 };
 
 export const createSession = async (req, res) => {
-  const { idPaciente, idJuego, idTerapeuta } = req.body;
-  
   try {
-    const query = `
-      INSERT INTO sesion (id_paciente, id_juego, id_terapeuta, fecha_sesion)
-      VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
-      RETURNING *
-    `;
-    const values = [idPaciente, idJuego, idTerapeuta];
-    const { rows } = await pool.query(query, values);
-    res.status(201).json(rows[0]);
+    const { id_paciente, id_juego, id_terapeuta } = req.body;
+    const [result] = await pool.query(
+      'INSERT INTO sesion (id_paciente, id_juego, id_terapeuta) VALUES (?, ?, ?)',
+      [id_paciente, id_juego, id_terapeuta]
+    );
+    res.status(201).json({ id: result.insertId });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
 export const updateSession = async (req, res) => {
-  const { id } = req.params;
-  const { duracion, aciertos, fallos, observacionesTerapeuta } = req.body;
-
   try {
-    const query = `
-      UPDATE sesion 
-      SET duracion = $1, aciertos = $2, fallos = $3, observaciones_terapeuta = $4
-      WHERE id_sesion = $5
-      RETURNING *
-    `;
-    const values = [duracion, aciertos, fallos, observacionesTerapeuta, id];
-    const { rows } = await pool.query(query, values);
-    
+    const { id } = req.params;
+    const { duracion, aciertos, fallos, observaciones_terapeuta } = req.body;
+    await pool.query(
+      'UPDATE sesion SET duracion = ?, aciertos = ?, fallos = ?, observaciones_terapeuta = ? WHERE id_sesion = ?',
+      [duracion, aciertos, fallos, observaciones_terapeuta, id]
+    );
+    res.json({ message: 'Session updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getSessionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.query('SELECT * FROM sesion WHERE id_sesion = ?', [id]);
     if (rows.length === 0) {
-      return res.status(404).json({ message: 'Sesión no encontrada' });
+      return res.status(404).json({ message: 'Session not found' });
     }
-    
     res.json(rows[0]);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -3,7 +3,6 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import pool from './config/db.js';
 import sessionRoutes from './routes/sessionRoutes.js';
-import gameRoutes from './routes/gameRoutes.js';
 
 import authRoutes from './routes/authRoutes.js';
 
@@ -19,7 +18,6 @@ app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/sessions', sessionRoutes);
-app.use('/api/games', gameRoutes);
 
 const PORT = process.env.PORT || 5000;
 
