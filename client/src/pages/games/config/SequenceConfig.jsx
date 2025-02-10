@@ -1,29 +1,31 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-//import { puzzleService } from '../../../services/puzzleService';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { sequenceService } from '../../../services/sequenceService';
 
-const PuzzleConfig = () => {
+const SequenceConfig = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const patientId = searchParams.get('patient');
 
     const [config, setConfig] = useState({
         difficulty: 'medium',
-        gridSize: '4x4',
-        puzzleCount: 1
+        hideImages: false,
+        sequenceCount: 1
     });
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleConfigChange = (e) => {
-        const { name, value } = e.target;
+        const { name, type, checked, value } = e.target;
         setConfig(prev => ({
             ...prev,
-            [name]: value
+            [name]: type === 'checkbox' ? checked : value
         }));
     };
 
     const handleBack = () => {
-        navigate('/games/1'); // ID temporal
+        navigate(`/games/${patientId}`);
     };
 
     const handlePlay = async () => {
@@ -31,14 +33,16 @@ const PuzzleConfig = () => {
         setError('');
 
         try {
-            // Por ahora solo pasamos la configuración directamente
-            navigate('/games/puzzle/play', {
+            // Obtenemos las secuencias según la dificultad seleccionada
+            const sequences = await sequenceService.getSequences(config.difficulty);
+            const configResponse = await sequenceService.saveConfig(1, config); // 1 es un sessionId temporal
+
+            navigate('/games/sequence/play', {
                 state: {
                     config,
-                    // Estos valores serán importantes cuando se implemente la BD
-                    configId: 1,    // Temporal
-                    sessionId: 1,   // Temporal
-                    patientId: 1    // Temporal
+                    sequences: sequences.slice(0, config.sequenceCount),
+                    configId: configResponse.configId,
+                    patientId
                 }
             });
         } catch (error) {
@@ -61,7 +65,7 @@ const PuzzleConfig = () => {
         <div className="container mx-auto px-4 py-8">
             <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-[#00398A] mb-6">
-                    Configuración del Rompecabezas
+                    Configuración de Secuencia Lógica
                 </h2>
 
                 {error && (
@@ -82,42 +86,39 @@ const PuzzleConfig = () => {
                             onChange={handleConfigChange}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
-                            <option value="medium">Media</option>
-                            <option value="hard">Difícil</option>
-                            <option value="random">Aleatorio</option>
+                            <option value="medium">Media (6 imágenes por cadena)</option>
+                            <option value="complex">Compleja (8 imágenes por cadena)</option>
                         </select>
                     </div>
 
-                    {/* Tamaño del Grid */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Tamaño del Rompecabezas
-                        </label>
-                        <select
-                            name="gridSize"
-                            value={config.gridSize}
+                    {/* Esconder imágenes */}
+                    <div className="flex items-center space-x-2">
+                        <input
+                            type="checkbox"
+                            id="hideImages"
+                            name="hideImages"
+                            checked={config.hideImages}
                             onChange={handleConfigChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
-                        >
-                            <option value="4x4">4 x 4</option>
-                            <option value="5x5">5 x 5</option>
-                            <option value="6x6">6 x 6</option>
-                        </select>
+                            className="h-4 w-4 rounded border-gray-300 text-[#00398A] focus:ring-[#00398A]"
+                        />
+                        <label htmlFor="hideImages" className="text-sm font-medium text-gray-700">
+                            Esconder imágenes (mostrar por 3 segundos al hacer clic)
+                        </label>
                     </div>
 
-                    {/* Cantidad de Rompecabezas */}
+                    {/* Cantidad de Cadenas */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
-                            Número de Rompecabezas
+                            Número de Cadenas
                         </label>
                         <select
-                            name="puzzleCount"
-                            value={config.puzzleCount}
+                            name="sequenceCount"
+                            value={config.sequenceCount}
                             onChange={handleConfigChange}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
-                            <option value={1}>1 Rompecabezas</option>
-                            <option value={2}>2 Rompecabezas</option>
+                            <option value={1}>1 Cadena</option>
+                            <option value={2}>2 Cadenas</option>
                         </select>
                     </div>
 
@@ -144,4 +145,4 @@ const PuzzleConfig = () => {
     );
 };
 
-export default PuzzleConfig;
+export default SequenceConfig;

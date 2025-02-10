@@ -6,7 +6,16 @@ import Register from '../pages/auth/Register';
 import Dashboard from '../pages/dashboard/Dashboard';
 import NewSession from '../pages/sessions/NewSession';
 import GameDashboard from '../pages/games/GameDashboard';
+
 import PuzzleConfig from '../pages/games/config/PuzzleConfig';
+import SequenceConfig from '../pages/games/config/SequenceConfig';
+import MemoryConfig from '../pages/games/config/MemoryConfig';
+import ForestConfig from '../pages/games/config/ForestConfig';
+
+import PuzzleGame from '../pages/games/puzzle/PuzzleGame';
+import SequenceGame from '../pages/games/sequence/SequenceGame';
+import MemoryGame from '../pages/games/memory/MemoryGame';
+import ForestGame from '../pages/games/forest/ForestGame';
 
 export const AppRoutes = () => {
   return (
@@ -24,6 +33,8 @@ export const AppRoutes = () => {
         </PrivateRoute>
       } />
 
+      {/* SESIÓN ------------------------------------------- */}
+      
       <Route path="/new-session" element={
        <PrivateRoute>
          <Layout>
@@ -43,12 +54,13 @@ export const AppRoutes = () => {
      <Route path="/sessions/:sessionId/stats" element={
        <PrivateRoute>
          <Layout>
-           {/* Aquí irá el componente de estadísticas cuando lo creemos */}
+           {/* Aquí irá el componente de estadísticas*/}
          </Layout>
        </PrivateRoute>
      } />
 
-      <Route path="/games/puzzle/config" element={
+     {/* Juego Puzzle */}
+     <Route path="/games/puzzle/config" element={
         <PrivateRoute>
           <Layout>
             <PuzzleConfig />
@@ -56,13 +68,60 @@ export const AppRoutes = () => {
         </PrivateRoute>
       } />
 
-     <Route path="/games/:gameId/play" element={
-       <PrivateRoute>
-         <Layout>
-           {/* Aquí irá el componente de juego cuando lo creemos */}
-         </Layout>
-       </PrivateRoute>
-     } />
+      <Route path="/games/puzzle/play" element={
+        <PrivateRoute>
+          <PuzzleGame />
+        </PrivateRoute>
+      } />
+
+      {/* Juego Sequence */}
+      <Route path="/games/sequence/config" element={
+        <PrivateRoute>
+          <Layout>
+            <SequenceConfig />
+          </Layout>
+        </PrivateRoute>
+      } />
+      
+      <Route path="/games/sequence/config" element={
+        <PrivateRoute>
+          <Layout>
+            <SequenceConfig />
+          </Layout>
+        </PrivateRoute>
+      } />
+
+      {/* Juego Memory */}
+      <Route path="/games/memory/config" element={
+        <PrivateRoute>
+          <Layout>
+            <MemoryConfig />
+          </Layout>
+        </PrivateRoute>
+      } />
+      
+      <Route path="/games/memory/play" element={
+        <PrivateRoute>
+          <MemoryGame />
+        </PrivateRoute>
+      } />
+
+      {/* Juego Forest */}
+      <Route path="/games/forest/config" element={
+        <PrivateRoute>
+          <Layout>
+            <ForestConfig />
+          </Layout>
+        </PrivateRoute>
+      } />
+      
+      <Route path="/games/forest/play" element={
+        <PrivateRoute>
+          <ForestGame />
+        </PrivateRoute>
+      } />
+
+      {/* FIN DE JUEGOS ------------------------------------------- */}
 
      <Route path="/games/:gameId/end" element={
        <PrivateRoute>
