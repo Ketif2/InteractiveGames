@@ -1,13 +1,25 @@
 // src/pages/games/puzzle/PuzzleGame.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
+import { AlertTriangle } from 'lucide-react';
+import SortablePuzzlePiece from '../../../components/games/puzzle/SortablePuzzlePiece';
+import GameFeedback from '../../../components/games/puzzle/GameFeedback';
 import { puzzleService } from '../../../services/puzzleService';
 
 const PuzzleGame = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { config, configId, patientId } = location.state || {};
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5,
+            },
+        })
+    );
 
     const [gameState, setGameState] = useState({
         currentPuzzle: 0,
@@ -20,9 +32,13 @@ const PuzzleGame = () => {
         lastPauseTime: null,
         helpCount: 0,
         successMoves: 0,
-        failedMoves: 0,
-        showErrors: false
+        failedMoves: 0
     });
+
+    const [showCorrectFeedback, setShowCorrectFeedback] = useState(false);
+    const [showWrongFeedback, setShowWrongFeedback] = useState(false);
+    const [gameCompleted, setGameCompleted] = useState(false);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
 
     useEffect(() => {
         initializePuzzle();
@@ -33,7 +49,6 @@ const PuzzleGame = () => {
         const totalPieces = gridSize * gridSize;
         const positions = Array.from({ length: totalPieces }, (_, i) => i);
         
-        // Mezclar posiciones
         for (let i = positions.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [positions[i], positions[j]] = [positions[j], positions[i]];
@@ -55,41 +70,53 @@ const PuzzleGame = () => {
         }));
     };
 
-    const handleDragEnd = (result) => {
-        const { source, destination } = result;
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
         
-        // Si no hay destino o es el mismo lugar, no hacemos nada
-        if (!destination || 
-            (source.droppableId === destination.droppableId && 
-             source.index === destination.index)) {
-            return;
+        if (!over || active.id === over.id) return;
+
+        const oldIndex = gameState.pieces.findIndex(piece => `piece-${piece.id}` === active.id);
+        const newIndex = gameState.pieces.findIndex(piece => `piece-${piece.id}` === over.id);
+
+        if (gameState.pieces[newIndex].isFixed) return;
+
+        const newPieces = [...gameState.pieces];
+        const movingPiece = { ...newPieces[oldIndex] };
+        const targetPiece = { ...newPieces[newIndex] };
+
+        newPieces[newIndex] = {
+            ...movingPiece,
+            currentPosition: newIndex
+        };
+        
+        newPieces[oldIndex] = {
+            ...targetPiece,
+            currentPosition: oldIndex
+        };
+
+        const isCorrect = movingPiece.correctPosition === newIndex;
+
+        // Mostrar feedback
+        if (isCorrect) {
+            setShowCorrectFeedback(true);
+            setTimeout(() => setShowCorrectFeedback(false), 2000);
+        } else {
+            setShowWrongFeedback(true);
+            setTimeout(() => setShowWrongFeedback(false), 2000);
         }
 
-        // Crear copia del array de piezas
-        const newPieces = Array.from(gameState.pieces);
-        
-        // Remover pieza del origen
-        const [draggedPiece] = newPieces.splice(source.index, 1);
-        // Insertar en el destino
-        newPieces.splice(destination.index, 0, draggedPiece);
-
-        // Verificar si la pieza está en su posición correcta
-        const isCorrect = draggedPiece.correctPosition === destination.index;
-
-        // Actualizar el estado
         setGameState(prev => ({
             ...prev,
-            pieces: newPieces.map((piece, index) => ({
+            pieces: newPieces.map(piece => ({
                 ...piece,
-                isFixed: piece.correctPosition === index // Se fija si está en posición correcta
+                isFixed: piece.correctPosition === piece.currentPosition
             })),
             successMoves: prev.successMoves + (isCorrect ? 1 : 0),
             failedMoves: prev.failedMoves + (!isCorrect ? 1 : 0)
         }));
 
-        // Verificar si el puzzle está completo
-        if (newPieces.every((piece, index) => piece.correctPosition === index)) {
-            handleFinishGame();
+        if (newPieces.every(piece => piece.correctPosition === piece.currentPosition)) {
+            setGameCompleted(true);
         }
     };
 
@@ -153,19 +180,19 @@ const PuzzleGame = () => {
                 <div className="flex gap-4">
                     <button
                         onClick={handleToggleHelp}
-                        className="bg-[#00A8E3] px-4 py-2 rounded"
+                        className="bg-[#00A8E3] px-4 py-2 rounded hover:bg-[#0096cc] transition-colors"
                     >
                         Ver Imagen
                     </button>
                     <button
                         onClick={handleTogglePause}
-                        className="bg-[#00A8E3] px-4 py-2 rounded"
+                        className="bg-[#00A8E3] px-4 py-2 rounded hover:bg-[#0096cc] transition-colors"
                     >
                         {gameState.isPaused ? 'Reanudar' : 'Pausar'}
                     </button>
                     <button
-                        onClick={handleFinishGame}
-                        className="bg-red-500 px-4 py-2 rounded"
+                        onClick={() => setShowExitConfirm(true)}
+                        className="bg-red-500 px-4 py-2 rounded hover:bg-red-600 transition-colors"
                     >
                         Terminar
                     </button>
@@ -187,65 +214,84 @@ const PuzzleGame = () => {
                     </div>
 
                     {/* Puzzle */}
-                    <DragDropContext onDragEnd={handleDragEnd}>
-                        <Droppable droppableId="puzzle-grid" type="PIECE">
-                            {(provided) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    className="grid gap-1"
-                                    style={{
-                                        gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
-                                        width: '600px',
-                                        height: '600px'
-                                    }}
-                                >
-                                    {gameState.pieces.map((piece, index) => (
-                                        <Draggable
-                                            key={piece.id}
-                                            draggableId={piece.id}
-                                            index={index}
-                                            isDragDisabled={piece.isFixed}
-                                        >
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    className={`relative bg-white rounded-lg shadow transition-all duration-300 ${
-                                                        piece.isFixed ? 'border-4 border-green-500' :
-                                                        'border border-gray-300 hover:border-blue-500'
-                                                    } ${snapshot.isDragging ? 'z-50 shadow-xl' : ''}`}
-                                                    style={{
-                                                        aspectRatio: '1',
-                                                        backgroundImage: `url(${piece.imageUrl})`,
-                                                        backgroundSize: `${gridSize * 100}%`,
-                                                        backgroundPosition: `${(piece.correctPosition % gridSize) * (100 / (gridSize - 1))}% ${Math.floor(piece.correctPosition / gridSize) * (100 / (gridSize - 1))}%`,
-                                                        ...provided.draggableProps.style
-                                                    }}
-                                                />
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
-                    </DragDropContext>
+                    <DndContext 
+                        sensors={sensors}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <SortableContext 
+                            items={gameState.pieces.map(piece => `piece-${piece.id}`)}
+                            strategy={rectSortingStrategy}
+                        >
+                            <div
+                                className="grid gap-1"
+                                style={{
+                                    gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+                                    width: '600px',
+                                    height: '600px'
+                                }}
+                            >
+                                {gameState.pieces.map((piece, index) => (
+                                    <SortablePuzzlePiece
+                                        key={piece.id}
+                                        piece={piece}
+                                        index={index}
+                                        gridSize={gridSize}
+                                    />
+                                ))}
+                            </div>
+                        </SortableContext>
+                    </DndContext>
                 </div>
             </div>
 
+            {/* Feedback y Overlay */}
+            <GameFeedback 
+                isCorrect={showCorrectFeedback}
+                isWrong={showWrongFeedback}
+                gameCompleted={gameCompleted}
+                onFinish={handleFinishGame}
+            />
+
             {/* Overlay de pausa */}
             {gameState.isPaused && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-8 rounded-lg text-center">
                         <h2 className="text-2xl font-bold text-[#00398A] mb-4">Juego Pausado</h2>
                         <button
                             onClick={handleTogglePause}
-                            className="bg-[#00398A] text-white px-6 py-2 rounded"
+                            className="bg-[#00398A] text-white px-6 py-2 rounded hover:bg-[#002d6f] transition-colors"
                         >
                             Reanudar
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Diálogo de confirmación para terminar */}
+            {showExitConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg text-center max-w-md">
+                        <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">
+                            ¿Seguro que quieres terminar el juego?
+                        </h2>
+                        <p className="text-gray-600 mb-6">
+                            Todo el progreso actual se perderá.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={() => setShowExitConfirm(false)}
+                                className="bg-gray-200 text-gray-800 px-6 py-2 rounded hover:bg-gray-300 transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleFinishGame}
+                                className="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600 transition-colors"
+                            >
+                                Aceptar
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
