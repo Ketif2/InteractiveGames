@@ -1,5 +1,5 @@
 // controllers/games/sequenceController.js
-import { pool } from '../../config/db.js';
+import  pool  from '../../config/db.js';
 
 const saveSequenceConfig = async (req, res) => {
     const { sessionId } = req.params;

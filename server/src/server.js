@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import pool from './config/db.js';
 import sessionRoutes from './routes/sessionRoutes.js';
-
+import patientRoutes from './routes/patientRoutes.js';
 import puzzleRoutes from './routes/games/puzzleRoutes.js'; 
 import sequenceRoutes from './routes/games/sequenceRoutes.js';
 
@@ -20,6 +20,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/patients', patientRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/games/puzzle', puzzleRoutes);
 app.use('/api/games/sequence', sequenceRoutes);

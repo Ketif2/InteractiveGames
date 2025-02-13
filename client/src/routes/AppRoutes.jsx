@@ -7,6 +7,7 @@ import Dashboard from '../pages/dashboard/Dashboard';
 import NewSession from '../pages/sessions/NewSession';
 import GameDashboard from '../pages/games/GameDashboard';
 
+import Patients from '../pages/patients/Patients';
 import PuzzleConfig from '../pages/games/config/PuzzleConfig';
 import SequenceConfig from '../pages/games/config/SequenceConfig';
 import MemoryConfig from '../pages/games/config/MemoryConfig';
@@ -74,6 +75,11 @@ export const AppRoutes = () => {
         </PrivateRoute>
       } />
 
+      <Route path="/patients" element={
+        <PrivateRoute>
+          <Patients />
+        </PrivateRoute>
+      } />
       {/* Juego Sequence */}
       <Route path="/games/sequence/config" element={
         <PrivateRoute>
