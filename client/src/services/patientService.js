@@ -28,6 +28,7 @@ const patientService = {
         nombre: patientData.nombre,
         apellido: patientData.apellido,
         fecha_nacimiento: patientData.fecha_nacimiento,
+        sexo: patientData.sexo,
         diagnostico: patientData.diagnostico,
         documentos: patientData.documentos
       });

@@ -47,7 +47,7 @@ export const createPaciente = async (req, res) => {
             `INSERT INTO paciente (
                 id_terapeuta, nombre, apellido, 
                 fecha_nacimiento, sexo, diagnostico, documentos
-            ) VALUES (?, ?, ?, ?, ?, ?)`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
                 id_terapeuta, nombre, apellido, 
                 fecha_nacimiento, sexo, diagnostico, 

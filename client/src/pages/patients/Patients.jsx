@@ -23,6 +23,8 @@ const Patients = () => {
   const [currentId, setCurrentId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false); 
+  const [patientToDelete, setPatientToDelete] = useState(null);
 
   useEffect(() => {
     fetchPatients();
@@ -73,19 +75,19 @@ const Patients = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Está seguro de eliminar este paciente?')) {
-      try {
-        setLoading(true);
-        await patientService.deletePatient(id);
-        fetchPatients(); // Recargar la lista después de eliminar
-        setError(null);
-      } catch (err) {
-        setError(err.message || 'Error al eliminar paciente');
-        console.error('Error deleting patient:', err);
-      } finally {
-        setLoading(false);
-      }
+  const handleDelete = async () => {
+    try {
+      setLoading(true);
+      await patientService.deletePatient(patientToDelete);
+      fetchPatients();
+      setShowDeleteModal(false);
+      setPatientToDelete(null);
+      setError(null);
+    } catch (err) {
+      setError(err.message || 'Error al eliminar paciente');
+      console.error('Error deleting patient:', err);
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -170,8 +172,11 @@ const Patients = () => {
                     Editar
                   </button>
                   <button
-                    onClick={() => handleDelete(patient.id_paciente)}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-500 hover:bg-red-600"
+                    onClick={() => {
+                      setPatientToDelete(patient.id_paciente);
+                      setShowDeleteModal(true);
+                    }}
+                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                   >
                     Eliminar
                   </button>
@@ -179,7 +184,7 @@ const Patients = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                     <Link
                         to={`/patients/${patient.id_paciente}`}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#7EC3E2] hover:bg-[#00A8E3]"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00A8E3] hover:bg-[#7EC3E2]"
                     >
                         Ver
                     </Link>
@@ -190,6 +195,37 @@ const Patients = () => {
         </table>
       </div>
 
+      {showDeleteModal && (
+        <div className="absolute top-0 left-0 right-0 bottom-0">
+          <div className="bg-white p-6 rounded-lg max-w-md mx-auto mt-10 shadow-lg">
+            <div className="text-center">
+              <h3 className="text-xl font-bold mb-4">
+                Confirmar Eliminación
+              </h3>
+              <p className="text-gray-600 mb-6">
+                ¿Está seguro que desea eliminar este paciente? Esta acción no se puede deshacer.
+              </p>
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setPatientToDelete(null);
+                  }}
+                  className="px-4 py-2 bg-[#000000] text-white border rounded hover:bg-gray-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-[#FF3B30] text-white rounded hover:bg-red-600"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {isModalOpen && (
         <div className="absolute top-0 left-0 right-0 bottom-0">
           <div className="bg-white p-6 rounded-lg max-w-md mx-auto mt-10 shadow-lg">
@@ -238,7 +274,7 @@ const Patients = () => {
                   required
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-1">Sexo:</label>
                 <select
@@ -247,9 +283,9 @@ const Patients = () => {
                   onChange={(e) => setFormData({...formData, sexo: e.target.value})}
                   required
                 >
-                  <option value="">Seleccione el sexo</option>
-                  <option value="M">Masculino</option>
-                  <option value="F">Femenino</option>
+                  <option value="" disabled>Seleccione el sexo</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
                 </select>
               </div>
               

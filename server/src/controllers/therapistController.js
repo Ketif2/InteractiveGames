@@ -72,7 +72,6 @@ export const getAllMyPatients = async (req, res) => {
 export const getTherapists = async (req, res) => {
     try {
         const [rows] = await pool.query('SELECT * FROM terapeuta');
-        console.log('Datos obtenidos:', rows); // 👈 Agrega esto
         res.json(rows);
     } catch (error) {
         console.error('Error al obtener terapeutas:', error);

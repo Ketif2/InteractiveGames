@@ -37,13 +37,17 @@ export const AppRoutes = () => {
 
       <Route path="/patients" element={
         <PrivateRoute>
-          <Patients />
+          <Layout>
+            <Patients />
+          </Layout>
         </PrivateRoute>
       } />
 
       <Route path="/patients/:id" element={
         <PrivateRoute>
-          <PatientDetails />
+          <Layout>
+            <PatientDetails />
+          </Layout>
         </PrivateRoute>
       } />
 
