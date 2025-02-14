@@ -13,8 +13,8 @@ const router = Router();
 
 // Comentamos temporalmente verifyToken
 router.get('/all', /*verifyToken,*/ getPacientes);
-router.get('/:id', /*verifyToken,*/ getPacienteById);
 router.post('/new', /*verifyToken,*/ createPaciente);
+router.get('/:id', /*verifyToken,*/ getPacienteById);
 router.put('/:id', /*verifyToken,*/ updatePaciente);
 router.delete('/:id', /*verifyToken,*/ deletePaciente);
 router.put('/:id_paciente/assign-therapist', /*verifyToken,*/ assignTherapist);

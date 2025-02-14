@@ -4,9 +4,9 @@ import cors from 'cors';
 import pool from './config/db.js';
 import sessionRoutes from './routes/sessionRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
+import therapistRoutes from './routes/therapistRoutes.js';
 import puzzleRoutes from './routes/games/puzzleRoutes.js'; 
 import sequenceRoutes from './routes/games/sequenceRoutes.js';
-
 import authRoutes from './routes/authRoutes.js';
 
 dotenv.config();
@@ -20,6 +20,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/therapist', therapistRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/games/puzzle', puzzleRoutes);

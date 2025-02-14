@@ -37,7 +37,8 @@ export const createPaciente = async (req, res) => {
         id_terapeuta,
         nombre, 
         apellido, 
-        fecha_nacimiento, 
+        fecha_nacimiento,
+        sexo, 
         diagnostico, 
         documentos 
     } = req.body;
@@ -45,11 +46,11 @@ export const createPaciente = async (req, res) => {
         const [result] = await pool.query(
             `INSERT INTO paciente (
                 id_terapeuta, nombre, apellido, 
-                fecha_nacimiento, diagnostico, documentos
+                fecha_nacimiento, sexo, diagnostico, documentos
             ) VALUES (?, ?, ?, ?, ?, ?)`,
             [
                 id_terapeuta, nombre, apellido, 
-                fecha_nacimiento, diagnostico, 
+                fecha_nacimiento, sexo, diagnostico, 
                 documentos ? JSON.stringify(documentos) : null
             ]
         );

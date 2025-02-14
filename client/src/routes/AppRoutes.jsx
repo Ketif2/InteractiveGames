@@ -6,8 +6,9 @@ import Register from '../pages/auth/Register';
 import Dashboard from '../pages/dashboard/Dashboard';
 import NewSession from '../pages/sessions/NewSession';
 import GameDashboard from '../pages/games/GameDashboard';
-
+import PatientDetails from '@/pages/patients/PatientDetails';
 import Patients from '../pages/patients/Patients';
+
 import PuzzleConfig from '../pages/games/config/PuzzleConfig';
 import SequenceConfig from '../pages/games/config/SequenceConfig';
 import MemoryConfig from '../pages/games/config/MemoryConfig';
@@ -31,6 +32,18 @@ export const AppRoutes = () => {
           <Layout>
             <Dashboard />
           </Layout>
+        </PrivateRoute>
+      } />
+
+      <Route path="/patients" element={
+        <PrivateRoute>
+          <Patients />
+        </PrivateRoute>
+      } />
+
+      <Route path="/patients/:id" element={
+        <PrivateRoute>
+          <PatientDetails />
         </PrivateRoute>
       } />
 
@@ -75,11 +88,6 @@ export const AppRoutes = () => {
         </PrivateRoute>
       } />
 
-      <Route path="/patients" element={
-        <PrivateRoute>
-          <Patients />
-        </PrivateRoute>
-      } />
       {/* Juego Sequence */}
       <Route path="/games/sequence/config" element={
         <PrivateRoute>
