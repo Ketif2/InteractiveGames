@@ -22,9 +22,8 @@ const PuzzleGame = () => {
     );
 
     const [gameState, setGameState] = useState({
-        currentPuzzle: 0,
-        pieces: [],
-        originalImage: '',
+        currentPuzzleIndex: 0,
+        puzzles: [],
         showHelp: false,
         isPaused: false,
         startTime: Date.now(),
@@ -41,32 +40,45 @@ const PuzzleGame = () => {
     const [showExitConfirm, setShowExitConfirm] = useState(false);
 
     useEffect(() => {
-        initializePuzzle();
+        initializePuzzles();
     }, []);
 
-    const initializePuzzle = async () => {
+    const initializePuzzles = () => {
+        const { selectedPuzzles } = config;
         const gridSize = parseInt(config.gridSize);
-        const totalPieces = gridSize * gridSize;
-        const positions = Array.from({ length: totalPieces }, (_, i) => i);
         
-        for (let i = positions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [positions[i], positions[j]] = [positions[j], positions[i]];
-        }
+        const puzzles = selectedPuzzles.map(puzzleConfig => {
+            const totalPieces = gridSize * gridSize;
+            const positions = Array.from({ length: totalPieces }, (_, i) => i);
+            
+            for (let i = positions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [positions[i], positions[j]] = [positions[j], positions[i]];
+            }
 
-        const imageUrl = `/src/assets/images/puzzle/${config.difficulty}/Alpacas.jpg`;
-        const pieces = positions.map((pos, index) => ({
-            id: `piece-${index}`,
-            correctPosition: pos,
-            currentPosition: index,
-            imageUrl,
-            isFixed: false
-        }));
+            return {
+                imageId: puzzleConfig.id,
+                imageUrl: puzzleConfig.url,
+                difficulty: puzzleConfig.difficulty,
+                pieces: positions.map((pos, index) => ({
+                    id: `piece-${index}`,
+                    correctPosition: pos,
+                    currentPosition: index,
+                    imageUrl: puzzleConfig.url,
+                    isFixed: false
+                })),
+                completed: false,
+                stats: {
+                    successMoves: 0,
+                    failedMoves: 0,
+                    helpCount: 0
+                }
+            };
+        });
 
         setGameState(prev => ({
             ...prev,
-            pieces,
-            originalImage: imageUrl
+            puzzles
         }));
     };
 
@@ -75,12 +87,13 @@ const PuzzleGame = () => {
         
         if (!over || active.id === over.id) return;
 
-        const oldIndex = gameState.pieces.findIndex(piece => `piece-${piece.id}` === active.id);
-        const newIndex = gameState.pieces.findIndex(piece => `piece-${piece.id}` === over.id);
+        const currentPuzzle = gameState.puzzles[gameState.currentPuzzleIndex];
+        const oldIndex = currentPuzzle.pieces.findIndex(piece => `piece-${piece.id}` === active.id);
+        const newIndex = currentPuzzle.pieces.findIndex(piece => `piece-${piece.id}` === over.id);
 
-        if (gameState.pieces[newIndex].isFixed) return;
+        if (currentPuzzle.pieces[newIndex].isFixed) return;
 
-        const newPieces = [...gameState.pieces];
+        const newPieces = [...currentPuzzle.pieces];
         const movingPiece = { ...newPieces[oldIndex] };
         const targetPiece = { ...newPieces[newIndex] };
 
@@ -105,26 +118,53 @@ const PuzzleGame = () => {
             setTimeout(() => setShowWrongFeedback(false), 2000);
         }
 
-        setGameState(prev => ({
-            ...prev,
+        const updatedPuzzles = [...gameState.puzzles];
+        updatedPuzzles[gameState.currentPuzzleIndex] = {
+            ...currentPuzzle,
             pieces: newPieces.map(piece => ({
                 ...piece,
                 isFixed: piece.correctPosition === piece.currentPosition
             })),
-            successMoves: prev.successMoves + (isCorrect ? 1 : 0),
-            failedMoves: prev.failedMoves + (!isCorrect ? 1 : 0)
-        }));
+            stats: {
+                ...currentPuzzle.stats,
+                successMoves: currentPuzzle.stats.successMoves + (isCorrect ? 1 : 0),
+                failedMoves: currentPuzzle.stats.failedMoves + (!isCorrect ? 1 : 0)
+            }
+        };
 
-        if (newPieces.every(piece => piece.correctPosition === piece.currentPosition)) {
-            setGameCompleted(true);
+        const isPuzzleComplete = newPieces.every(piece => piece.correctPosition === piece.currentPosition);
+        if (isPuzzleComplete) {
+            updatedPuzzles[gameState.currentPuzzleIndex].completed = true;
+            
+            // Si todos los puzzles están completos, terminamos el juego
+            if (updatedPuzzles.every(puzzle => puzzle.completed)) {
+                setGameCompleted(true);
+            } else if (gameState.currentPuzzleIndex < updatedPuzzles.length - 1) {
+                // Si hay más puzzles, mostramos el mensaje de éxito y preparamos el siguiente
+                setTimeout(() => {
+                    setGameState(prev => ({
+                        ...prev,
+                        currentPuzzleIndex: prev.currentPuzzleIndex + 1,
+                        puzzles: updatedPuzzles
+                    }));
+                }, 2000);
+            }
         }
+
+        setGameState(prev => ({
+            ...prev,
+            puzzles: updatedPuzzles
+        }));
     };
 
     const handleToggleHelp = () => {
+        const updatedPuzzles = [...gameState.puzzles];
+        updatedPuzzles[gameState.currentPuzzleIndex].stats.helpCount += 1;
+
         setGameState(prev => ({
             ...prev,
             showHelp: true,
-            helpCount: prev.helpCount + 1
+            puzzles: updatedPuzzles
         }));
 
         setTimeout(() => {
@@ -160,9 +200,9 @@ const PuzzleGame = () => {
         const totalTime = Math.floor((endTime - gameState.startTime - gameState.totalPauseTime) / 1000);
 
         const stats = {
-            successMoves: gameState.successMoves,
-            failedMoves: gameState.failedMoves,
-            helpCount: gameState.helpCount,
+            successMoves: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.successMoves, 0),
+            failedMoves: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.failedMoves, 0),
+            helpCount: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.helpCount, 0),
             totalTime,
             totalPauses: Math.floor(gameState.totalPauseTime / 1000)
         };
@@ -170,13 +210,14 @@ const PuzzleGame = () => {
         navigate('/games/puzzle/end', { state: { stats, config, configId, patientId } });
     };
 
+    const currentPuzzle = gameState.puzzles[gameState.currentPuzzleIndex] || {};
     const gridSize = parseInt(config.gridSize);
 
     return (
         <div className="fixed inset-0 bg-gray-100">
             {/* Barra superior */}
             <div className="absolute top-0 left-0 right-0 bg-[#00398A] text-white p-4 flex justify-between items-center">
-                <div>Puzzle {gameState.currentPuzzle + 1} de {config.puzzleCount}</div>
+                <div>Puzzle {gameState.currentPuzzleIndex + 1} de {config.selectedPuzzles.length}</div>
                 <div className="flex gap-4">
                     <button
                         onClick={handleToggleHelp}
@@ -205,7 +246,7 @@ const PuzzleGame = () => {
                     {/* Imagen original */}
                     <div className="w-1/2 max-w-[600px] aspect-square bg-gray-200 rounded-lg overflow-hidden">
                         <img
-                            src={gameState.originalImage}
+                            src={currentPuzzle.imageUrl}
                             alt="Imagen original"
                             className={`w-full h-full object-cover transition-opacity duration-300 ${
                                 gameState.showHelp ? 'opacity-100' : 'opacity-0'
@@ -214,33 +255,35 @@ const PuzzleGame = () => {
                     </div>
 
                     {/* Puzzle */}
-                    <DndContext 
-                        sensors={sensors}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <SortableContext 
-                            items={gameState.pieces.map(piece => `piece-${piece.id}`)}
-                            strategy={rectSortingStrategy}
+                    {currentPuzzle.pieces && (
+                        <DndContext 
+                            sensors={sensors}
+                            onDragEnd={handleDragEnd}
                         >
-                            <div
-                                className="grid gap-1"
-                                style={{
-                                    gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
-                                    width: '600px',
-                                    height: '600px'
-                                }}
+                            <SortableContext 
+                                items={currentPuzzle.pieces.map(piece => `piece-${piece.id}`)}
+                                strategy={rectSortingStrategy}
                             >
-                                {gameState.pieces.map((piece, index) => (
-                                    <SortablePuzzlePiece
-                                        key={piece.id}
-                                        piece={piece}
-                                        index={index}
-                                        gridSize={gridSize}
-                                    />
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </DndContext>
+                                <div
+                                    className="grid gap-1"
+                                    style={{
+                                        gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+                                        width: '600px',
+                                        height: '600px'
+                                    }}
+                                >
+                                    {currentPuzzle.pieces.map((piece, index) => (
+                                        <SortablePuzzlePiece
+                                            key={piece.id}
+                                            piece={piece}
+                                            index={index}
+                                            gridSize={gridSize}
+                                        />
+                                    ))}
+                                </div>
+                            </SortableContext>
+                        </DndContext>
+                    )}
                 </div>
             </div>
 

@@ -30,7 +30,7 @@ const PUZZLE_IMAGES = {
         { id: '7H', name: 'Laguna', path: 'Laguna.jpg' },
         { id: '8H', name: 'Panecillo', path: 'Panecillo.jpg' },
         { id: '9H', name: 'Quito Centro', path: 'QuitoCentro.jpg' },
-        { id: '10H', name: 'Quito Centro B', path: 'QuitoCentroB.jpg' }
+        { id: '10H', name: 'Quito Centro B', path: 'QuitoCentroD.jpg' }
     ]
 };
 
