@@ -1,4 +1,3 @@
-// src/services/puzzleService.js
 import axios from 'axios';
 
 const BASE_URL = 'http://localhost:5173/api/games/puzzle';
@@ -7,6 +6,34 @@ const BASE_URL = 'http://localhost:5173/api/games/puzzle';
 let configCounter = 1;
 const configStore = new Map();
 
+// Definición de imágenes como JSON
+const PUZZLE_IMAGES = {
+    medium: [
+        { id: '1M', name: 'Alpacas', path: 'Alpacas.jpg' },
+        { id: '2M', name: 'Cangrejos', path: 'Cangrejos.jpg' },
+        { id: '3M', name: 'Foca', path: 'Foca.jpg' },
+        { id: '4M', name: 'Laguna', path: 'Laguna.jpg' },
+        { id: '5M', name: 'MitadMund', path: 'MitadMund.jpg' },
+        { id: '6M', name: 'Pajarito', path: 'Pajarito.jpg' },
+        { id: '7M', name: 'Pajaritos', path: 'Pajaritos.jpg' },
+        { id: '8M', name: 'Signal', path: 'Signal.jpg' },
+        { id: '9M', name: 'Stop', path: 'Stop.jpg' },
+        { id: '10M', name: 'Volcan', path: 'Volcan.jpg' }
+    ],
+    hard: [
+        { id: '1H', name: 'Bandera ECU', path: 'BanderaECU.jpg' },
+        { id: '2H', name: 'Birds', path: 'Birds.jpg' },
+        { id: '3H', name: 'Capillas', path: 'Capillas.jpg' },
+        { id: '4H', name: 'Colibri', path: 'Colibri.jpg' },
+        { id: '5H', name: 'Fin Año', path: 'FinAnio.jpg' },
+        { id: '6H', name: 'Foca', path: 'Foca.jpg' },
+        { id: '7H', name: 'Laguna', path: 'Laguna.jpg' },
+        { id: '8H', name: 'Panecillo', path: 'Panecillo.jpg' },
+        { id: '9H', name: 'Quito Centro', path: 'QuitoCentro.jpg' },
+        { id: '10H', name: 'Quito Centro B', path: 'QuitoCentroB.jpg' }
+    ]
+};
+
 export const puzzleService = {
     getImages: (difficulty) => {
         if (difficulty === 'random') {
@@ -14,30 +41,31 @@ export const puzzleService = {
                 `https://picsum.photos/1200/1200?random=${Math.random()}`
             );
         }
+        return PUZZLE_IMAGES[difficulty];
+    },
 
-        const path = `/src/assets/images/puzzle/${difficulty}`;
-        const images = {
-            medium: [
-                'Alpacas.jpg', 'Cangrejos.jpg', 'Foca.jpg', 'Laguna.jpg',
-                'MitadMund.jpg', 'Pajarito.jpg', 'Pajaritos.jpg', 'Signal.jpg',
-                'Stop.jpg', 'Volcan.jpg'
-            ],
-            hard: [
-                'BanderaECU.jpg', 'Birds.jpg', 'Capillas.jpg', 'Colibri.jpg',
-                'FinAnio.jpg', 'Foca.jpg', 'Laguna.jpg', 'Panecillo.jpg',
-                'QuitoCentro.jpg', 'QuitoCentroB.jpg'
-            ]
-        };
+    getImageUrlById: (imageId) => {
+        const difficulty = imageId.endsWith('M') ? 'medium' : 'hard';
+        const image = PUZZLE_IMAGES[difficulty].find(img => img.id === imageId);
+        if (!image) return null;
+        return `/src/assets/images/puzzle/${difficulty}/${image.path}`;
+    },
 
-        return images[difficulty].map(img => `${path}/${img}`);
+    getPlayedImages: async (patientId) => {
+        try {
+            // Cuando implementemos la BD, esto traerá las imágenes ya jugadas
+            const response = await axios.get(`${BASE_URL}/patient/${patientId}/images`);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching played images:', error);
+            return [];
+        }
     },
 
     saveConfig: async (sessionId, configData) => {
         try {
-            // Generamos un ID único para esta configuración
             const configId = configCounter++;
             
-            // Guardamos la configuración en nuestro store temporal
             const config = {
                 id: configId,
                 sessionId,
@@ -46,7 +74,7 @@ export const puzzleService = {
             };
             configStore.set(configId, config);
 
-            // Cuando implementemos la BD, aquí irá el código para guardar en la base de datos
+            // Cuando implementemos la BD:
             /*
             const response = await axios.post(
                 `${BASE_URL}/session/${sessionId}/config`,
@@ -58,7 +86,7 @@ export const puzzleService = {
             return {
                 success: true,
                 configId,
-                config, // Devolvemos la configuración completa
+                config,
                 message: 'Configuración guardada exitosamente'
             };
         } catch (error) {
