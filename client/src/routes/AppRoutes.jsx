@@ -19,6 +19,8 @@ import SequenceGame from '../pages/games/sequence/SequenceGame';
 import MemoryGame from '../pages/games/memory/MemoryGame';
 import ForestGame from '../pages/games/forest/ForestGame';
 
+import PuzzleEnd from '../pages/games/puzzle/PuzzleEnd';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -88,7 +90,15 @@ export const AppRoutes = () => {
 
       <Route path="/games/puzzle/play" element={
         <PrivateRoute>
-          <PuzzleGame />
+          <PuzzleGame/>
+        </PrivateRoute>
+      } />
+
+      <Route path="/games/puzzle/end" element={
+        <PrivateRoute>
+          <Layout>
+          <PuzzleEnd />
+          </Layout>
         </PrivateRoute>
       } />
 
@@ -101,11 +111,9 @@ export const AppRoutes = () => {
         </PrivateRoute>
       } />
       
-      <Route path="/games/sequence/config" element={
+      <Route path="/games/sequence/play" element={
         <PrivateRoute>
-          <Layout>
-            <SequenceConfig />
-          </Layout>
+          <SequenceGame/>
         </PrivateRoute>
       } />
 
@@ -138,16 +146,6 @@ export const AppRoutes = () => {
           <ForestGame />
         </PrivateRoute>
       } />
-
-      {/* FIN DE JUEGOS ------------------------------------------- */}
-
-     <Route path="/games/:gameId/end" element={
-       <PrivateRoute>
-         <Layout>
-           {/* Aquí irá el componente de fin de juego cuando lo creemos */}
-         </Layout>
-       </PrivateRoute>
-     } />
    </Routes>
   );
 };

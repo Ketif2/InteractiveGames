@@ -1,148 +1,144 @@
 // src/pages/games/puzzle/PuzzleEnd.jsx
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { puzzleService } from '../../../services/puzzleService';
 
 const PuzzleEnd = () => {
-    const location = useLocation();
     const navigate = useNavigate();
-    const { stats, config, configId, patientId } = location.state || {};
-
-    const [observations, setObservations] = useState('');
+    const location = useLocation();
+    const { patientId, sessionId } = location.state || {};
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [observations, setObservations] = useState('');
 
-    const formatTime = (seconds) => {
-        const minutes = Math.floor(seconds / 60);
-        const remainingSeconds = seconds % 60;
-        return `${minutes}m ${remainingSeconds}s`;
+    // Mock data - reemplazar con datos reales del backend
+    const mockStats = {
+        timeElapsed: '5min',
+        errors: 6,
+        successes: 16,
+        pauses: 2,
+        successesPerMinute: 3.2,
+        errorsPerMinute: 1.2,
+        accuracy: 72.2
     };
 
-    const handlePlayAgain = () => {
-        navigate(`/games/puzzle/config?patient=${patientId}`);
+    const mockConfig = {
+        difficulty: 'Difícil',
+        pieces: 16
     };
 
     const handleFinishSession = async () => {
         setLoading(true);
-        setError('');
-
         try {
-            await puzzleService.saveStats(configId, {
-                ...stats,
-                observations
+            // TODO: Descomentar cuando se implemente el backend
+            /*
+            await puzzleService.saveSession({
+                patientId,
+                sessionId,
+                stats: mockStats,
+                config: mockConfig,
+                observations,
+                status: 'Hecho'
             });
-            navigate(`/games/${patientId}`);
+            */
+            
+            navigate('/new-session');
         } catch (error) {
-            setError('Error al guardar las estadísticas. Por favor, intente nuevamente.');
-            console.error('Error:', error);
+            console.error('Error al guardar la sesión:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00398A]"></div>
-            </div>
-        );
-    }
+    const handlePlayAgain = () => {
+        navigate('/games/puzzle/config', { 
+            state: { patientId } 
+        });
+    };
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-[#00398A] mb-6">
-                    Resumen del Juego
-                </h2>
+        <div className="h-[calc(100vh-10rem)] flex flex-col bg-gray-50">
+            {/* Header */}
+            <div className="bg-[#00398A] text-white py-2 px-6">
+                <h1 className="text-xl font-semibold">Resultados del Rompecabezas</h1>
+            </div>
 
-                {error && (
-                    <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-                        {error}
-                    </div>
-                )}
-
-                <div className="space-y-6">
-                    {/* Estadísticas */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="font-semibold text-lg mb-3">Estadísticas</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-gray-600">Intentos exitosos</p>
-                                <p className="font-medium">{stats.successMoves}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-600">Intentos fallidos</p>
-                                <p className="font-medium">{stats.failedMoves}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-600">Ayudas utilizadas</p>
-                                <p className="font-medium">{stats.helpCount}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-600">Tiempo total</p>
-                                <p className="font-medium">{formatTime(stats.totalTime)}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-600">Tiempo en pausas</p>
-                                <p className="font-medium">{formatTime(stats.totalPauses)}</p>
-                            </div>
-                        </div>
-                    </div>
-
+            {/* Contenido principal */}
+            <div className="flex-1 p-4 grid grid-cols-2 gap-4 min-h-0">
+                {/* Columna izquierda */}
+                <div className="flex flex-col gap-4 h-full">
                     {/* Configuración */}
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="font-semibold text-lg mb-3">Configuración</h3>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-gray-600">Dificultad</p>
-                                <p className="font-medium">{config.difficulty}</p>
+                    <section className="bg-white rounded-lg shadow p-4">
+                        <h2 className="text-lg font-semibold text-[#00398A] mb-2">
+                            Configuración Sesión
+                        </h2>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Dificultad:</span>
+                                <span className="bg-blue-100 px-3 py-1 rounded">{mockConfig.difficulty}</span>
                             </div>
-                            <div>
-                                <p className="text-gray-600">Tamaño del rompecabezas</p>
-                                <p className="font-medium">{config.gridSize}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-600">Rompecabezas armados</p>
-                                <p className="font-medium">{config.puzzleCount}</p>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Número de piezas:</span>
+                                <span className="bg-blue-100 px-3 py-1 rounded">{mockConfig.pieces}</span>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
                     {/* Observaciones */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Observaciones del terapeuta
-                        </label>
+                    <section className="bg-white rounded-lg shadow p-4 flex-1">
+                        <h2 className="text-lg font-semibold text-[#00398A] mb-2">
+                            Observaciones
+                        </h2>
                         <textarea
-                            rows={4}
                             value={observations}
                             onChange={(e) => setObservations(e.target.value)}
-                            className="w-full p-2 border rounded-md focus:ring-[#00398A] focus:border-[#00398A]"
+                            className="w-full h-[calc(100%-8rem)] p-3 border rounded-lg resize-none"
                             placeholder="Ingrese sus observaciones aquí..."
                         />
-                    </div>
+                    </section>
+                </div>
 
-                    {/* Botones */}
-                    <div className="flex justify-between pt-6">
-                        <button
-                            onClick={handlePlayAgain}
-                            className="px-4 py-2 bg-[#00A8E3] text-white rounded hover:bg-[#0096cc] transition-colors"
-                            disabled={loading}
-                        >
-                            Volver a jugar
-                        </button>
-                        <button
-                            onClick={handleFinishSession}
-                            className="px-4 py-2 bg-[#00398A] text-white rounded hover:bg-[#002d6f] transition-colors"
-                            disabled={loading}
-                        >
-                            Terminar sesión
-                        </button>
+                {/* Columna derecha - Estadísticas */}
+                <div className="bg-white rounded-lg shadow p-4 flex flex-col h-full">
+                    <h2 className="text-lg font-semibold text-[#00398A] mb-4">
+                        Estadísticas
+                    </h2>
+                    <div className="space-y-3 flex-1">
+                        <StatItem label="Tiempo transcurrido" value={`${mockStats.timeElapsed}`} />
+                        <StatItem label="Número de errores" value={mockStats.errors} />
+                        <StatItem label="Número de aciertos" value={mockStats.successes} />
+                        <StatItem label="Número de pausas" value={mockStats.pauses} />
+                        <StatItem label="Aciertos por minuto" value={`${mockStats.successesPerMinute} aciertos/min`} />
+                        <StatItem label="Errores por minuto" value={`${mockStats.errorsPerMinute} errores/min`} />
+                        <StatItem label="Precisión en las tareas" value={`${mockStats.accuracy}%`} />
                     </div>
                 </div>
+            </div>
+
+            {/* Botones */}
+            <div className="p-4 bg-white border-t flex justify-center gap-4 mt-auto">
+                <button
+                    onClick={handleFinishSession}
+                    disabled={loading}
+                    className="px-6 py-2 bg-[#00398A] text-white rounded-lg hover:bg-[#002d6f] transition-colors disabled:opacity-50"
+                >
+                    {loading ? 'Guardando...' : 'Terminar Sesión'}
+                </button>
+                <button
+                    onClick={handlePlayAgain}
+                    disabled={loading}
+                    className="px-6 py-2 bg-[#00A8E3] text-white rounded-lg hover:bg-[#0096cc] transition-colors disabled:opacity-50"
+                >
+                    Repetir Sesión
+                </button>
             </div>
         </div>
     );
 };
+
+const StatItem = ({ label, value }) => (
+    <div className="flex justify-between items-center py-1.5">
+        <span className="text-gray-600">{label}:</span>
+        <span className="font-medium">{value}</span>
+    </div>
+);
 
 export default PuzzleEnd;
