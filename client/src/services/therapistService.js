@@ -15,7 +15,13 @@ const therapistService = {
     } catch (error) {
       throw error;
     }
-  }
-
+  },
+  getTherapistPatients: async (therapistId) => {
+    try {
+      return await api.get(`/therapist/${therapistId}/patients`);
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 export default therapistService;
