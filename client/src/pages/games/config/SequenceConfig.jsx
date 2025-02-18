@@ -1,23 +1,19 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { sequenceService } from '../../../services/sequenceService';
+import { useNavigate } from 'react-router-dom';
+// import { sequenceService } from '../../../services/sequenceService';
 
 const SequenceConfig = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const patientId = searchParams.get('patient');
-
-    const [config, setConfig] = useState({
-        numberRange: '1-50',
-        hiddenCount: '3-5',
-        pattern: 'even',
-        shuffleTime: 10,
-        gameMode: 'normal',
-        sequenceCount: 1
-    });
-
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    const [config, setConfig] = useState({
+        startRange: 1,
+        endRange: 100,
+        numbersToHide: 5,
+        gameMode: 'normal',
+        timeInterval: 30 // Para modos desvanecimiento y revuelto
+    });
 
     const handleConfigChange = (e) => {
         const { name, value } = e.target;
@@ -27,25 +23,41 @@ const SequenceConfig = () => {
         }));
     };
 
+    const validateConfig = () => {
+        if (config.startRange >= config.endRange) {
+            setError('El rango inicial debe ser menor que el rango final');
+            return false;
+        }
+
+        const rangeSize = config.endRange - config.startRange + 1;
+        if (config.numbersToHide >= rangeSize) {
+            setError('La cantidad de números a ocultar debe ser menor que el rango total');
+            return false;
+        }
+
+        return true;
+    };
+
     const handleBack = () => {
-        navigate(`/games/${patientId}`);
+        navigate('/games/1');
     };
 
     const handlePlay = async () => {
+        if (!validateConfig()) return;
+
         setLoading(true);
         setError('');
 
         try {
-            const configResponse = await sequenceService.saveConfig({
-                ...config,
-                patientId
-            });
-
+            // Aquí iría la llamada al servicio cuando esté implementado
+            // await sequenceService.saveConfig(config);
+            
             navigate('/games/sequence/play', {
                 state: {
                     config,
-                    configId: configResponse.configId,
-                    patientId
+                    configId: 1,
+                    sessionId: 1,
+                    patientId: 1
                 }
             });
         } catch (error) {
@@ -66,9 +78,9 @@ const SequenceConfig = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-[#00398A] mb-6">
-                    Configuración de Secuencia Numérica
+                    Configuración del Juego de Secuencia
                 </h2>
 
                 {error && (
@@ -78,61 +90,60 @@ const SequenceConfig = () => {
                 )}
 
                 <div className="space-y-6">
-                    {/* Rango de Números */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Rango de Números
-                        </label>
-                        <select
-                            name="numberRange"
-                            value={config.numberRange}
-                            onChange={handleConfigChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
-                        >
-                            <option value="1-50">1-50</option>
-                            <option value="100-200">100-200</option>
-                            <option value="500-1000">500-1000</option>
-                            <option value="1000+">1000+</option>
-                        </select>
+                    {/* Configuración de rangos */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                                Inicio del Rango
+                            </label>
+                            <input
+                                type="number"
+                                name="startRange"
+                                value={config.startRange}
+                                onChange={handleConfigChange}
+                                min="1"
+                                max="999"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                                Fin del Rango
+                            </label>
+                            <input
+                                type="number"
+                                name="endRange"
+                                value={config.endRange}
+                                onChange={handleConfigChange}
+                                min="1"
+                                max="999"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                            />
+                        </div>
                     </div>
 
-                    {/* Números a Ocultar */}
+                    {/* Números a ocultar */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
                             Números a Ocultar
                         </label>
                         <select
-                            name="hiddenCount"
-                            value={config.hiddenCount}
+                            name="numbersToHide"
+                            value={config.numbersToHide}
                             onChange={handleConfigChange}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
-                            <option value="3-5">3-5 números</option>
-                            <option value="6-10">6-10 números</option>
-                            <option value="11-15">11-15 números</option>
-                            <option value="16+">16+ números</option>
+                            {[...Array(10)].map((_, i) => (
+                                <option key={i + 1} value={i + 1}>
+                                    {i + 1} {i === 0 ? 'número' : 'números'}
+                                </option>
+                            ))}
+                            <option value="11">Más de 10 números</option>
                         </select>
                     </div>
 
-                    {/* Patrón */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Patrón de Números
-                        </label>
-                        <select
-                            name="pattern"
-                            value={config.pattern}
-                            onChange={handleConfigChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
-                        >
-                            <option value="even">Números pares</option>
-                            <option value="odd">Números impares</option>
-                            <option value="sequence">Secuencia + n</option>
-                            <option value="position">Posición (esquinas/medios)</option>
-                        </select>
-                    </div>
-
-                    {/* Modo de Juego */}
+                    {/* Modo de juego */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
                             Modo de Juego
@@ -144,40 +155,53 @@ const SequenceConfig = () => {
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
                             <option value="normal">Normal</option>
-                            <option value="fade">Desvanecimiento</option>
-                            <option value="memory">Memoria (5s)</option>
+                            <option value="desvanecimiento">Desvanecimiento</option>
+                            <option value="memoria">Memoria</option>
+                            <option value="revuelto">Revuelto</option>
                         </select>
                     </div>
 
-                    {/* Tiempo de Mezcla */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Tiempo de Mezcla
-                        </label>
-                        <select
-                            name="shuffleTime"
-                            value={config.shuffleTime}
-                            onChange={handleConfigChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
-                        >
-                            <option value={10}>10 segundos</option>
-                            <option value={20}>20 segundos</option>
-                            <option value={30}>30 segundos</option>
-                        </select>
-                    </div>
+                    {/* Intervalo de tiempo para modos específicos */}
+                    {(config.gameMode === 'desvanecimiento' || config.gameMode === 'revuelto') && (
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                                Intervalo de Tiempo (segundos)
+                            </label>
+                            <select
+                                name="timeInterval"
+                                value={config.timeInterval}
+                                onChange={handleConfigChange}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                            >
+                                {config.gameMode === 'revuelto' ? (
+                                    <>
+                                        <option value="20">20 segundos</option>
+                                        <option value="30">30 segundos</option>
+                                        <option value="60">60 segundos</option>
+                                    </>
+                                ) : (
+                                    <>
+                                        <option value="5">5 segundos</option>
+                                        <option value="10">10 segundos</option>
+                                        <option value="15">15 segundos</option>
+                                    </>
+                                )}
+                            </select>
+                        </div>
+                    )}
 
                     {/* Botones */}
                     <div className="flex justify-between pt-6">
                         <button
                             onClick={handleBack}
-                            className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
+                            className="px-6 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
                             disabled={loading}
                         >
                             Regresar
                         </button>
                         <button
                             onClick={handlePlay}
-                            className="px-4 py-2 bg-[#00398A] text-white rounded hover:bg-[#002d6f] transition-colors"
+                            className="px-6 py-2 bg-[#00398A] text-white rounded hover:bg-[#002d6f] transition-colors"
                             disabled={loading}
                         >
                             Jugar

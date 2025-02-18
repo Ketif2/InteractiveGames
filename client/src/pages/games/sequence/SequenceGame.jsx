@@ -1,193 +1,284 @@
-import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { sequenceService } from '../../../services/sequenceService';
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import GameControls from '../../../components/games/sequence/GameControls';
+import NumberGrid from '../../../components/games/sequence/NumberGrid';
+import AnswerInputs from '../../../components/games/sequence/AnswerInputs';
+import FeedbackOverlay from '../../../components/games/sequence/FeedbackOverlay';
 
-const SequenceConfig = () => {
+const SequenceGame = () => {
+    const location = useLocation();
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const patientId = searchParams.get('patient');
+    const { config, configId, patientId } = location.state || {};
+    const scrollContainerRef = useRef(null);
 
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    // Configuración inicial
-    const [config, setConfig] = useState({
-        numberRange: '1-50',
-        hiddenCount: '3-5',
-        pattern: 'even',
-        shuffleTime: 10,
-        gameMode: 'normal'
+    const [gameState, setGameState] = useState({
+        numbers: [],
+        hiddenNumbers: [],
+        userAnswers: {},
+        showHelp: false,
+        isPaused: false,
+        startTime: Date.now(),
+        totalPauseTime: 0,
+        lastPauseTime: null,
+        helpCount: 0,
+        successCount: 0,
+        failedCount: 0,
+        memoryShows: 0
     });
 
-    const handleConfigChange = (name, value) => {
-        setConfig(prev => ({
+    const [showCorrectFeedback, setShowCorrectFeedback] = useState(false);
+    const [showWrongFeedback, setShowWrongFeedback] = useState(false);
+    const [gameCompleted, setGameCompleted] = useState(false);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
+    const [showMemoryNumbers, setShowMemoryNumbers] = useState(false);
+
+    useEffect(() => {
+        initializeGame();
+    }, []);
+
+    useEffect(() => {
+        let intervalId;
+        if (config.gameMode === 'revuelto' && !gameState.isPaused) {
+            intervalId = setInterval(shuffleNumbers, config.timeInterval * 1000);
+        }
+        return () => {
+            if (intervalId) clearInterval(intervalId);
+        };
+    }, [config.gameMode, gameState.isPaused]);
+
+    const initializeGame = () => {
+        const { startRange, endRange, numbersToHide } = config;
+        const allNumbers = Array.from(
+            { length: endRange - startRange + 1 },
+            (_, i) => startRange + i
+        ).sort(() => Math.random() - 0.5);
+
+        const hiddenIndices = new Set();
+        while (hiddenIndices.size < numbersToHide) {
+            hiddenIndices.add(Math.floor(Math.random() * allNumbers.length));
+        }
+
+        const hiddenNums = Array.from(hiddenIndices).map(index => allNumbers[index]);
+        
+        setGameState(prev => ({
             ...prev,
-            [name]: value
+            numbers: allNumbers,
+            hiddenNumbers: hiddenNums,
+            userAnswers: {}
         }));
-    };
 
-    const handleBack = () => {
-        navigate(`/games/${patientId}`);
-    };
-
-    const handlePlay = async () => {
-        setLoading(true);
-        setError('');
-
-        try {
-            // En lugar de hacer una llamada real al backend, 
-            // usamos nuestro servicio con datos mock
-            const configResponse = await sequenceService.saveConfig({
-                ...config,
-                patientId
-            });
-
-            // Generamos la secuencia localmente
-            const sequence = await sequenceService.generateSequence(config);
-
-            // Navegamos al juego con los datos necesarios
-            navigate('/games/sequence/play', {
-                state: {
-                    config,
-                    sequence,
-                    configId: configResponse.configId,
-                    patientId
-                }
-            });
-        } catch (error) {
-            setError('Error al iniciar el juego. Por favor, intente nuevamente.');
-            console.error('Error:', error);
-        } finally {
-            setLoading(false);
+        if (config.gameMode === 'memoria') {
+            setShowMemoryNumbers(true);
+            setTimeout(() => setShowMemoryNumbers(false), 10000);
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00398A]"></div>
-            </div>
+    const shuffleNumbers = () => {
+        setGameState(prev => ({
+            ...prev,
+            numbers: [...prev.numbers].sort(() => Math.random() - 0.5)
+        }));
+    };
+
+    const handleScroll = (direction) => {
+        if (scrollContainerRef.current) {
+            const pageWidth = scrollContainerRef.current.clientWidth;
+            scrollContainerRef.current.scrollBy({
+                left: direction * pageWidth,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    const handleAnswerChange = (index, value) => {
+        const numValue = parseInt(value);
+        if (isNaN(numValue)) return;
+
+        setGameState(prev => {
+            const isCorrect = prev.hiddenNumbers.includes(numValue);
+            const newAnswers = { ...prev.userAnswers, [index]: numValue };
+
+            // Verificar si el juego está completo
+            if (Object.keys(newAnswers).length === prev.hiddenNumbers.length) {
+                const allCorrect = prev.hiddenNumbers.every(num => 
+                    Object.values(newAnswers).includes(num)
+                );
+                if (allCorrect) {
+                    setGameCompleted(true); // Activar el modal de completado
+                }
+            }
+
+            // Mostrar feedback
+            if (isCorrect && !prev.userAnswers[index]) {
+                setShowCorrectFeedback(true);
+                setTimeout(() => setShowCorrectFeedback(false), 2000);
+                return {
+                    ...prev,
+                    userAnswers: newAnswers,
+                    successCount: prev.successCount + 1
+                };
+            } else if (!isCorrect && prev.userAnswers[index] !== numValue) {
+                setShowWrongFeedback(true);
+                setTimeout(() => setShowWrongFeedback(false), 2000);
+                return {
+                    ...prev,
+                    userAnswers: newAnswers,
+                    failedCount: prev.failedCount + 1
+                };
+            }
+
+            return { ...prev, userAnswers: newAnswers };
+        });
+    };
+
+    const handleToggleHelp = () => {
+        if (config.gameMode === 'memoria') {
+            setShowMemoryNumbers(true);
+            setGameState(prev => ({
+                ...prev,
+                memoryShows: prev.memoryShows + 1
+            }));
+            setTimeout(() => setShowMemoryNumbers(false), 10000);
+        } else {
+            setGameState(prev => ({
+                ...prev,
+                showHelp: true,
+                helpCount: prev.helpCount + 1
+            }));
+            setTimeout(() => {
+                setGameState(prev => ({ ...prev, showHelp: false }));
+            }, 3000);
+        }
+    };
+
+    const handleTogglePause = () => {
+        setGameState(prev => {
+            const now = Date.now();
+            if (prev.isPaused) {
+                return {
+                    ...prev,
+                    isPaused: false,
+                    totalPauseTime: prev.totalPauseTime + (now - prev.lastPauseTime),
+                    lastPauseTime: null
+                };
+            }
+            return {
+                ...prev,
+                isPaused: true,
+                lastPauseTime: now
+            };
+        });
+    };
+
+    
+
+    const handleFinishGame = () => {
+        const endTime = Date.now();
+        const totalTime = Math.floor(
+            (endTime - gameState.startTime - gameState.totalPauseTime) / 1000
         );
-    }
+
+        const stats = {
+            successCount: gameState.successCount,
+            failedCount: gameState.failedCount,
+            helpCount: gameState.helpCount,
+            memoryShows: gameState.memoryShows,
+            totalTime,
+            totalPauses: Math.floor(gameState.totalPauseTime / 1000)
+        };
+
+        navigate('/games/sequence/end', { 
+            state: { stats, config, configId, patientId } 
+        });
+    };
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-2xl font-bold text-[#00398A] mb-6">
-                    Configuración de Secuencia Numérica
-                </h2>
+        <div className="fixed inset-0 bg-gray-100">
+            {/* Header fijo */}
+            <div className="fixed top-0 left-0 right-0 h-16 z-50">
+                <GameControls 
+                    onHelp={handleToggleHelp}
+                    onPause={handleTogglePause}
+                    onExit={() => setShowExitConfirm(true)}
+                    isPaused={gameState.isPaused}
+                    gameMode={config.gameMode}
+                />
+            </div>
 
-                {error && (
-                    <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-                        {error}
-                    </div>
-                )}
+            {/* Contenedor principal con scroll */}
+            <div className="absolute top-16 bottom-32 left-0 right-0 overflow-hidden">
+                <div className="h-full flex items-center justify-center">
+                    <div className="relative w-full max-w-[1400px] mx-auto px-12">
+                        {gameState.numbers.length > 48 && (
+                            <button
+                                onClick={() => handleScroll(-1)}
+                                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 
+                                         bg-[#00398A] text-white rounded-full w-12 h-12
+                                         flex items-center justify-center text-2xl
+                                         hover:bg-[#002d6f] transition-colors shadow-lg"
+                            >
+                                ←
+                            </button>
+                        )}
 
-                <div className="space-y-6">
-                    {/* Rango de Números */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Rango de Números
-                        </label>
-                        <select
-                            value={config.numberRange}
-                            onChange={(e) => handleConfigChange('numberRange', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
+                        <div 
+                            ref={scrollContainerRef}
+                            className="overflow-x-auto scrollbar-hide"
+                            style={{
+                                scrollSnapType: 'x mandatory',
+                                WebkitOverflowScrolling: 'touch'
+                            }}
                         >
-                            <option value="1-50">1-50</option>
-                            <option value="100-200">100-200</option>
-                            <option value="500-1000">500-1000</option>
-                            <option value="1000+">1000+</option>
-                        </select>
-                    </div>
+                            <NumberGrid 
+                                numbers={gameState.numbers}
+                                hiddenNumbers={gameState.hiddenNumbers}
+                                showHelp={gameState.showHelp}
+                                showMemoryNumbers={showMemoryNumbers}
+                                gameMode={config.gameMode}
+                            />
+                        </div>
 
-                    {/* Números a Ocultar */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Números a Ocultar
-                        </label>
-                        <select
-                            value={config.hiddenCount}
-                            onChange={(e) => handleConfigChange('hiddenCount', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
-                        >
-                            <option value="3-5">3-5 números</option>
-                            <option value="6-10">6-10 números</option>
-                            <option value="11-15">11-15 números</option>
-                            <option value="16+">16+ números</option>
-                        </select>
-                    </div>
-
-                    {/* Patrón */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Patrón de Números
-                        </label>
-                        <select
-                            value={config.pattern}
-                            onChange={(e) => handleConfigChange('pattern', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
-                        >
-                            <option value="even">Números pares</option>
-                            <option value="odd">Números impares</option>
-                            <option value="sequence">Secuencia + n</option>
-                            <option value="position">Posición (esquinas/medios)</option>
-                        </select>
-                    </div>
-
-                    {/* Modo de Juego */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Modo de Juego
-                        </label>
-                        <select
-                            value={config.gameMode}
-                            onChange={(e) => handleConfigChange('gameMode', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
-                        >
-                            <option value="normal">Normal</option>
-                            <option value="fade">Desvanecimiento</option>
-                            <option value="memory">Memoria (5s)</option>
-                        </select>
-                    </div>
-
-                    {/* Tiempo de Mezcla */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Tiempo de Mezcla
-                        </label>
-                        <select
-                            value={config.shuffleTime}
-                            onChange={(e) => handleConfigChange('shuffleTime', parseInt(e.target.value))}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
-                        >
-                            <option value={10}>10 segundos</option>
-                            <option value={20}>20 segundos</option>
-                            <option value={30}>30 segundos</option>
-                        </select>
-                    </div>
-
-                    {/* Botones */}
-                    <div className="flex justify-between pt-6">
-                        <button
-                            onClick={handleBack}
-                            className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
-                            disabled={loading}
-                        >
-                            Regresar
-                        </button>
-                        <button
-                            onClick={handlePlay}
-                            className="px-4 py-2 bg-[#00398A] text-white rounded hover:bg-[#002d6f] transition-colors"
-                            disabled={loading}
-                        >
-                            Jugar
-                        </button>
+                        {gameState.numbers.length > 48 && (
+                            <button
+                                onClick={() => handleScroll(1)}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 
+                                         bg-[#00398A] text-white rounded-full w-12 h-12
+                                         flex items-center justify-center text-2xl
+                                         hover:bg-[#002d6f] transition-colors shadow-lg"
+                            >
+                                →
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
+
+            {/* Área de inputs fija en la parte inferior */}
+            <div className="fixed bottom-0 left-0 right-0 h-32 bg-white bg-opacity-95 shadow-lg">
+                <AnswerInputs 
+                    hiddenCount={gameState.hiddenNumbers.length}
+                    answers={gameState.userAnswers}
+                    onChange={handleAnswerChange}
+                    config={config}
+                    isPaused={gameState.isPaused}
+                />
+            </div>
+
+            {/* Overlay de feedbacks */}
+            <FeedbackOverlay 
+                showCorrect={showCorrectFeedback}
+                showWrong={showWrongFeedback}
+                showPause={gameState.isPaused}
+                showExit={showExitConfirm}
+                showCompleted={gameCompleted}
+                onPauseResume={handleTogglePause}
+                onExitConfirm={handleFinishGame}
+                onExitCancel={() => setShowExitConfirm(false)}
+                onGameComplete={handleFinishGame}
+            />
         </div>
     );
 };
 
-export default SequenceConfig;
+
+export default SequenceGame;
