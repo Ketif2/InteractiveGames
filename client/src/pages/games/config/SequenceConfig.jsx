@@ -8,8 +8,11 @@ const SequenceConfig = () => {
     const patientId = searchParams.get('patient');
 
     const [config, setConfig] = useState({
-        difficulty: 'medium',
-        hideImages: false,
+        numberRange: '1-50',
+        hiddenCount: '3-5',
+        pattern: 'even',
+        shuffleTime: 10,
+        gameMode: 'normal',
         sequenceCount: 1
     });
 
@@ -17,10 +20,10 @@ const SequenceConfig = () => {
     const [error, setError] = useState('');
 
     const handleConfigChange = (e) => {
-        const { name, type, checked, value } = e.target;
+        const { name, value } = e.target;
         setConfig(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value
+            [name]: value
         }));
     };
 
@@ -33,14 +36,14 @@ const SequenceConfig = () => {
         setError('');
 
         try {
-            // Obtenemos las secuencias según la dificultad seleccionada
-            const sequences = await sequenceService.getSequences(config.difficulty);
-            const configResponse = await sequenceService.saveConfig(1, config); // 1 es un sessionId temporal
+            const configResponse = await sequenceService.saveConfig({
+                ...config,
+                patientId
+            });
 
             navigate('/games/sequence/play', {
                 state: {
                     config,
-                    sequences: sequences.slice(0, config.sequenceCount),
                     configId: configResponse.configId,
                     patientId
                 }
@@ -65,7 +68,7 @@ const SequenceConfig = () => {
         <div className="container mx-auto px-4 py-8">
             <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-[#00398A] mb-6">
-                    Configuración de Secuencia Lógica
+                    Configuración de Secuencia Numérica
                 </h2>
 
                 {error && (
@@ -75,50 +78,91 @@ const SequenceConfig = () => {
                 )}
 
                 <div className="space-y-6">
-                    {/* Dificultad */}
+                    {/* Rango de Números */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
-                            Dificultad
+                            Rango de Números
                         </label>
                         <select
-                            name="difficulty"
-                            value={config.difficulty}
+                            name="numberRange"
+                            value={config.numberRange}
                             onChange={handleConfigChange}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
-                            <option value="medium">Media (6 imágenes por cadena)</option>
-                            <option value="complex">Compleja (8 imágenes por cadena)</option>
+                            <option value="1-50">1-50</option>
+                            <option value="100-200">100-200</option>
+                            <option value="500-1000">500-1000</option>
+                            <option value="1000+">1000+</option>
                         </select>
                     </div>
 
-                    {/* Esconder imágenes */}
-                    <div className="flex items-center space-x-2">
-                        <input
-                            type="checkbox"
-                            id="hideImages"
-                            name="hideImages"
-                            checked={config.hideImages}
-                            onChange={handleConfigChange}
-                            className="h-4 w-4 rounded border-gray-300 text-[#00398A] focus:ring-[#00398A]"
-                        />
-                        <label htmlFor="hideImages" className="text-sm font-medium text-gray-700">
-                            Esconder imágenes (mostrar por 3 segundos al hacer clic)
-                        </label>
-                    </div>
-
-                    {/* Cantidad de Cadenas */}
+                    {/* Números a Ocultar */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
-                            Número de Cadenas
+                            Números a Ocultar
                         </label>
                         <select
-                            name="sequenceCount"
-                            value={config.sequenceCount}
+                            name="hiddenCount"
+                            value={config.hiddenCount}
                             onChange={handleConfigChange}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
-                            <option value={1}>1 Cadena</option>
-                            <option value={2}>2 Cadenas</option>
+                            <option value="3-5">3-5 números</option>
+                            <option value="6-10">6-10 números</option>
+                            <option value="11-15">11-15 números</option>
+                            <option value="16+">16+ números</option>
+                        </select>
+                    </div>
+
+                    {/* Patrón */}
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Patrón de Números
+                        </label>
+                        <select
+                            name="pattern"
+                            value={config.pattern}
+                            onChange={handleConfigChange}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                        >
+                            <option value="even">Números pares</option>
+                            <option value="odd">Números impares</option>
+                            <option value="sequence">Secuencia + n</option>
+                            <option value="position">Posición (esquinas/medios)</option>
+                        </select>
+                    </div>
+
+                    {/* Modo de Juego */}
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Modo de Juego
+                        </label>
+                        <select
+                            name="gameMode"
+                            value={config.gameMode}
+                            onChange={handleConfigChange}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                        >
+                            <option value="normal">Normal</option>
+                            <option value="fade">Desvanecimiento</option>
+                            <option value="memory">Memoria (5s)</option>
+                        </select>
+                    </div>
+
+                    {/* Tiempo de Mezcla */}
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                            Tiempo de Mezcla
+                        </label>
+                        <select
+                            name="shuffleTime"
+                            value={config.shuffleTime}
+                            onChange={handleConfigChange}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                        >
+                            <option value={10}>10 segundos</option>
+                            <option value={20}>20 segundos</option>
+                            <option value={30}>30 segundos</option>
                         </select>
                     </div>
 

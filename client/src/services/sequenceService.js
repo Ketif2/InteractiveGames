@@ -1,71 +1,87 @@
-import axios from 'axios';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-const BASE_URL = 'http://localhost:5173/api/games/sequence';
+// sequenceService.js
+class SequenceService {
+    // Mock data para desarrollo
+    #mockData = {
+        configs: [],
+        stats: []
+    };
 
-// Datos de ejemplo (temporales hasta que se implemente la BD)
-const TEMP_SEQUENCES = {
-    cadenasMedias: [
-        {
-            texto: "Realizar las compras en el supermercado",
-            imagenes: [
-                { src: "/src/assets/games/sequence/medium/img1.jpg", orden: 1, ayuda: "Tomar el carrito de compras" },
-                { src: "/src/assets/games/sequence/medium/img2.jpg", orden: 2, ayuda: "Recorrer los pasillos" },
-                { src: "/src/assets/games/sequence/medium/img3.jpg", orden: 3, ayuda: "Seleccionar productos" },
-                { src: "/src/assets/games/sequence/medium/img4.jpg", orden: 4, ayuda: "Ir a la caja" },
-                { src: "/src/assets/games/sequence/medium/img5.jpg", orden: 5, ayuda: "Pagar los productos" },
-                { src: "/src/assets/games/sequence/medium/img6.jpg", orden: 6, ayuda: "Guardar las compras" }
-            ]
-        }
-    ],
-    cadenasComplejas: [
-        {
-            texto: "Organizar una fiesta de cumpleaños",
-            imagenes: [
-                { src: "/src/assets/games/sequence/complex/img1.jpg", orden: 1, ayuda: "Hacer la lista de invitados" },
-                { src: "/src/assets/games/sequence/complex/img2.jpg", orden: 2, ayuda: "Enviar invitaciones" },
-                { src: "/src/assets/games/sequence/complex/img3.jpg", orden: 3, ayuda: "Comprar decoraciones" },
-                { src: "/src/assets/games/sequence/complex/img4.jpg", orden: 4, ayuda: "Ordenar el pastel" },
-                { src: "/src/assets/games/sequence/complex/img5.jpg", orden: 5, ayuda: "Decorar el lugar" },
-                { src: "/src/assets/games/sequence/complex/img6.jpg", orden: 6, ayuda: "Recibir a los invitados" },
-                { src: "/src/assets/games/sequence/complex/img7.jpg", orden: 7, ayuda: "Cantar cumpleaños" },
-                { src: "/src/assets/games/sequence/complex/img8.jpg", orden: 8, ayuda: "Repartir el pastel" }
-            ]
-        }
-    ]
-};
-
-export const sequenceService = {
-    saveConfig: async (sessionId, configData) => {
+    async saveConfig(config) {
+        // Simula una llamada al backend
         try {
-            // Por ahora retornamos una respuesta simulada
+            // En producción, esto sería una llamada API real
+            // const response = await fetch(`${API_URL}/sequence/config`, {...});
+            
+            const configId = Date.now(); // Simulamos un ID único
+            this.#mockData.configs.push({ ...config, id: configId });
+            
             return {
                 success: true,
-                configId: 1,
+                configId,
                 message: 'Configuración guardada exitosamente'
             };
         } catch (error) {
-            throw new Error(error.response?.data?.message || 'Error al guardar configuración');
+            console.error('Error en saveConfig:', error);
+            throw new Error('Error al guardar la configuración');
         }
-    },
+    }
 
-    getSequences: async (difficulty) => {
+    async generateSequence(config) {
+        // Simula la generación de secuencia basada en la configuración
         try {
-            // Por ahora retornamos los datos de ejemplo
-            return difficulty === 'medium' ? TEMP_SEQUENCES.cadenasMedias : TEMP_SEQUENCES.cadenasComplejas;
+            const [min, max] = config.numberRange.split('-').map(Number);
+            const sequence = [];
+            const length = 25; // Grid 5x5
+            
+            for (let i = 0; i < length; i++) {
+                sequence.push(Math.floor(Math.random() * (max - min + 1)) + min);
+            }
+            
+            // Ordenamos la secuencia
+            sequence.sort((a, b) => a - b);
+            
+            // Aplicamos el patrón seleccionado
+            return this.#applyPattern(sequence, config.pattern);
         } catch (error) {
-            throw new Error('Error al obtener las secuencias');
+            console.error('Error en generateSequence:', error);
+            throw new Error('Error al generar la secuencia');
         }
-    },
+    }
 
-    saveStats: async (configId, statsData) => {
+    #applyPattern(sequence, pattern) {
+        switch (pattern) {
+            case 'even':
+                return sequence.filter(num => num % 2 === 0);
+            case 'odd':
+                return sequence.filter(num => num % 2 !== 0);
+            case 'sequence':
+                // Incrementamos cada número por 2
+                return sequence.map(num => num + 2);
+            case 'position':
+                // Mantenemos los números en las esquinas y el centro
+                return sequence;
+            default:
+                return sequence;
+        }
+    }
+
+    async saveStats(stats) {
         try {
-            // Por ahora retornamos una respuesta simulada
+            const statId = Date.now();
+            this.#mockData.stats.push({ ...stats, id: statId });
+            
             return {
                 success: true,
+                statId,
                 message: 'Estadísticas guardadas exitosamente'
             };
         } catch (error) {
-            throw new Error(error.response?.data?.message || 'Error al guardar estadísticas');
+            console.error('Error en saveStats:', error);
+            throw new Error('Error al guardar las estadísticas');
         }
     }
-};
+}
+
+export const sequenceService = new SequenceService();

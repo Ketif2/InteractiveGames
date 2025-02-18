@@ -1,53 +1,193 @@
-import React from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { sequenceService } from '../../../services/sequenceService';
 
-const SequenceGame = () => {
-    const location = useLocation();
+const SequenceConfig = () => {
     const navigate = useNavigate();
-    const { config, sequences, configId, patientId } = location.state || {};
+    const [searchParams] = useSearchParams();
+    const patientId = searchParams.get('patient');
 
-    const handleFinishGame = () => {
-        navigate('/games/sequence/end', {
-            state: {
-                configId,
-                patientId,
-                stats: {
-                    // Aquí irán las estadísticas del juego
-                }
-            }
-        });
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    // Configuración inicial
+    const [config, setConfig] = useState({
+        numberRange: '1-50',
+        hiddenCount: '3-5',
+        pattern: 'even',
+        shuffleTime: 10,
+        gameMode: 'normal'
+    });
+
+    const handleConfigChange = (name, value) => {
+        setConfig(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
-    return (
-        <div className="fixed inset-0 bg-gray-100">
-            {/* Barra superior con tiempo y controles */}
-            <div className="absolute top-0 left-0 right-0 bg-[#00398A] text-white p-4 flex justify-between items-center">
-                <div>Tiempo: 00:00</div>
-                <div className="flex gap-4">
-                    <button className="bg-[#00A8E3] px-4 py-2 rounded">Ayuda</button>
-                    <button className="bg-[#00A8E3] px-4 py-2 rounded">Pausa</button>
-                    <button 
-                        onClick={handleFinishGame}
-                        className="bg-red-500 px-4 py-2 rounded"
-                    >
-                        Terminar
-                    </button>
-                </div>
-            </div>
+    const handleBack = () => {
+        navigate(`/games/${patientId}`);
+    };
 
-            {/* Área del juego */}
-            <div className="absolute inset-0 mt-16 p-4 flex items-center justify-center">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold text-[#00398A] mb-4">
-                        Secuencia Lógica
-                    </h2>
-                    <p className="text-gray-600">
-                        Aquí irá el juego de secuencias
-                    </p>
+    const handlePlay = async () => {
+        setLoading(true);
+        setError('');
+
+        try {
+            // En lugar de hacer una llamada real al backend, 
+            // usamos nuestro servicio con datos mock
+            const configResponse = await sequenceService.saveConfig({
+                ...config,
+                patientId
+            });
+
+            // Generamos la secuencia localmente
+            const sequence = await sequenceService.generateSequence(config);
+
+            // Navegamos al juego con los datos necesarios
+            navigate('/games/sequence/play', {
+                state: {
+                    config,
+                    sequence,
+                    configId: configResponse.configId,
+                    patientId
+                }
+            });
+        } catch (error) {
+            setError('Error al iniciar el juego. Por favor, intente nuevamente.');
+            console.error('Error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00398A]"></div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+                <h2 className="text-2xl font-bold text-[#00398A] mb-6">
+                    Configuración de Secuencia Numérica
+                </h2>
+
+                {error && (
+                    <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+                        {error}
+                    </div>
+                )}
+
+                <div className="space-y-6">
+                    {/* Rango de Números */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Rango de Números
+                        </label>
+                        <select
+                            value={config.numberRange}
+                            onChange={(e) => handleConfigChange('numberRange', e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
+                        >
+                            <option value="1-50">1-50</option>
+                            <option value="100-200">100-200</option>
+                            <option value="500-1000">500-1000</option>
+                            <option value="1000+">1000+</option>
+                        </select>
+                    </div>
+
+                    {/* Números a Ocultar */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Números a Ocultar
+                        </label>
+                        <select
+                            value={config.hiddenCount}
+                            onChange={(e) => handleConfigChange('hiddenCount', e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
+                        >
+                            <option value="3-5">3-5 números</option>
+                            <option value="6-10">6-10 números</option>
+                            <option value="11-15">11-15 números</option>
+                            <option value="16+">16+ números</option>
+                        </select>
+                    </div>
+
+                    {/* Patrón */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Patrón de Números
+                        </label>
+                        <select
+                            value={config.pattern}
+                            onChange={(e) => handleConfigChange('pattern', e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
+                        >
+                            <option value="even">Números pares</option>
+                            <option value="odd">Números impares</option>
+                            <option value="sequence">Secuencia + n</option>
+                            <option value="position">Posición (esquinas/medios)</option>
+                        </select>
+                    </div>
+
+                    {/* Modo de Juego */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Modo de Juego
+                        </label>
+                        <select
+                            value={config.gameMode}
+                            onChange={(e) => handleConfigChange('gameMode', e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
+                        >
+                            <option value="normal">Normal</option>
+                            <option value="fade">Desvanecimiento</option>
+                            <option value="memory">Memoria (5s)</option>
+                        </select>
+                    </div>
+
+                    {/* Tiempo de Mezcla */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tiempo de Mezcla
+                        </label>
+                        <select
+                            value={config.shuffleTime}
+                            onChange={(e) => handleConfigChange('shuffleTime', parseInt(e.target.value))}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#00398A]"
+                        >
+                            <option value={10}>10 segundos</option>
+                            <option value={20}>20 segundos</option>
+                            <option value={30}>30 segundos</option>
+                        </select>
+                    </div>
+
+                    {/* Botones */}
+                    <div className="flex justify-between pt-6">
+                        <button
+                            onClick={handleBack}
+                            className="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors"
+                            disabled={loading}
+                        >
+                            Regresar
+                        </button>
+                        <button
+                            onClick={handlePlay}
+                            className="px-4 py-2 bg-[#00398A] text-white rounded hover:bg-[#002d6f] transition-colors"
+                            disabled={loading}
+                        >
+                            Jugar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     );
 };
 
-export default SequenceGame;
+export default SequenceConfig;
