@@ -8,9 +8,9 @@ import FeedbackOverlay from '../../../components/games/sequence/FeedbackOverlay'
 const SequenceGame = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { config, configId, patientId } = location.state || {};
+    const { config, patientId } = location.state || {};
     const scrollContainerRef = useRef(null);
-
+    
     const [gameState, setGameState] = useState({
         numbers: [],
         hiddenNumbers: [],
@@ -25,12 +25,13 @@ const SequenceGame = () => {
         failedCount: 0,
         memoryShows: 0
     });
-
+    
     const [showCorrectFeedback, setShowCorrectFeedback] = useState(false);
     const [showWrongFeedback, setShowWrongFeedback] = useState(false);
     const [gameCompleted, setGameCompleted] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
     const [showMemoryNumbers, setShowMemoryNumbers] = useState(false);
+    const [incorrectAnswers, setIncorrectAnswers] = useState([]);
 
     useEffect(() => {
         initializeGame();
@@ -82,9 +83,9 @@ const SequenceGame = () => {
 
     const handleScroll = (direction) => {
         if (scrollContainerRef.current) {
-            const pageWidth = scrollContainerRef.current.clientWidth;
+            const scrollAmount = scrollContainerRef.current.clientWidth * 0.8;
             scrollContainerRef.current.scrollBy({
-                left: direction * pageWidth,
+                left: direction * scrollAmount,
                 behavior: 'smooth'
             });
         }
@@ -94,41 +95,18 @@ const SequenceGame = () => {
         const numValue = parseInt(value);
         if (isNaN(numValue)) return;
 
-        setGameState(prev => {
-            const isCorrect = prev.hiddenNumbers.includes(numValue);
-            const newAnswers = { ...prev.userAnswers, [index]: numValue };
-
-            // Verificar si el juego está completo
-            if (Object.keys(newAnswers).length === prev.hiddenNumbers.length) {
-                const allCorrect = prev.hiddenNumbers.every(num => 
-                    Object.values(newAnswers).includes(num)
-                );
-                if (allCorrect) {
-                    setGameCompleted(true); // Activar el modal de completado
-                }
+        setGameState(prev => ({
+            ...prev,
+            userAnswers: {
+                ...prev.userAnswers,
+                [index]: numValue
             }
+        }));
 
-            // Mostrar feedback
-            if (isCorrect && !prev.userAnswers[index]) {
-                setShowCorrectFeedback(true);
-                setTimeout(() => setShowCorrectFeedback(false), 2000);
-                return {
-                    ...prev,
-                    userAnswers: newAnswers,
-                    successCount: prev.successCount + 1
-                };
-            } else if (!isCorrect && prev.userAnswers[index] !== numValue) {
-                setShowWrongFeedback(true);
-                setTimeout(() => setShowWrongFeedback(false), 2000);
-                return {
-                    ...prev,
-                    userAnswers: newAnswers,
-                    failedCount: prev.failedCount + 1
-                };
-            }
-
-            return { ...prev, userAnswers: newAnswers };
-        });
+        // Limpiar los errores cuando el usuario modifica una respuesta
+        if (incorrectAnswers.includes(index)) {
+            setIncorrectAnswers(prev => prev.filter(i => i !== index));
+        }
     };
 
     const handleToggleHelp = () => {
@@ -170,8 +148,44 @@ const SequenceGame = () => {
         });
     };
 
-    
+    const handleCheck = () => {
+        const answers = Object.values(gameState.userAnswers);
+        
+        // Verificar si todos los espacios están llenos
+        if (answers.length !== gameState.hiddenNumbers.length) {
+            setShowWrongFeedback(true);
+            setTimeout(() => setShowWrongFeedback(false), 2000);
+            return;
+        }
 
+        // Encontrar respuestas incorrectas
+        const incorrect = [];
+        answers.forEach((answer, index) => {
+            if (!gameState.hiddenNumbers.includes(Number(answer))) {
+                incorrect.push(index);
+                setGameState(prev => ({
+                    ...prev,
+                    failedCount: prev.failedCount + 1
+                }));
+            }
+        });
+
+        setIncorrectAnswers(incorrect);
+
+        if (incorrect.length === 0) {
+            setGameState(prev => ({
+                ...prev,
+                successCount: prev.successCount + answers.length
+            }));
+            setGameCompleted(true);
+            setShowCorrectFeedback(true);
+            setTimeout(() => setShowCorrectFeedback(false), 2000);
+        } else {
+            setShowWrongFeedback(true);
+            setTimeout(() => setShowWrongFeedback(false), 2000);
+        }
+    };
+    
     const handleFinishGame = () => {
         const endTime = Date.now();
         const totalTime = Math.floor(
@@ -187,15 +201,19 @@ const SequenceGame = () => {
             totalPauses: Math.floor(gameState.totalPauseTime / 1000)
         };
 
+        // Navegar a la pantalla de resultados con toda la información necesaria
         navigate('/games/sequence/end', { 
-            state: { stats, config, configId, patientId } 
+            state: { 
+                stats,
+                config,
+                patientId
+            } 
         });
     };
 
     return (
         <div className="fixed inset-0 bg-gray-100">
-            {/* Header fijo */}
-            <div className="fixed top-0 left-0 right-0 h-16 z-50">
+            <div className="fixed top-0 left-0 right-0 z-50">
                 <GameControls 
                     onHelp={handleToggleHelp}
                     onPause={handleTogglePause}
@@ -204,31 +222,28 @@ const SequenceGame = () => {
                     gameMode={config.gameMode}
                 />
             </div>
-
-            {/* Contenedor principal con scroll */}
-            <div className="absolute top-16 bottom-32 left-0 right-0 overflow-hidden">
-                <div className="h-full flex items-center justify-center">
-                    <div className="relative w-full max-w-[1400px] mx-auto px-12">
-                        {gameState.numbers.length > 48 && (
-                            <button
-                                onClick={() => handleScroll(-1)}
-                                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 
-                                         bg-[#00398A] text-white rounded-full w-12 h-12
-                                         flex items-center justify-center text-2xl
-                                         hover:bg-[#002d6f] transition-colors shadow-lg"
-                            >
-                                ←
-                            </button>
-                        )}
-
-                        <div 
-                            ref={scrollContainerRef}
-                            className="overflow-x-auto scrollbar-hide"
-                            style={{
-                                scrollSnapType: 'x mandatory',
-                                WebkitOverflowScrolling: 'touch'
-                            }}
-                        >
+    
+            {/* Área principal centrada */}
+            <div className="mt-16 h-[calc(100vh-56px-160px)] flex items-center justify-center relative">
+            <div className="absolute left-14 bottom-3 -translate-y-1/2 z-10">
+                <button
+                    onClick={() => handleScroll(-1)}
+                    className="bg-[#00398A] text-white rounded-full w-12 h-12 
+                            flex items-center justify-center text-2xl pb-1
+                            hover:bg-blue-400 hover:text-black transition-colors shadow-lg"
+                >
+                    ←
+                </button>
+            </div>
+                <div className="w-[calc(100%-6rem)] px-4">
+                    <div 
+                        ref={scrollContainerRef}
+                        className="overflow-x-auto hide-scrollbar"
+                        style={{
+                            scrollBehavior: 'smooth'
+                        }}
+                    >
+                        <div className="min-w-max px-4">
                             <NumberGrid 
                                 numbers={gameState.numbers}
                                 hiddenNumbers={gameState.hiddenNumbers}
@@ -237,34 +252,34 @@ const SequenceGame = () => {
                                 gameMode={config.gameMode}
                             />
                         </div>
-
-                        {gameState.numbers.length > 48 && (
-                            <button
-                                onClick={() => handleScroll(1)}
-                                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 
-                                         bg-[#00398A] text-white rounded-full w-12 h-12
-                                         flex items-center justify-center text-2xl
-                                         hover:bg-[#002d6f] transition-colors shadow-lg"
-                            >
-                                →
-                            </button>
-                        )}
                     </div>
                 </div>
-            </div>
 
-            {/* Área de inputs fija en la parte inferior */}
-            <div className="fixed bottom-0 left-0 right-0 h-32 bg-white bg-opacity-95 shadow-lg">
+                <div className="absolute right-14 bottom-3 -translate-y-1/2 z-10">
+                    <button
+                        onClick={() => handleScroll(1)}
+                        className="bg-[#00398A] text-white rounded-full w-12 h-12
+                                flex items-center justify-center text-2xl pb-1
+                                hover:bg-blue-400 hover:text-black transition-colors shadow-lg"
+                    >
+                        →
+                    </button>
+                </div>
+            </div>
+                
+            {/* Área de inputs */}
+            <div className="fixed bottom-0 left-0 right-0">
                 <AnswerInputs 
                     hiddenCount={gameState.hiddenNumbers.length}
                     answers={gameState.userAnswers}
                     onChange={handleAnswerChange}
                     config={config}
                     isPaused={gameState.isPaused}
+                    incorrectAnswers={incorrectAnswers}
+                    onCheck={handleCheck}
                 />
             </div>
-
-            {/* Overlay de feedbacks */}
+    
             <FeedbackOverlay 
                 showCorrect={showCorrectFeedback}
                 showWrong={showWrongFeedback}
@@ -278,6 +293,7 @@ const SequenceGame = () => {
             />
         </div>
     );
+
 };
 
 

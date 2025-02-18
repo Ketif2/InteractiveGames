@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-// import { sequenceService } from '../../../services/sequenceService';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const SequenceConfig = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { patientId } = location.state || {};
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -12,15 +14,31 @@ const SequenceConfig = () => {
         endRange: 100,
         numbersToHide: 5,
         gameMode: 'normal',
-        timeInterval: 30 // Para modos desvanecimiento y revuelto
+        timeInterval: 30
     });
 
     const handleConfigChange = (e) => {
         const { name, value } = e.target;
-        setConfig(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        
+        setConfig(prev => {
+            const newConfig = { ...prev, [name]: value };
+            
+            // Si el modo de juego cambia, ajustamos el intervalo de tiempo según el modo
+            if (name === 'gameMode') {
+                if (value === 'revuelto') {
+                    newConfig.timeInterval = 30; // Valor por defecto para modo revuelto
+                } else if (value === 'desvanecimiento') {
+                    newConfig.timeInterval = 10; // Valor por defecto para modo desvanecimiento
+                }
+            }
+
+            // Convertir valores numéricos
+            if (['startRange', 'endRange', 'numbersToHide', 'timeInterval'].includes(name)) {
+                newConfig[name] = parseInt(value);
+            }
+
+            return newConfig;
+        });
     };
 
     const validateConfig = () => {
@@ -35,29 +53,33 @@ const SequenceConfig = () => {
             return false;
         }
 
+        if (config.numbersToHide < 1) {
+            setError('Debe ocultar al menos un número');
+            return false;
+        }
+
         return true;
     };
 
     const handleBack = () => {
-        navigate('/games/1');
+        navigate('/games/' + patientId);
     };
 
-    const handlePlay = async () => {
+    const handlePlay = () => {
         if (!validateConfig()) return;
 
         setLoading(true);
-        setError('');
-
         try {
-            // Aquí iría la llamada al servicio cuando esté implementado
-            // await sequenceService.saveConfig(config);
-            
             navigate('/games/sequence/play', {
                 state: {
-                    config,
-                    configId: 1,
-                    sessionId: 1,
-                    patientId: 1
+                    config: {
+                        startRange: config.startRange,
+                        endRange: config.endRange,
+                        numbersToHide: config.numbersToHide,
+                        gameMode: config.gameMode,
+                        timeInterval: config.timeInterval
+                    },
+                    patientId
                 }
             });
         } catch (error) {
@@ -78,7 +100,7 @@ const SequenceConfig = () => {
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+            <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-2xl font-bold text-[#00398A] mb-6">
                     Configuración del Juego de Secuencia
                 </h2>
@@ -91,7 +113,7 @@ const SequenceConfig = () => {
 
                 <div className="space-y-6">
                     {/* Configuración de rangos */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="block text-sm font-medium text-gray-700">
                                 Inicio del Rango
@@ -103,7 +125,8 @@ const SequenceConfig = () => {
                                 onChange={handleConfigChange}
                                 min="1"
                                 max="999"
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
+                                         focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                             />
                         </div>
 
@@ -118,7 +141,8 @@ const SequenceConfig = () => {
                                 onChange={handleConfigChange}
                                 min="1"
                                 max="999"
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
+                                         focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                             />
                         </div>
                     </div>
@@ -132,7 +156,8 @@ const SequenceConfig = () => {
                             name="numbersToHide"
                             value={config.numbersToHide}
                             onChange={handleConfigChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
+                                     focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
                             {[...Array(10)].map((_, i) => (
                                 <option key={i + 1} value={i + 1}>
@@ -152,7 +177,8 @@ const SequenceConfig = () => {
                             name="gameMode"
                             value={config.gameMode}
                             onChange={handleConfigChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
+                                     focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
                             <option value="normal">Normal</option>
                             <option value="desvanecimiento">Desvanecimiento</option>
@@ -171,7 +197,8 @@ const SequenceConfig = () => {
                                 name="timeInterval"
                                 value={config.timeInterval}
                                 onChange={handleConfigChange}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
+                                         focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                             >
                                 {config.gameMode === 'revuelto' ? (
                                     <>
