@@ -1,143 +1,174 @@
 // src/pages/games/sequence/SequenceEnd.jsx
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-// import { sequenceService } from '../../../services/sequenceService';
 
 const SequenceEnd = () => {
-    const location = useLocation();
     const navigate = useNavigate();
+    const location = useLocation();
     const { stats, config, patientId } = location.state || {};
-    
-    const [observation, setObservation] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [observations, setObservations] = useState('');
 
-    const handleRepeatSession = () => {
-        navigate('/games/sequence/config');
-    };
+    // Cálculos adicionales para estadísticas
+    const accuracy = stats ? Math.round((stats.successCount / (stats.successCount + stats.failedCount)) * 100) : 0;
+    const timeInMinutes = stats ? Math.floor(stats.totalTime / 60) : 0;
+    const successesPerMinute = stats ? (stats.successCount / (stats.totalTime / 60)).toFixed(1) : 0;
+    const errorsPerMinute = stats ? (stats.failedCount / (stats.totalTime / 60)).toFixed(1) : 0;
 
     const handleFinishSession = async () => {
-        setIsSubmitting(true);
+        setLoading(true);
         try {
-            // Aquí es donde guardaríamos todo en la BD
-            // await sequenceService.saveSession({
-            //     config,
-            //     stats,
-            //     patientId,
-            //     observation
-            // });
+            // TODO: Implementar cuando esté listo el backend
+            /*
+            await sequenceService.saveSession({
+                patientId,
+                stats,
+                config,
+                observations,
+                status: 'Hecho'
+            });
+            */
             
-            // Por ahora solo navegamos de vuelta
             navigate('/new-session');
         } catch (error) {
             console.error('Error al guardar la sesión:', error);
         } finally {
-            setIsSubmitting(false);
+            setLoading(false);
         }
     };
 
-    // Calcular estadísticas adicionales
-    const successPerMinute = (stats.successCount / (stats.totalTime / 60)).toFixed(1);
-    const errorsPerMinute = (stats.failedCount / (stats.totalTime / 60)).toFixed(1);
+    const handlePlayAgain = () => {
+        navigate('/games/sequence/config', { 
+            state: { patientId } 
+        });
+    };
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto">
-                <h1 className="text-2xl font-bold text-[#00398A] mb-6">
-                    Resultados de la Secuencia Numérica
-                </h1>
+        <div className="h-[calc(100vh-10rem)] flex flex-col bg-gray-50">
+            {/* Header */}
+            <div className="bg-[#00398A] text-white py-2 px-6">
+                <h1 className="text-xl font-semibold">Resultados de la Secuencia Numérica</h1>
+            </div>
 
-                <div className="grid md:grid-cols-2 gap-8">
+            {/* Contenido principal */}
+            <div className="flex-1 p-4 grid grid-cols-2 gap-4 min-h-0">
+                {/* Columna izquierda */}
+                <div className="flex flex-col gap-4 h-full">
                     {/* Configuración */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-semibold text-[#00398A] mb-4">
+                    <section className="bg-white rounded-lg shadow p-4">
+                        <h2 className="text-lg font-semibold text-[#00398A] mb-2">
                             Configuración Sesión
                         </h2>
-                        <dl className="space-y-2">
-                            <div>
-                                <dt className="text-gray-600">Rango:</dt>
-                                <dd>{config.startRange} - {config.endRange}</dd>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Rango de números:</span>
+                                <span className="bg-blue-100 px-3 py-1 rounded">
+                                    {config.startRange} - {config.endRange}
+                                </span>
                             </div>
-                            <div>
-                                <dt className="text-gray-600">Números a ocultar:</dt>
-                                <dd>{config.numbersToHide}</dd>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Números a ocultar:</span>
+                                <span className="bg-blue-100 px-3 py-1 rounded">
+                                    {config.numbersToHide}
+                                </span>
                             </div>
-                            <div>
-                                <dt className="text-gray-600">Modo de juego:</dt>
-                                <dd className="capitalize">{config.gameMode}</dd>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Modo de juego:</span>
+                                <span className="bg-blue-100 px-3 py-1 rounded capitalize">
+                                    {config.gameMode}
+                                </span>
                             </div>
-                        </dl>
-                    </div>
+                        </div>
+                    </section>
 
-                    {/* Estadísticas */}
-                    <div className="bg-white rounded-lg shadow p-6">
-                        <h2 className="text-xl font-semibold text-[#00398A] mb-4">
-                            Estadísticas
+                    {/* Observaciones */}
+                    <section className="bg-white rounded-lg shadow p-4 flex-1">
+                        <h2 className="text-lg font-semibold text-[#00398A] mb-2">
+                            Observaciones
                         </h2>
-                        <dl className="space-y-2">
-                            <div>
-                                <dt className="text-gray-600">Tiempo transcurrido:</dt>
-                                <dd>{Math.floor(stats.totalTime / 60)}min</dd>
-                            </div>
-                            <div>
-                                <dt className="text-gray-600">Número de errores:</dt>
-                                <dd>{stats.failedCount}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-gray-600">Número de aciertos:</dt>
-                                <dd>{stats.successCount}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-gray-600">Número de pausas:</dt>
-                                <dd>{stats.totalPauses}</dd>
-                            </div>
-                            <div>
-                                <dt className="text-gray-600">Aciertos por minuto:</dt>
-                                <dd>{successPerMinute} aciertos/min</dd>
-                            </div>
-                            <div>
-                                <dt className="text-gray-600">Errores por minuto:</dt>
-                                <dd>{errorsPerMinute} errores/min</dd>
-                            </div>
-                        </dl>
+                        <textarea
+                            value={observations}
+                            onChange={(e) => setObservations(e.target.value)}
+                            className="w-full h-[calc(100%-8rem)] p-3 border rounded-lg resize-none"
+                            placeholder="Ingrese sus observaciones aquí..."
+                        />
+                    </section>
+                </div>
+
+                {/* Columna derecha - Estadísticas */}
+                <div className="bg-white rounded-lg shadow p-4 flex flex-col h-full">
+                    <h2 className="text-lg font-semibold text-[#00398A] mb-4">
+                        Estadísticas
+                    </h2>
+                    <div className="space-y-3 flex-1">
+                        <StatItem 
+                            label="Tiempo transcurrido" 
+                            value={`${timeInMinutes}min`} 
+                        />
+                        <StatItem 
+                            label="Número de errores" 
+                            value={stats?.failedCount || 0} 
+                        />
+                        <StatItem 
+                            label="Número de aciertos" 
+                            value={stats?.successCount || 0} 
+                        />
+                        <StatItem 
+                            label="Número de pausas" 
+                            value={stats?.totalPauses || 0} 
+                        />
+                        <StatItem 
+                            label="Número de ayudas" 
+                            value={stats?.helpCount || 0} 
+                        />
+                        {config.gameMode === 'memoria' && (
+                            <StatItem 
+                                label="Veces mostrados números" 
+                                value={stats?.memoryShows || 0} 
+                            />
+                        )}
+                        <StatItem 
+                            label="Aciertos por minuto" 
+                            value={`${successesPerMinute} aciertos/min`} 
+                        />
+                        <StatItem 
+                            label="Errores por minuto" 
+                            value={`${errorsPerMinute} errores/min`} 
+                        />
+                        <StatItem 
+                            label="Precisión" 
+                            value={`${accuracy}%`} 
+                        />
                     </div>
                 </div>
+            </div>
 
-                {/* Observaciones */}
-                <div className="mt-8 bg-white rounded-lg shadow p-6">
-                    <h2 className="text-xl font-semibold text-[#00398A] mb-4">
-                        Observaciones
-                    </h2>
-                    <textarea
-                        value={observation}
-                        onChange={(e) => setObservation(e.target.value)}
-                        placeholder="Ingrese sus observaciones aquí..."
-                        className="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-[#00398A] 
-                                 focus:border-transparent resize-none"
-                    />
-                </div>
-
-                {/* Botones */}
-                <div className="mt-8 flex justify-end gap-4">
-                    <button
-                        onClick={handleRepeatSession}
-                        className="px-6 py-2 bg-[#00A8E3] text-white rounded hover:bg-[#0096cc] 
-                                 transition-colors disabled:opacity-50"
-                        disabled={isSubmitting}
-                    >
-                        Repetir Sesión
-                    </button>
-                    <button
-                        onClick={handleFinishSession}
-                        className="px-6 py-2 bg-[#00398A] text-white rounded hover:bg-[#002d6f] 
-                                 transition-colors disabled:opacity-50"
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? 'Guardando...' : 'Terminar Sesión'}
-                    </button>
-                </div>
+            {/* Botones */}
+            <div className="p-4 bg-white border-t flex justify-center gap-4 mt-auto">
+                <button
+                    onClick={handleFinishSession}
+                    disabled={loading}
+                    className="px-6 py-2 bg-[#00398A] text-white rounded-lg hover:bg-[#002d6f] transition-colors disabled:opacity-50"
+                >
+                    {loading ? 'Guardando...' : 'Terminar Sesión'}
+                </button>
+                <button
+                    onClick={handlePlayAgain}
+                    disabled={loading}
+                    className="px-6 py-2 bg-[#00A8E3] text-white rounded-lg hover:bg-[#0096cc] transition-colors disabled:opacity-50"
+                >
+                    Repetir Sesión
+                </button>
             </div>
         </div>
     );
 };
+
+const StatItem = ({ label, value }) => (
+    <div className="flex justify-between items-center py-1.5">
+        <span className="text-gray-600">{label}:</span>
+        <span className="font-medium">{value}</span>
+    </div>
+);
 
 export default SequenceEnd;
