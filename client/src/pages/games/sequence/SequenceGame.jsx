@@ -224,8 +224,8 @@ const SequenceGame = () => {
             </div>
     
             {/* Área principal centrada */}
-            <div className="mt-16 h-[calc(100vh-56px-160px)] flex items-center justify-center relative">
-            <div className="absolute left-14 bottom-3 -translate-y-1/2 z-10">
+            <div className="mt-16 h-[calc(100vh-56px-130px)] flex items-center justify-center relative">
+            <div className="absolute left-14 bottom-8 -translate-y-1/2 z-10">
                 <button
                     onClick={() => handleScroll(-1)}
                     className="bg-[#00398A] text-white rounded-full w-12 h-12 
@@ -243,7 +243,7 @@ const SequenceGame = () => {
                             scrollBehavior: 'smooth'
                         }}
                     >
-                        <div className="min-w-max px-4">
+                        <div className="min-w-max">
                             <NumberGrid 
                                 numbers={gameState.numbers}
                                 hiddenNumbers={gameState.hiddenNumbers}
@@ -255,7 +255,7 @@ const SequenceGame = () => {
                     </div>
                 </div>
 
-                <div className="absolute right-14 bottom-3 -translate-y-1/2 z-10">
+                <div className="absolute right-14 bottom-8 -translate-y-1/2 z-10">
                     <button
                         onClick={() => handleScroll(1)}
                         className="bg-[#00398A] text-white rounded-full w-12 h-12

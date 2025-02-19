@@ -23,32 +23,28 @@ const NumberGrid = ({ numbers, hiddenNumbers, showHelp, showMemoryNumbers, gameM
     };
 
     const ROWS = 3;
-    const COLS = Math.ceil(numbers.length / ROWS);
-    const grid = Array(ROWS).fill().map((_, rowIndex) => {
-        const startIndex = rowIndex;
-        const rowNumbers = [];
-        for (let i = 0; i < COLS; i++) {
-            const index = i * ROWS + startIndex;
-            if (index < numbers.length) {
-                rowNumbers.push(numbers[index]);
-            }
-        }
-        return rowNumbers;
+    const NUMBERS_PER_ROW = Math.ceil(numbers.length / ROWS);
+    
+     // Distribuir números en 3 filas
+     const grid = Array(ROWS).fill().map((_, rowIndex) => {
+        const startIndex = rowIndex * NUMBERS_PER_ROW;
+        const endIndex = startIndex + NUMBERS_PER_ROW;
+        return numbers.slice(startIndex, endIndex);
     });
 
+    const shouldCenter = numbers.length <= 40;
+
     return (
-        <div className="inline-block pt-8">
-            <div className="grid grid-rows-4 gap-4">
-                {grid.map((row, rowIndex) => (
-                    <div key={rowIndex} className="flex gap-4">
-                        {row.map((number, colIndex) => (
-                            <div key={`${rowIndex}-${colIndex}`}>
-                                {renderNumber(number)}
-                            </div>
-                        ))}
-                    </div>
-                ))}
-            </div>
+        <div className={`grid grid-rows-4 gap-y-3 ${shouldCenter ? 'mx-auto' : ''}`}>
+            {grid.map((row, rowIndex) => (
+                <div key={rowIndex} className={`flex gap-3 ${shouldCenter ? 'justify-center' : 'min-w-max'}`}>
+                    {row.map((number, colIndex) => (
+                        <div key={`${rowIndex}-${colIndex}`}>
+                            {renderNumber(number)}
+                        </div>
+                    ))}
+                </div>
+            ))}
         </div>
     );
 };

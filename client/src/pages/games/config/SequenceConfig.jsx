@@ -164,7 +164,6 @@ const SequenceConfig = () => {
                                     {i + 1} {i === 0 ? 'número' : 'números'}
                                 </option>
                             ))}
-                            <option value="11">Más de 10 números</option>
                         </select>
                     </div>
 
