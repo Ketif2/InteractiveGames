@@ -1,39 +1,32 @@
-// src/pages/games/puzzle/PuzzleEnd.jsx
+// src/pages/games/memory/MemoryEnd.jsx
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { sessionService } from '../../../services/sessionService';
 
-const PuzzleEnd = () => {
+const MemoryEnd = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { patientId, sessionId } = location.state || {};
+    const { stats, config, patientId } = location.state || {};
     const [loading, setLoading] = useState(false);
     const [observations, setObservations] = useState('');
 
-    // Mock data - reemplazar con datos reales del backend
-    const mockStats = {
-        timeElapsed: '5min',
-        errors: 6,
-        successes: 16,
-        pauses: 2,
-        successesPerMinute: 3.2,
-        errorsPerMinute: 1.2,
-        accuracy: 72.2
-    };
-
-    const mockConfig = {
-        difficulty: 'Difícil',
-        pieces: 16
-    };
+    // Cálculos adicionales para estadísticas
+    const timeInMinutes = stats ? Math.floor(stats.totalTime / 60) : 0;
+    const timeInSeconds = stats ? stats.totalTime % 60 : 0;
+    const successRate = stats ? Math.round(100 / (stats.attempts + 1)) : 0;
 
     const handleFinishSession = async () => {
         setLoading(true);
         try {
-            await sessionService.createSession({
-                id_paciente: 5, // ID del paciente
-                id_juego: 1, // ID del juego de rompecabezas
-                id_terapeuta: 1//localStorage.getItem('userId') // Asumiendo que guardas el ID del terapeuta en localStorage
+            // TODO: Implementar cuando esté listo el backend
+            /*
+            await memoryService.saveSession({
+                patientId,
+                stats,
+                config,
+                observations,
+                status: 'Completado'
             });
+            */
             
             navigate('/new-session');
         } catch (error) {
@@ -44,7 +37,7 @@ const PuzzleEnd = () => {
     };
 
     const handlePlayAgain = () => {
-        navigate('/games/puzzle/config', { 
+        navigate('/games/memory/config', { 
             state: { patientId } 
         });
     };
@@ -53,7 +46,7 @@ const PuzzleEnd = () => {
         <div className="h-[calc(100vh-10rem)] flex flex-col bg-gray-50">
             {/* Header */}
             <div className="bg-[#00398A] text-white py-2 px-6">
-                <h1 className="text-xl font-semibold">Resultados del Rompecabezas</h1>
+                <h1 className="text-xl font-semibold">Resultados del Juego de Memoria</h1>
             </div>
 
             {/* Contenido principal */}
@@ -68,11 +61,21 @@ const PuzzleEnd = () => {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-600">Dificultad:</span>
-                                <span className="bg-blue-100 px-3 py-1 rounded">{mockConfig.difficulty}</span>
+                                <span className="bg-blue-100 px-3 py-1 rounded capitalize">
+                                    {config.difficulty}
+                                </span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Número de piezas:</span>
-                                <span className="bg-blue-100 px-3 py-1 rounded">{mockConfig.pieces}</span>
+                                <span className="text-gray-600">Modo de juego:</span>
+                                <span className="bg-blue-100 px-3 py-1 rounded capitalize">
+                                    {config.gameMode}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Nombres visibles:</span>
+                                <span className="bg-blue-100 px-3 py-1 rounded">
+                                    {config.showObjectName ? 'Sí' : 'No'}
+                                </span>
                             </div>
                         </div>
                     </section>
@@ -97,13 +100,32 @@ const PuzzleEnd = () => {
                         Estadísticas
                     </h2>
                     <div className="space-y-3 flex-1">
-                        <StatItem label="Tiempo transcurrido" value={`${mockStats.timeElapsed}`} />
-                        <StatItem label="Número de errores" value={mockStats.errors} />
-                        <StatItem label="Número de aciertos" value={mockStats.successes} />
-                        <StatItem label="Número de pausas" value={mockStats.pauses} />
-                        <StatItem label="Aciertos por minuto" value={`${mockStats.successesPerMinute} aciertos/min`} />
-                        <StatItem label="Errores por minuto" value={`${mockStats.errorsPerMinute} errores/min`} />
-                        <StatItem label="Precisión en las tareas" value={`${mockStats.accuracy}%`} />
+                        <StatItem 
+                            label="Tiempo total" 
+                            value={`${timeInMinutes}m ${timeInSeconds}s`} 
+                        />
+                        <StatItem 
+                            label="Intentos realizados" 
+                            value={stats?.attempts || 0} 
+                        />
+                        <StatItem 
+                            label="Ayudas utilizadas" 
+                            value={stats?.helpCount || 0} 
+                        />
+                        {config.gameMode === 'memoria' && (
+                            <StatItem 
+                                label="Veces mostrados objetos" 
+                                value={stats?.memoryShows || 0} 
+                            />
+                        )}
+                        <StatItem 
+                            label="Tasa de éxito" 
+                            value={`${successRate}%`} 
+                        />
+                        <StatItem 
+                            label="Número de pausas" 
+                            value={stats?.totalPauses || 0} 
+                        />
                     </div>
                 </div>
             </div>
@@ -136,4 +158,4 @@ const StatItem = ({ label, value }) => (
     </div>
 );
 
-export default PuzzleEnd;
+export default MemoryEnd;

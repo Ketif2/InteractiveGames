@@ -21,6 +21,7 @@ import ForestGame from '../pages/games/forest/ForestGame';
 
 import PuzzleEnd from '../pages/games/puzzle/PuzzleEnd';
 import SequenceEnd from '../pages/games/sequence/SequenceEnd';
+import MemoryEnd from '../pages/games/memory/MemoryEnd';
 
 export const AppRoutes = () => {
   return (
@@ -138,6 +139,14 @@ export const AppRoutes = () => {
       <Route path="/games/memory/play" element={
         <PrivateRoute>
           <MemoryGame />
+        </PrivateRoute>
+      } />
+
+      <Route path="/games/memory/end" element={
+        <PrivateRoute>
+          <Layout>
+            <MemoryEnd />
+          </Layout>
         </PrivateRoute>
       } />
 
