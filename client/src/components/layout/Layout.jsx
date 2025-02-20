@@ -1,10 +1,12 @@
 // components/layout/Layout.jsx
 import Header from './Header';
 import { useLocation, Link } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 const Layout = ({ children }) => {
   const location = useLocation();
   const pathName = location.pathname;
+  const { isLoading } = useAuth();
 
   const renderNavigation = () => {
     return (
@@ -12,9 +14,9 @@ const Layout = ({ children }) => {
         <div className="container mx-auto">
           <div className="flex justify-center space-x-8 py-3">
             <Link 
-              to="/"
+              to="/dashboard"
               className={`text-base font-medium px-4 py-2 ${
-                pathName === '/' 
+                pathName.includes('/dashboard')
                   ? 'bg-[#00A8E3] text-white rounded-md'
                   : 'text-gray-700 hover:text-[#00A8E3]'
               }`}
@@ -46,6 +48,14 @@ const Layout = ({ children }) => {
       </nav>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#D7D7D7]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00A8E3]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#D7D7D7]">

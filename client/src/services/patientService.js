@@ -5,7 +5,8 @@ const patientService = {
   // Obtener todos los pacientes
   getAllPatients: async () => {
     try {
-      return await api.get('/patients/all');
+      const data = api.get('/patients/all');
+      return data;
     } catch (error) {
       throw error;
     }

@@ -1,7 +1,10 @@
 // pages/dashboard/Dashboard.jsx
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 
 const Dashboard = () => {
+  const { therapist } = useAuth();
+  
   return (
     <div className="container mx-auto p-8">
       <h1 className="text-2xl font-bold text-[#00398A] mb-8 ">Dashboard</h1>

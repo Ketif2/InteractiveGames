@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { PrivateRoute } from './PrivateRoute';
 import Layout from '../components/layout/Layout';
 import Login from '../pages/auth/Login';
@@ -31,7 +31,7 @@ export const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
 
       {/* Rutas privadas */}
-      <Route path="/" element={
+      <Route path="/dashboard" element={
         <PrivateRoute>
           <Layout>
             <Dashboard />
@@ -147,6 +147,7 @@ export const AppRoutes = () => {
           <Layout>
             <MemoryEnd />
           </Layout>
+          <MemoryEnd />
         </PrivateRoute>
       } />
 
