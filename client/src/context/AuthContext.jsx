@@ -1,52 +1,65 @@
-// src/context/AuthContext.jsx
+// context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '@/services/authService';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [therapist, setTherapist] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const initializeAuth = () => {
-      const token = authService.getToken();
-      const storedTherapist = localStorage.getItem('therapistData');
-      
-      if (token && storedTherapist) {
-        setTherapist(JSON.parse(storedTherapist));
+    const initAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const userData = await authService.verifyToken();
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error('Token verification failed:', error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('therapistId');
+          localStorage.removeItem('therapistData');
+        }
       }
-      
       setIsLoading(false);
     };
 
-    initializeAuth();
+    initAuth();
   }, []);
 
   const login = async (credentials) => {
     const response = await authService.login(credentials);
-    setTherapist(response.terapeuta);
+    const { token, terapeuta } = response;
+    
+    localStorage.setItem('token', token);
+    localStorage.setItem('therapistId', terapeuta.id_terapeuta);
+    localStorage.setItem('therapistData', JSON.stringify(terapeuta));
+    
+    setUser(terapeuta);
+    setIsAuthenticated(true);
     return response;
   };
 
   const logout = () => {
-    authService.logout();
-    setTherapist(null);
-    localStorage.removeItem('therapistData');
+    localStorage.removeItem('token');
     localStorage.removeItem('therapistId');
-  };
-
-  const value = {
-    therapist,
-    isLoading,
-    login,
-    logout,
-    isAuthenticated: authService.isAuthenticated()
+    localStorage.removeItem('therapistData');
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {!isLoading && children}
+    <AuthContext.Provider value={{ 
+      isAuthenticated, 
+      isLoading, 
+      user, 
+      login, 
+      logout 
+    }}>
+      {children}
     </AuthContext.Provider>
   );
 };

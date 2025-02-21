@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authService } from '@/services/authService';
+import { useAuth } from '@/context/AuthContext';
 
 const LoginForm = () => {
+  const { login } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -17,24 +18,9 @@ const LoginForm = () => {
     setError('');
 
     try {
-      const response = await authService.login(formData);
-      console.log('Login response:', response); // Agregar log para debug
-
-      if (response && response.token) {
-        localStorage.setItem('token', response.token);
-        if (response.terapeuta) {
-          localStorage.setItem('therapistId', response.terapeuta.id_terapeuta);
-          localStorage.setItem('therapistData', JSON.stringify(response.terapeuta));
-        }
-        
-        // Forzar la navegación
-        console.log('Navegando a /');
-        navigate('/dashboard', { replace: true });
-      } else {
-        throw new Error('No se recibió token de autenticación');
-      }
+      await login(formData);
+      navigate('/dashboard', { replace: true });
     } catch (err) {
-      console.error('Error en login:', err); // Agregar log para debug
       setError(err.message || 'Error al iniciar sesión');
     } finally {
       setIsLoading(false);
