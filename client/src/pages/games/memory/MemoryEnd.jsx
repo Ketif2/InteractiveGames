@@ -10,6 +10,7 @@ const MemoryEnd = () => {
     const { stats, config, patientId } = location.state || {};
     const [loading, setLoading] = useState(false);
     const [observations, setObservations] = useState('');
+    const { user } = useAuth();
 
     // Cálculos adicionales para estadísticas
     const timeInMinutes = stats ? Math.floor(stats.totalTime / 60) : 0;
