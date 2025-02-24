@@ -1,3 +1,4 @@
+// services/authService.js
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -7,56 +8,26 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  withCredentials: true
+  withCredentials: true // Importante para las cookies
 });
-
-// Interceptor para manejar errores de autenticación
-axiosInstance.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      // Redirigir al login solo si no estamos ya en la página de login
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
-      }
-    }
-    return Promise.reject(error);
-  }
-);
 
 export const authService = {
   async register(userData) {
-    try {
-      const response = await axiosInstance.post('/auth/register', userData);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Error en el registro');
-    }
+    const response = await axiosInstance.post('/auth/register', userData);
+    return response.data;
   },
 
   async login(credentials) {
-    try {
-      const response = await axiosInstance.post('/auth/login', credentials);
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Error en el inicio de sesión');
-    }
+    const response = await axiosInstance.post('/auth/login', credentials);
+    return response.data;
   },
 
   async verifyToken() {
-    try {
-      const response = await axiosInstance.get('/auth/verify');
-      return response.data;
-    } catch (error) {
-      throw new Error('Token inválido');
-    }
+    const response = await axiosInstance.get('/auth/verify');
+    return response.data;
   },
 
   async logout() {
-    try {
-      await axiosInstance.post('/auth/logout');
-    } catch (error) {
-      console.error('Error during logout:', error);
-    }
-  },
+    await axiosInstance.post('/auth/logout');
+  }
 };

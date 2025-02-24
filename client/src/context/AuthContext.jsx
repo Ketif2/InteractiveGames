@@ -9,14 +9,17 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Verificación automática al cargar la aplicación
   useEffect(() => {
-    const initAuth = async () => {
+    const verifyAuth = async () => {
       try {
-        const userData = await authService.verifyToken();
-        setUser(userData.terapeuta);
-        setIsAuthenticated(true);
+        const response = await authService.verifyToken();
+        if (response && response.terapeuta) {
+          setUser(response.terapeuta);
+          setIsAuthenticated(true);
+        }
       } catch (error) {
-        console.error('Token verification failed:', error);
+        console.error('Error verificando autenticación:', error);
         setUser(null);
         setIsAuthenticated(false);
       } finally {
@@ -24,7 +27,7 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    initAuth();
+    verifyAuth();
   }, []);
 
   const login = async (credentials) => {
@@ -36,24 +39,26 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       setUser(null);
       setIsAuthenticated(false);
-      throw error; // Re-lanzamos el error para manejarlo en el componente
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
       await authService.logout();
+    } finally {
       setUser(null);
       setIsAuthenticated(false);
-    } catch (error) {
-      console.error('Error during logout:', error);
     }
   };
+
+  if (isLoading) {
+    return <div>Cargando...</div>; // O tu componente de loading
+  }
 
   return (
     <AuthContext.Provider value={{ 
       isAuthenticated, 
-      isLoading, 
       user, 
       login, 
       logout 

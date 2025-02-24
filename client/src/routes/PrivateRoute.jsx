@@ -15,7 +15,7 @@ export const PrivateRoute = ({ children }) => {
 
   if (!isAuthenticated) {
     // Guarda la ruta a la que intentaba acceder
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} />;
   }
 
   return children;
