@@ -1,6 +1,8 @@
 // pages/dashboard/Dashboard.jsx
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import Patients from '../../assets/icons/patient-icon.svg';
+import NewSession from '../../assets/icons/new-session.svg';
 
 const Dashboard = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -26,7 +28,7 @@ const Dashboard = () => {
           className="flex flex-col items-center p-6 bg-[#7EC3E2] rounded-lg hover:bg-[#00A8E3] transition-all"
         >
           <img 
-            src="/src/assets/icons/patientsIcon.svg"
+            src={Patients}
             alt="Pacientes" 
             className="w-24 h-24 mb-4"
           />
@@ -38,7 +40,7 @@ const Dashboard = () => {
           className="flex flex-col items-center p-6 bg-[#7EC3E2] rounded-lg hover:bg-[#00A8E3] transition-all"
         >
           <img 
-            src="/src/assets/icons/sessionIcon.svg"
+            src={NewSession}
             alt="Nueva Sesión" 
             className="w-24 h-24 mb-4"
           />
