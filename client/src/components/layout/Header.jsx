@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+import MainLogo from '../../assets/icons/logoApp.svg';
+import UserIcon from '../../assets/icons/user-icon.svg';
+
 const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -19,7 +22,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-2">
             <img 
-              src="/src/assets/icons/brainLogo.svg" 
+              src={MainLogo}
               alt="Logo" 
               className="w-8 h-8"
             />
@@ -31,7 +34,7 @@ const Header = () => {
               onClick={() => setShowMenu(!showMenu)}
             >
               <img 
-                src="/src/assets/icons/userIcon.svg" 
+                src={UserIcon}
                 alt="Usuario" 
                 className="w-8 h-8"
               />
