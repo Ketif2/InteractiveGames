@@ -11,26 +11,17 @@ export const AuthProvider = ({ children }) => {
 
   // Verificación automática al cargar la aplicación
   useEffect(() => {
-    console.log('🔄 Montando el AuthContext - Se ejecutará verifyAuth');
-
-    const verifyAuth = async () => {
-        console.log('🔍 Iniciando verificación de autenticación...');
-        
+    const verifyAuth = async () => {      
         try {
             const response = await authService.verifyToken();
-            console.log('✅ Respuesta de verifyToken:', response);
-
             if (response && response.terapeuta) {
                 setUser(response.terapeuta);
                 setIsAuthenticated(true);
-                console.log('✅ Usuario autenticado:', response.terapeuta);
             } else {
                 setUser(null);
                 setIsAuthenticated(false);
-                console.log('❌ No se encontró un usuario válido.');
             }
         } catch (error) {
-            console.error('🚨 Error verificando autenticación:', error);
             setUser(null);
             setIsAuthenticated(false);
         } finally {

@@ -1,14 +1,16 @@
 // src/pages/games/puzzle/PuzzleEnd.jsx
 import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate , useLocation } from 'react-router-dom';
 import { sessionService } from '../../../services/sessionService';
+import { useAuth } from '@/context/AuthContext';
 
 const PuzzleEnd = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { patientId, sessionId } = location.state || {};
+    const { patientId } = location.state || {};
     const [loading, setLoading] = useState(false);
     const [observations, setObservations] = useState('');
+    const { user } = useAuth();
 
     // Mock data - reemplazar con datos reales del backend
     const mockStats = {
@@ -26,13 +28,26 @@ const PuzzleEnd = () => {
         pieces: 16
     };
 
+    console.log('Estado recibido en PuzzleEnd:', location.state);
+    console.log('PatientId en PuzzleEnd:', patientId);
+
     const handleFinishSession = async () => {
         setLoading(true);
         try {
+
+        // Verificar que el usuario esté autenticado y exista el paciente
+            if (!user?.id) {
+                throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
+            }
+
+            if (!patientId) {
+                throw new Error('No se pudo encontrar el ID del paciente.');
+            }
+    
             await sessionService.createSession({
-                id_paciente: 5, // ID del paciente
+                id_paciente: patientId, // ID del paciente
                 id_juego: 1, // ID del juego de rompecabezas
-                id_terapeuta: 1//localStorage.getItem('userId') // Asumiendo que guardas el ID del terapeuta en localStorage
+                id_terapeuta: user.id//localStorage.getItem('userId') // Asumiendo que guardas el ID del terapeuta en localStorage
             });
             
             navigate('/new-session');

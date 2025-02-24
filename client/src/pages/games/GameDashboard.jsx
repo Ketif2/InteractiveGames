@@ -37,7 +37,8 @@ const GameDashboard = () => {
         {GAMES.map((game) => (
           <Link
             key={game.id}
-            to={`/games/${game.id}/config?patient=${patientId}`}
+            to={`/games/${game.id}/config`} // Quitamos el query parameter
+            state={{ patientId }} // Pasamos el patientId en el state
             className="block bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow"
           >
             <div className="p-4">

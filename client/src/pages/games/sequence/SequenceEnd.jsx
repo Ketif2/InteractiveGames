@@ -1,6 +1,8 @@
 // src/pages/games/sequence/SequenceEnd.jsx
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { sessionService } from '../../../services/sessionService';
+import { useAuth } from '@/context/AuthContext';
 
 const SequenceEnd = () => {
     const navigate = useNavigate();
@@ -8,6 +10,7 @@ const SequenceEnd = () => {
     const { stats, config, patientId } = location.state || {};
     const [loading, setLoading] = useState(false);
     const [observations, setObservations] = useState('');
+    const { user } = useAuth();
 
     // Cálculos adicionales para estadísticas
     const accuracy = stats ? Math.round((stats.successCount / (stats.successCount + stats.failedCount)) * 100) : 0;
@@ -18,17 +21,22 @@ const SequenceEnd = () => {
     const handleFinishSession = async () => {
         setLoading(true);
         try {
-            // TODO: Implementar cuando esté listo el backend
-            /*
-            await sequenceService.saveSession({
-                patientId,
-                stats,
-                config,
-                observations,
-                status: 'Hecho'
-            });
-            */
             
+        // Verificar que el usuario esté autenticado y exista el paciente
+            if (!user?.id) {
+                throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
+            }
+
+            if (!patientId) {
+                throw new Error('No se pudo encontrar el ID del paciente.');
+            }
+    
+            await sessionService.createSession({
+                id_paciente: patientId, // ID del paciente
+                id_juego: 2, // ID del juego de rompecabezas
+                id_terapeuta: user.id//localStorage.getItem('userId') // Asumiendo que guardas el ID del terapeuta en localStorage
+            });
+
             navigate('/new-session');
         } catch (error) {
             console.error('Error al guardar la sesión:', error);

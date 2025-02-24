@@ -115,31 +115,6 @@ const PatientDetails = () => {
             <h2 className="text-xl font-bold text-[#00398A]">{patient.nombre} {patient.apellido}</h2>
             <p className="text-sm text-gray-600">ID: {patient.id_paciente} | Status: <span className="text-red-500">Pendiente</span></p>
           </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => {
-                setCurrentId(patient.id_paciente);
-                setFormData({
-                  ...patient,
-                  fecha_nacimiento: new Date(patient.fecha_nacimiento).toISOString().split('T')[0]
-                });
-                setIsEditing(true);
-                setIsModalOpen(true);
-              }}
-              className="bg-[#00A8E3] text-white px-3 py-1 rounded text-sm hover:bg-[#7EC3E2]"
-            >
-              Editar
-            </button>
-            <button
-              onClick={() => {
-                setPatientToDelete(patient.id_paciente);
-                setShowDeleteModal(true);
-              }}
-              className="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-            >
-              Eliminar
-            </button>
-          </div>
         </div>
 
         {/* Content Grid */}

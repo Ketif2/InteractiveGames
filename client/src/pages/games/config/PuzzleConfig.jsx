@@ -1,10 +1,12 @@
 // src/pages/games/puzzle/PuzzleConfig.jsx
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { puzzleService } from '../../../services/puzzleService';
 
 const PuzzleConfig = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { patientId } = location.state || {};
 
     const [config, setConfig] = useState({
         selectedImages: [],
@@ -82,9 +84,9 @@ const PuzzleConfig = () => {
                         ...config,
                         selectedPuzzles: config.selectedImages
                     },
+                    patientId,
                     configId: 1,
                     sessionId: 1,
-                    patientId: 1
                 }
             });
         } catch (error) {

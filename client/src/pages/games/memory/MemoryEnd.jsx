@@ -1,6 +1,8 @@
 // src/pages/games/memory/MemoryEnd.jsx
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { sessionService } from '../../../services/sessionService';
+import { useAuth } from '@/context/AuthContext';
 
 const MemoryEnd = () => {
     const navigate = useNavigate();
@@ -17,16 +19,21 @@ const MemoryEnd = () => {
     const handleFinishSession = async () => {
         setLoading(true);
         try {
-            // TODO: Implementar cuando esté listo el backend
-            /*
-            await memoryService.saveSession({
-                patientId,
-                stats,
-                config,
-                observations,
-                status: 'Completado'
+
+        // Verificar que el usuario esté autenticado y exista el paciente
+            if (!user?.id) {
+                throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
+            }
+
+            if (!patientId) {
+                throw new Error('No se pudo encontrar el ID del paciente.');
+            }
+    
+            await sessionService.createSession({
+                id_paciente: patientId, // ID del paciente
+                id_juego: 3, // ID del juego de rompecabezas
+                id_terapeuta: user.id//localStorage.getItem('userId') // Asumiendo que guardas el ID del terapeuta en localStorage
             });
-            */
             
             navigate('/new-session');
         } catch (error) {

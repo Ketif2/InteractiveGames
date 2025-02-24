@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import {sessionService} from '@/services/sessionService';
-import patientService from '@/services/patientService'
+import { Link, useNavigate } from 'react-router-dom';
+import { sessionService } from '@/services/sessionService';
+import  therapistService  from '@/services/therapistService';
+import { useAuth } from '@/context/AuthContext';
 
 const INITIAL_FORM = {
   id_paciente: '',
@@ -20,34 +21,38 @@ const NewSession = () => {
   const [todaySessions, setTodaySessions] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPatientsAndSessions();
-  }, []);
+  }, [user]);
 
   const fetchPatientsAndSessions = async () => {
     try {
       setLoading(true);
-      const patientsData = await patientService.getAllPatients();
-      
-      if (!patientsData || !Array.isArray(patientsData) || patientsData.length === 0) {
-        throw new Error('No se encontraron pacientes');
+      let patientsArray;
+      if (!user?.id) {
+        throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
       }
-
-      console.log('Pacientes obtenidos:', patientsData);
+      
+      const patientsResponse = await therapistService.getTherapistPatients(user.id);
+      if (Array.isArray(patientsResponse)) {
+        patientsArray = patientsResponse;
+      } else if (patientsResponse?.data && Array.isArray(patientsResponse.data)) {
+        patientsArray = patientsResponse.data;
+      } else {
+        throw new Error('No se recibieron datos de pacientes en el formato esperado');
+      }
+      setPatients(patientsArray);
 
       // Obtener sesiones para cada paciente
-      const sessionsPromises = patientsData.map(async (patient) => {
+      const sessionsPromises = patientsArray.map(async (patient) => {
         try {
           const [weeklySession, todaySession] = await Promise.all([
             sessionService.getSessionsPerWeek(patient.id_paciente),
             sessionService.getSessionToday(patient.id_paciente)
           ]);
-
-          console.log(`Datos sesiones paciente ${patient.id_paciente}:`, {
-            weekly: weeklySession,
-            today: todaySession
-          });
 
           return {
             patientId: patient.id_paciente,
@@ -75,14 +80,16 @@ const NewSession = () => {
         todayMap[patientId] = hasToday;
       });
 
-      setPatients(patientsData);
       setWeeklyPatientSessions(weeklyMap);
       setTodaySessions(todayMap);
       setError(null);
-      
-    } catch (err) {
-      console.error('Error en fetchPatientsAndSessions:', err);
-      setError(err.message || 'Error al cargar datos');
+
+    } catch (error) {
+      console.error('Error detallado en fetchPatientsAndSessions:', error);
+      setError(error.message || 'Error al cargar los datos');
+      if (error.message.includes('No se pudo encontrar el ID del terapeuta')) {
+        navigate('/login');
+      }
     } finally {
       setLoading(false);
     }
@@ -134,7 +141,7 @@ const NewSession = () => {
               const hasToday = todaySessions[patientId] || false;
 
               return (
-                <tr key={patientId}>
+                <tr key={patientId} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     {patientId}
                   </td>
@@ -155,6 +162,7 @@ const NewSession = () => {
                     {!hasToday ? (
                       <Link
                         to={`/games/${patientId}`}
+                        state={{ patientId }}
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00A8E3] hover:bg-[#7EC3E2] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#00398A]"
                       >
                         Jugar
@@ -173,6 +181,11 @@ const NewSession = () => {
             })}
           </tbody>
         </table>
+        {patients.length === 0 && !loading && !error && (
+          <div className="text-center py-8 text-gray-500">
+            No hay pacientes asignados
+          </div>
+        )}
       </div>
     </div>
   );
