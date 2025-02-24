@@ -6,8 +6,23 @@ const axiosInstance = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true
 });
+
+// Interceptor para manejar errores de autenticación
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Redirigir al login solo si no estamos ya en la página de login
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const authService = {
   async register(userData) {
@@ -37,9 +52,11 @@ export const authService = {
     }
   },
 
-  logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('therapistId');
-    localStorage.removeItem('therapistData');
-  }
+  async logout() {
+    try {
+      await axiosInstance.post('/auth/logout');
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  },
 };

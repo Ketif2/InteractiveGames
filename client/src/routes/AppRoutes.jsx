@@ -165,6 +165,10 @@ export const AppRoutes = () => {
           <ForestGame />
         </PrivateRoute>
       } />
+
+      {/* Rutas por defecto */}
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
    </Routes>
   );
 };

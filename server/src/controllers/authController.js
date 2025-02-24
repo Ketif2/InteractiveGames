@@ -77,7 +77,7 @@ export const login = async (req, res) => {
         }
 
         // Generate JWT token
-        const token = jwt.sign(
+        const accessToken = jwt.sign(
             { 
                 userId: user.id_terapeuta,
                 role: 'terapeuta'
@@ -86,8 +86,16 @@ export const login = async (req, res) => {
             { expiresIn: '1h' }
         );
 
+        // Set HTTP Only cookie
+        res.cookie('token', accessToken, { 
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // HTTPS en producción
+            sameSite: 'lax', // Protección contra CSRF
+            path: '/', // Asegura que la cookie esté disponible en toda la app
+            maxAge: 3600000 // 1 hora
+        });
+
         res.json({
-            token,
             terapeuta: {
                 id: user.id_terapeuta,
                 nombre: user.nombre,
@@ -101,8 +109,60 @@ export const login = async (req, res) => {
     }
 };
 
+export const verifyToken = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        
+        const [users] = await pool.query(
+            'SELECT id_terapeuta, nombre, apellido, email FROM terapeuta WHERE id_terapeuta = ?',
+            [userId]
+        );
+
+        if (users.length === 0) {
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/'
+            });
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        const user = users[0];
+        
+        res.json({
+            terapeuta: {
+                id: user.id_terapeuta,
+                nombre: user.nombre,
+                apellido: user.apellido,
+                email: user.email
+            }
+        });
+    } catch (error) {
+        console.error('Error en verificación:', error);
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/'
+        });
+        res.status(500).json({ message: 'Error en el servidor' });
+    }
+};
+
+export const logout = (req, res) => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/'
+    });
+    res.json({ message: 'Sesión cerrada exitosamente' });
+};
 
 export default {
     register,
     login,
+    verifyToken,
+    logout
 };

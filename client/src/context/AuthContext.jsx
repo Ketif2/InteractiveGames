@@ -11,44 +11,43 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const userData = await authService.verifyToken();
-          setUser(userData);
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Token verification failed:', error);
-          localStorage.removeItem('token');
-          localStorage.removeItem('therapistId');
-          localStorage.removeItem('therapistData');
-        }
+      try {
+        const userData = await authService.verifyToken();
+        setUser(userData.terapeuta);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        setUser(null);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     initAuth();
   }, []);
 
   const login = async (credentials) => {
-    const response = await authService.login(credentials);
-    const { token, terapeuta } = response;
-    
-    localStorage.setItem('token', token);
-    localStorage.setItem('therapistId', terapeuta.id_terapeuta);
-    localStorage.setItem('therapistData', JSON.stringify(terapeuta));
-    
-    setUser(terapeuta);
-    setIsAuthenticated(true);
-    return response;
+    try {
+      const response = await authService.login(credentials);
+      setUser(response.terapeuta);
+      setIsAuthenticated(true);
+      return response;
+    } catch (error) {
+      setUser(null);
+      setIsAuthenticated(false);
+      throw error; // Re-lanzamos el error para manejarlo en el componente
+    }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('therapistId');
-    localStorage.removeItem('therapistData');
-    setUser(null);
-    setIsAuthenticated(false);
+  const logout = async () => {
+    try {
+      await authService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   return (

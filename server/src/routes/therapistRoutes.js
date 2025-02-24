@@ -4,13 +4,14 @@ import {
     updateTherapistProfile,
     getAllMyPatients,
     getTherapists} from '../controllers/therapistController.js';
-//import verifyToken from '../middlewares/authMiddleware.js';
+import authenticate from '../middlewares/authMiddleware.js';
+
 const router = Router();
 
-router.get('/all', /*verifyToken,*/ getTherapists);
-router.get('/:id', /*verifyToken,*/ getTherapistById);
-router.put('/:id', /*verifyToken,*/ updateTherapistProfile);
-router.get('/:id/patients', /*verifyToken,*/ getAllMyPatients);
+router.get('/all', authenticate, getTherapists);
+router.get('/:id', authenticate, getTherapistById);
+router.put('/:id', authenticate, updateTherapistProfile);
+router.get('/:id/patients', authenticate, getAllMyPatients);
 
 
 export default router;
