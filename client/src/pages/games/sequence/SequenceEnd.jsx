@@ -33,7 +33,7 @@ const SequenceEnd = () => {
     
             await sessionService.createSession({
                 id_paciente: patientId, // ID del paciente
-                id_juego: 2, // ID del juego de rompecabezas
+                id_juego: 3, // ID del juego de rompecabezas
                 id_terapeuta: user.id//localStorage.getItem('userId') // Asumiendo que guardas el ID del terapeuta en localStorage
             });
 

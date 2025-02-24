@@ -1,5 +1,3 @@
-// src/data/memoryObjects.js
-
 export const memoryObjects = [
     { id: 1, name: 'Pluma' },
     { id: 2, name: 'Clip' },
@@ -55,30 +53,36 @@ export const memoryObjects = [
 
 // Función para seleccionar objetos según dificultad
 export const selectObjectsByDifficulty = (difficulty) => {
-    const count = difficulty === 'fácil' ? 5 : 7;
+    // Determine number of items based on difficulty
+    const count = difficulty === 'fácil' ? 20 : 28; // 4 rows of 5 or 7 items
     let selectedObjects = [];
     
     switch(difficulty) {
         case 'fácil':
-            // Selecciona objetos muy separados entre sí
-            selectedObjects = [1, 15, 25, 35, 50].map(id => 
-                memoryObjects.find(obj => obj.id === id)
+            // Select objects with clear weight differences (spread across the list)
+            const easyIndexes = [1, 5, 8, 12, 15, 19, 22, 25, 28, 30, 33, 35, 38, 41, 43, 45, 47, 48, 49, 50];
+            selectedObjects = easyIndexes.map(id => 
+                memoryObjects.find(obj => obj.id === id) || memoryObjects[id-1]
             );
             break;
             
         case 'medio':
-            // Selecciona objetos con diferencias moderadas
-            selectedObjects = [5, 15, 25, 30, 35, 40, 45].map(id => 
-                memoryObjects.find(obj => obj.id === id)
-            );
+            // Select objects with moderate weight differences
+            const mediumStartIndex = 5;
+            selectedObjects = memoryObjects.slice(mediumStartIndex, mediumStartIndex + count);
             break;
             
         case 'difícil':
-            // Selecciona un punto de inicio aleatorio para tomar 7 objetos consecutivos
-            const startIndex = Math.floor(Math.random() * (memoryObjects.length - 7));
-            selectedObjects = memoryObjects.slice(startIndex, startIndex + 7);
+            // Select consecutive objects (more similar weights)
+            const difficultStartIndex = 10;
+            selectedObjects = memoryObjects.slice(difficultStartIndex, difficultStartIndex + count);
             break;
+            
+        default:
+            // Default to easy selection
+            selectedObjects = memoryObjects.slice(0, 20);
     }
     
-    return selectedObjects.sort(() => Math.random() - 0.5); // Mezcla los objetos
+    // Randomly shuffle the objects for initial display
+    return selectedObjects.sort(() => Math.random() - 0.5);
 };

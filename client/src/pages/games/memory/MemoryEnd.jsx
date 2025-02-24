@@ -12,16 +12,34 @@ const MemoryEnd = () => {
     const [observations, setObservations] = useState('');
     const { user } = useAuth();
 
-    // Cálculos adicionales para estadísticas
+    // Cálculos para estadísticas
     const timeInMinutes = stats ? Math.floor(stats.totalTime / 60) : 0;
     const timeInSeconds = stats ? stats.totalTime % 60 : 0;
-    const successRate = stats ? Math.round(100 / (stats.attempts + 1)) : 0;
+    const successRate = stats && (stats.attempts > 0) 
+        ? Math.round((stats.num_aciertos / (stats.attempts + 1)) * 100)
+        : stats && stats.completado ? 100 : 0;
+
+    // Preparar datos para guardar en la base de datos
+    const prepareStatsForDatabase = () => {
+        return {
+            id_paciente: patientId,
+            id_juego: 2, // ID del juego de memoria
+            id_terapeuta: user?.id,
+            tiempo_transcurrido: stats.totalTime,
+            num_errores: stats.num_errores,
+            num_aciertos: stats.num_aciertos,
+            num_pausas: stats.totalPauses,
+            num_ayudas: stats.helpCount + (config.gameMode === 'memoria' ? stats.memoryShows : 0),
+            completado: stats.completado,
+            fecha_inicio: new Date(Date.now() - stats.totalTime * 1000).toISOString(),
+            fecha_fin: new Date().toISOString()
+        };
+    };
 
     const handleFinishSession = async () => {
         setLoading(true);
         try {
-
-        // Verificar que el usuario esté autenticado y exista el paciente
+            // Verificar que el usuario esté autenticado y exista el paciente
             if (!user?.id) {
                 throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
             }
@@ -30,15 +48,30 @@ const MemoryEnd = () => {
                 throw new Error('No se pudo encontrar el ID del paciente.');
             }
     
-            await sessionService.createSession({
-                id_paciente: patientId, // ID del paciente
-                id_juego: 3, // ID del juego de rompecabezas
-                id_terapeuta: user.id//localStorage.getItem('userId') // Asumiendo que guardas el ID del terapeuta en localStorage
-            });
+            const sessionData = {
+                id_paciente: patientId,
+                id_juego: 2, // ID del juego de memoria
+                id_terapeuta: user.id,
+                observaciones: observations
+            };
+            
+            // Crear sesión y obtener el ID
+            const sessionResponse = await sessionService.createSession(sessionData);
+            
+            if (sessionResponse && sessionResponse.id) {
+                // Guardar estadísticas con el ID de sesión
+                const gameStats = {
+                    ...prepareStatsForDatabase(),
+                    id_sesion: sessionResponse.id
+                };
+                
+                await sessionService.saveGameStats(gameStats);
+            }
             
             navigate('/new-session');
         } catch (error) {
             console.error('Error al guardar la sesión:', error);
+            alert('Ha ocurrido un error al guardar la sesión. Por favor, intente nuevamente.');
         } finally {
             setLoading(false);
         }
@@ -58,7 +91,7 @@ const MemoryEnd = () => {
             </div>
 
             {/* Contenido principal */}
-            <div className="flex-1 p-4 grid grid-cols-2 gap-4 min-h-0">
+            <div className="flex-1 p-4 grid grid-cols-1 md:grid-cols-2 gap-4 min-h-0">
                 {/* Columna izquierda */}
                 <div className="flex flex-col gap-4 h-full">
                     {/* Configuración */}
@@ -70,19 +103,19 @@ const MemoryEnd = () => {
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-600">Dificultad:</span>
                                 <span className="bg-blue-100 px-3 py-1 rounded capitalize">
-                                    {config.difficulty}
+                                    {config?.difficulty || 'No disponible'}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-600">Modo de juego:</span>
                                 <span className="bg-blue-100 px-3 py-1 rounded capitalize">
-                                    {config.gameMode}
+                                    {config?.gameMode || 'No disponible'}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-600">Nombres visibles:</span>
                                 <span className="bg-blue-100 px-3 py-1 rounded">
-                                    {config.showObjectName ? 'Sí' : 'No'}
+                                    {config?.showObjectName ? 'Sí' : 'No'}
                                 </span>
                             </div>
                         </div>
@@ -117,10 +150,18 @@ const MemoryEnd = () => {
                             value={stats?.attempts || 0} 
                         />
                         <StatItem 
+                            label="Respuestas correctas" 
+                            value={stats?.num_aciertos || 0} 
+                        />
+                        <StatItem 
+                            label="Errores cometidos" 
+                            value={stats?.num_errores || 0} 
+                        />
+                        <StatItem 
                             label="Ayudas utilizadas" 
                             value={stats?.helpCount || 0} 
                         />
-                        {config.gameMode === 'memoria' && (
+                        {config?.gameMode === 'memoria' && (
                             <StatItem 
                                 label="Veces mostrados objetos" 
                                 value={stats?.memoryShows || 0} 
@@ -133,6 +174,10 @@ const MemoryEnd = () => {
                         <StatItem 
                             label="Número de pausas" 
                             value={stats?.totalPauses || 0} 
+                        />
+                        <StatItem 
+                            label="Completado" 
+                            value={stats?.completado ? 'Sí' : 'No'} 
                         />
                     </div>
                 </div>

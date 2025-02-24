@@ -1,5 +1,5 @@
 // src/components/games/memory/FeedbackOverlay.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 const FeedbackOverlay = ({
     showCorrect,
@@ -12,24 +12,42 @@ const FeedbackOverlay = ({
     onExitCancel,
     onGameComplete
 }) => {
+    // Estado para animación de entrada/salida
+    const [animation, setAnimation] = useState('');
+    
+    useEffect(() => {
+        // Agregar animación cuando se muestra algún feedback
+        if (showCorrect || showWrong || showPause || showExit) {
+            setAnimation('animate-fadeIn');
+        } else {
+            setAnimation('animate-fadeOut');
+        }
+    }, [showCorrect, showWrong, showPause, showExit]);
+
     if (showCorrect) {
         return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-8 rounded-lg shadow-xl text-center">
-                    <span className="material-icons text-6xl text-green-500 mb-4">
-                        check_circle
-                    </span>
+            <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto">
+                <div className={`bg-white p-8 rounded-lg shadow-xl text-center max-w-md w-full mx-4 ${animation}`}>
+                    <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                        <span className="text-green-500 text-5xl">✓</span>
+                    </div>
                     <h2 className="text-2xl font-bold text-green-700 mb-4">
                         ¡Correcto!
                     </h2>
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-gray-600 mb-6">
                         Has ordenado correctamente todos los objetos.
                     </p>
+                    <div className="flex justify-center space-x-2 mb-4">
+                        {/* Estrellas de gamificación */}
+                        <span className="text-yellow-400 text-3xl">★</span>
+                        <span className="text-yellow-400 text-3xl">★</span>
+                        <span className="text-yellow-400 text-3xl">★</span>
+                    </div>
                     {showCompleted && (
                         <button
                             onClick={onGameComplete}
-                            className="px-6 py-2 bg-green-500 text-white rounded-lg 
-                                     hover:bg-green-600 transition-colors"
+                            className="w-full px-6 py-3 bg-green-500 text-white rounded-lg 
+                                     hover:bg-green-600 transition-colors font-medium"
                         >
                             Continuar
                         </button>
@@ -41,17 +59,27 @@ const FeedbackOverlay = ({
 
     if (showWrong) {
         return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-8 rounded-lg shadow-xl text-center">
-                    <span className="material-icons text-6xl text-red-500 mb-4">
-                        error
-                    </span>
+            <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto">
+                <div className={`bg-white p-8 rounded-lg shadow-xl text-center max-w-md w-full mx-4 ${animation}`}>
+                    <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
+                        <span className="text-red-500 text-5xl">✗</span>
+                    </div>
                     <h2 className="text-2xl font-bold text-red-700 mb-4">
                         ¡Incorrecto!
                     </h2>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 mb-6">
                         El orden no es correcto. Inténtalo de nuevo.
                     </p>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                        <div className="bg-red-600 h-2.5 rounded-full w-1/3"></div>
+                    </div>
+                    <button
+                        onClick={() => {}} // Cierra automáticamente después de un tiempo
+                        className="w-full px-6 py-3 bg-blue-500 text-white rounded-lg 
+                                 hover:bg-blue-600 transition-colors font-medium"
+                    >
+                        Volver a intentar
+                    </button>
                 </div>
             </div>
         );
@@ -59,18 +87,18 @@ const FeedbackOverlay = ({
 
     if (showPause) {
         return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-8 rounded-lg shadow-xl text-center">
-                    <span className="material-icons text-6xl text-yellow-500 mb-4">
-                        pause_circle
-                    </span>
-                    <h2 className="text-2xl font-bold text-yellow-700 mb-4">
+            <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto bg-black bg-opacity-30">
+                <div className={`bg-white p-8 rounded-lg shadow-xl text-center max-w-md w-full mx-4 ${animation}`}>
+                    <div className="w-20 h-20 mx-auto bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                        <span className="text-yellow-500 text-5xl">❙ ❙</span>
+                    </div>
+                    <h2 className="text-2xl font-bold text-yellow-700 mb-6">
                         Juego Pausado
                     </h2>
                     <button
                         onClick={onPauseResume}
-                        className="px-6 py-2 bg-yellow-500 text-white rounded-lg 
-                                 hover:bg-yellow-600 transition-colors"
+                        className="w-full px-6 py-3 bg-yellow-500 text-white rounded-lg 
+                                 hover:bg-yellow-600 transition-colors font-medium"
                     >
                         Continuar
                     </button>
@@ -81,8 +109,8 @@ const FeedbackOverlay = ({
 
     if (showExit) {
         return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white p-8 rounded-lg shadow-xl">
+            <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto bg-black bg-opacity-30">
+                <div className={`bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4 ${animation}`}>
                     <h2 className="text-2xl font-bold text-gray-800 mb-4">
                         ¿Deseas terminar el juego?
                     </h2>
@@ -92,15 +120,15 @@ const FeedbackOverlay = ({
                     <div className="flex justify-end gap-4">
                         <button
                             onClick={onExitCancel}
-                            className="px-6 py-2 bg-gray-100 text-gray-800 rounded-lg 
-                                     hover:bg-gray-200 transition-colors"
+                            className="px-6 py-3 bg-gray-100 text-gray-800 rounded-lg 
+                                     hover:bg-gray-200 transition-colors flex-1"
                         >
                             Cancelar
                         </button>
                         <button
                             onClick={onExitConfirm}
-                            className="px-6 py-2 bg-red-500 text-white rounded-lg 
-                                     hover:bg-red-600 transition-colors"
+                            className="px-6 py-3 bg-red-500 text-white rounded-lg 
+                                     hover:bg-red-600 transition-colors flex-1"
                         >
                             Terminar
                         </button>

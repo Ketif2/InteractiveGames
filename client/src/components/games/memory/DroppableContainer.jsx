@@ -1,0 +1,79 @@
+// src/components/games/memory/DroppableContainer.jsx
+import React, { useState } from 'react';
+
+const DroppableContainer = ({ items, showNames, onReorder, isPaused }) => {
+    const [draggedItem, setDraggedItem] = useState(null);
+    
+    // Handle drag start
+    const handleDragStart = (e, index) => {
+        if (isPaused) return;
+        
+        setDraggedItem(index);
+        // Required for Firefox
+        e.dataTransfer.effectAllowed = 'move';
+        // For some browsers, setting data is required
+        e.dataTransfer.setData('text/plain', index);
+        
+        // Make the drag image semi-transparent
+        if (e.target.style) {
+            setTimeout(() => {
+                e.target.style.opacity = '0.5';
+            }, 0);
+        }
+    };
+    
+    // Handle drag over
+    const handleDragOver = (e, index) => {
+        e.preventDefault();
+        
+        // Return if the item is dragged over itself
+        if (draggedItem === null || draggedItem === index) return;
+        
+        // Actual reordering logic
+        onReorder(draggedItem, index);
+        setDraggedItem(index);
+    };
+    
+    // Handle drag end
+    const handleDragEnd = (e) => {
+        setDraggedItem(null);
+        
+        // Reset opacity
+        if (e.target.style) {
+            e.target.style.opacity = '1';
+        }
+    };
+    
+    return (
+        <div className="flex flex-wrap justify-center gap-4">
+            {items.map((item, index) => (
+                <div
+                    key={item.id}
+                    draggable={!isPaused}
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDragEnd={handleDragEnd}
+                    className={`
+                        flex flex-col items-center justify-center
+                        w-24 h-24 m-2 rounded-lg 
+                        cursor-move transition-all duration-200
+                        bg-white border-2 border-blue-500
+                        shadow-lg hover:shadow-xl
+                        ${isPaused ? 'opacity-50 cursor-not-allowed' : ''}
+                    `}
+                >
+                    <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl">
+                        {index + 1}
+                    </div>
+                    {showNames && (
+                        <span className="mt-2 text-xs text-center font-medium text-gray-700 truncate w-full px-1">
+                            {item.name}
+                        </span>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+};
+
+export default DroppableContainer;
