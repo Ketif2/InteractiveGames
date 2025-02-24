@@ -23,9 +23,17 @@ export const authService = {
   },
 
   async verifyToken() {
-    const response = await axiosInstance.get('/auth/verify');
-    return response.data;
-  },
+    console.log('📡 Enviando solicitud a /auth/verify');
+
+    try {
+        const response = await axiosInstance.get('/auth/verify');
+        console.log('✅ Respuesta de /auth/verify:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('🚨 Error en /auth/verify:', error);
+        throw error;
+    }
+},
 
   async logout() {
     await axiosInstance.post('/auth/logout');

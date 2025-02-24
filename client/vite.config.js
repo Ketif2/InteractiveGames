@@ -6,7 +6,7 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: "/login",
+  base: "/",
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src')
@@ -14,6 +14,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    open: true
+    open: true,
+    historyApiFallback: true
   }
 })
