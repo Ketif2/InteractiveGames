@@ -249,35 +249,32 @@ const PuzzleGame = () => {
         const endTime = Date.now();
         const totalTime = Math.floor((endTime - gameState.startTime - gameState.totalPauseTime) / 1000);
       
-        // Calcular estadísticas totales del juego
         const stats = {
             successMoves: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.successMoves, 0),
             failedMoves: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.failedMoves, 0),
-            helpCount: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.helpCount, 0) + gameState.helpCount,
+            helpCount: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.helpCount, 0),
             totalTime,
-            pauseCount: gameState.pauseCount,
+            pauseCount: gameState.pauseCount || 0,
             completed: gameState.puzzles.every(puzzle => puzzle.completed)
         };
       
-        // Intentar guardar las estadísticas temporales si hay configId
-        if (configId) {
-            try {
-                puzzleService.saveStats(configId, stats)
-                    .then(() => console.log('Estadísticas guardadas temporalmente'))
-                    .catch(err => console.error('Error al guardar estadísticas temporales:', err));
-            } catch (error) {
-                console.error('Error al guardar estadísticas:', error);
-            }
-        }
+        console.log('PuzzleGame - Datos para navegación a PuzzleEnd:', {
+            stats, 
+            config,
+            patientId,
+            sessionId // Verificar si esto existe
+        });
       
-        // Navegar a la pantalla de resultados
+        // Para pruebas, crear un sessionId falso si no existe
+        const fakeSessionId = sessionId || Date.now();
+        console.log('PuzzleGame - Usando sessionId:', sessionId || 'FALLBACK: ' + fakeSessionId);
+      
         navigate('/games/puzzle/end', { 
             state: { 
                 stats, 
-                config: config || {}, // Usar configuración disponible
-                sessionId,
+                config,
                 patientId,
-                configId
+                sessionId: sessionId || fakeSessionId // Usar fallback si no hay sessionId
             } 
         });
     };

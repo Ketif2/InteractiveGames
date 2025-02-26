@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { puzzleService } from '../../../services/puzzleService';
+import { sessionService } from '../../../services/sessionService'; // Añadido
 import { useAuth } from '@/context/AuthContext';
 import { AlertTriangle } from 'lucide-react';
 
@@ -21,22 +22,27 @@ const PuzzleEnd = () => {
     setError(null);
     
     try {
-      // Verificar datos necesarios
-      if (!user?.id) {
-        throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
-      }
-
+      // Verificar si tenemos patientId
       if (!patientId) {
-        throw new Error('No se pudo encontrar el ID del paciente.');
-      }
-      
-      if (!sessionId) {
-        throw new Error('No se pudo encontrar la sesión asociada.');
+        throw new Error('No se pudo encontrar el ID del paciente');
       }
 
-      // Guardar todos los datos de la sesión
+      // Modo simple: crear una nueva sesión y guardar datos
+      const sessionData = {
+        id_paciente: patientId,
+        id_terapeuta: user?.id || 1,
+        id_juego: 1 // ID del juego de rompecabezas
+      };
+      
+      console.log('Creando nueva sesión con:', sessionData);
+      const sessionResponse = await sessionService.createSession(sessionData);
+      const newSessionId = sessionResponse.id;
+      
+      console.log('Sesión creada exitosamente con ID:', newSessionId);
+      
+      // Guardar configuración y estadísticas
       await puzzleService.savePuzzleSessionComplete(
-        sessionId,
+        newSessionId,
         config,
         {
           ...stats,
@@ -47,7 +53,7 @@ const PuzzleEnd = () => {
         observations
       );
       
-      // Redirigir al usuario a la lista de sesiones
+      // Navegar a la página de sesiones
       navigate('/new-session', { 
         state: { 
           success: true,
@@ -64,28 +70,27 @@ const PuzzleEnd = () => {
 
   const handlePlayAgain = () => {
     if (!patientId) {
-        console.error("PuzzleEnd - No se encontró el ID del paciente.");
-        setError("No se pudo encontrar el ID del paciente.");
-        return;
+      console.error("PuzzleEnd - No se encontró el ID del paciente.");
+      setError("No se pudo encontrar el ID del paciente.");
+      return;
     }
 
     console.log(`PuzzleEnd - Redirigiendo a /games/${patientId}`);
     navigate(`/games/${patientId}`);
-};
-
+  };
 
   // Si no hay estadísticas o configuración, mostrar error
   if (!stats || !config) {
     return (
       <div className="h-[calc(100vh-10rem)] flex flex-col items-center justify-center bg-gray-50">
         <AlertTriangle className="w-16 h-16 text-yellow-500 mb-4" />
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">No se encontraron datos del juego</h2>
-        <p className="text-gray-600 mb-6">No se pudieron cargar las estadísticas o la configuración del juego.</p>
-        <button
-          onClick={() => navigate('/games')}
-          className="px-6 py-2 bg-[#00398A] text-white rounded-lg hover:bg-[#002d6f] transition-colors"
-        >
-          Volver a Juegos
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">No se encontraron datos del juego</h2>
+            <p className="text-gray-600 mb-6">No se pudieron cargar las estadísticas o la configuración del juego.</p>
+              <button
+                onClick={() => navigate('/games')}
+                className="px-6 py-2 bg-[#00398A] text-white rounded-lg hover:bg-[#002d6f] transition-colors"
+              >
+            Volver a Juegos
         </button>
       </div>
     );
