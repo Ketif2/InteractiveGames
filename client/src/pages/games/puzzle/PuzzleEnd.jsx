@@ -63,11 +63,16 @@ const PuzzleEnd = () => {
   };
 
   const handlePlayAgain = () => {
-    // Volver a la selección de juegos con el mismo ID de paciente
-    navigate('/games', { 
-      state: { patientId } 
-    });
-  };
+    if (!patientId) {
+        console.error("PuzzleEnd - No se encontró el ID del paciente.");
+        setError("No se pudo encontrar el ID del paciente.");
+        return;
+    }
+
+    console.log(`PuzzleEnd - Redirigiendo a /games/${patientId}`);
+    navigate(`/games/${patientId}`);
+};
+
 
   // Si no hay estadísticas o configuración, mostrar error
   if (!stats || !config) {
@@ -131,7 +136,7 @@ const PuzzleEnd = () => {
             <textarea
               value={observations}
               onChange={(e) => setObservations(e.target.value)}
-              className="w-full h-[calc(100%-8rem)] p-3 border rounded-lg resize-none"
+              className="resize-none w-full h-[calc(100%-2rem)] p-3 border rounded-lg overflow-y-auto"
               placeholder="Ingrese sus observaciones aquí..."
             />
           </section>
@@ -159,10 +164,6 @@ const PuzzleEnd = () => {
               label="Errores por minuto" 
               value={`${((stats.failedMoves / (stats.totalTime / 60)) || 0).toFixed(1)} errores/min`} 
             />
-            <StatItem 
-              label="Precisión en las tareas" 
-              value={`${(((stats.successMoves / (stats.successMoves + stats.failedMoves)) * 100) || 0).toFixed(1)}%`} 
-            />
           </div>
         </div>
       </div>
@@ -175,7 +176,7 @@ const PuzzleEnd = () => {
       )}
 
       {/* Botones */}
-      <div className="p-4 bg-white border-t flex justify-center gap-4 mt-auto">
+      <div className="mt-2 bg-white flex justify-center gap-4">
         <button
           onClick={handleFinishSession}
           disabled={loading}
