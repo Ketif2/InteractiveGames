@@ -73,26 +73,28 @@ const PuzzleConfig = () => {
             setError(`Por favor, selecciona ${config.puzzleCount} imagen${config.puzzleCount > 1 ? 'es' : ''} para continuar.`);
             return;
         }
-
+    
         setLoading(true);
         setError('');
-
+    
         try {
-            navigate('/games/puzzle/play', {
+            // Crear configuración para pasar al juego
+            const gameConfig = {
+                difficulty: config.useRandomImages ? 'random' : config.selectedImages[0].difficulty,
+                gridSize: config.gridSize.split('x')[0],
+                selectedPuzzles: config.selectedImages
+            };
+    
+            // Navegar directamente al juego
+            navigate('/games/puzzle/game', {
                 state: {
-                    config: {
-                        ...config,
-                        selectedPuzzles: config.selectedImages
-                    },
-                    patientId,
-                    configId: 1,
-                    sessionId: 1,
+                    config: gameConfig,
+                    patientId
                 }
             });
         } catch (error) {
+            console.error('Error al iniciar el juego:', error);
             setError('Error al iniciar el juego. Por favor, intente nuevamente.');
-            console.error('Error:', error);
-        } finally {
             setLoading(false);
         }
     };

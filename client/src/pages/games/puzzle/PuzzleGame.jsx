@@ -11,7 +11,7 @@ import { puzzleService } from '../../../services/puzzleService';
 const PuzzleGame = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { config, configId, patientId } = location.state || {};
+    const { config, configId, patientId, sessionId } = location.state || {};
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -31,26 +31,59 @@ const PuzzleGame = () => {
         lastPauseTime: null,
         helpCount: 0,
         successMoves: 0,
-        failedMoves: 0
+        failedMoves: 0,
+        pauseCount: 0
     });
 
     const [showCorrectFeedback, setShowCorrectFeedback] = useState(false);
     const [showWrongFeedback, setShowWrongFeedback] = useState(false);
     const [gameCompleted, setGameCompleted] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
+    // Efecto para inicializar el juego y cargar configuración si es necesario
     useEffect(() => {
-        initializePuzzles();
-    }, []);
+        async function initialize() {
+            try {
+                setLoading(true);
+                
+                // Si no tenemos la configuración pero sí el configId, la cargamos
+                if (!config && configId) {
+                    const response = await puzzleService.getConfig(configId);
+                    if (response.success && response.config) {
+                        initializePuzzles(response.config);
+                    } else {
+                        throw new Error('No se pudo cargar la configuración del juego');
+                    }
+                } else if (config) {
+                    // Si ya tenemos la configuración, inicializamos directamente
+                    initializePuzzles(config);
+                } else {
+                    throw new Error('No se encontró configuración para el juego');
+                }
+                
+                setLoading(false);
+            } catch (err) {
+                console.error('Error al inicializar el juego:', err);
+                setError(err.message || 'Error al cargar el juego');
+                setLoading(false);
+            }
+        }
 
-    const initializePuzzles = () => {
-        const { selectedPuzzles } = config;
-        const gridSize = parseInt(config.gridSize);
+        initialize();
+    }, [configId, config]);
+
+    // Inicializar puzzles basado en la configuración
+    const initializePuzzles = (configData) => {
+        const { selectedPuzzles } = configData;
+        const gridSize = parseInt(configData.gridSize);
         
         const puzzles = selectedPuzzles.map(puzzleConfig => {
             const totalPieces = gridSize * gridSize;
             const positions = Array.from({ length: totalPieces }, (_, i) => i);
             
+            // Mezclar posiciones
             for (let i = positions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [positions[i], positions[j]] = [positions[j], positions[i]];
@@ -82,17 +115,26 @@ const PuzzleGame = () => {
         }));
     };
 
+    // Manejar el fin de una acción de arrastrar
     const handleDragEnd = (event) => {
         const { active, over } = event;
         
         if (!over || active.id === over.id) return;
 
+        // Obtener el puzzle actual
         const currentPuzzle = gameState.puzzles[gameState.currentPuzzleIndex];
-        const oldIndex = currentPuzzle.pieces.findIndex(piece => `piece-${piece.id}` === active.id);
-        const newIndex = currentPuzzle.pieces.findIndex(piece => `piece-${piece.id}` === over.id);
+        
+        // Encontrar las piezas involucradas
+        const activeId = active.id.toString();
+        const overId = over.id.toString();
+        
+        const oldIndex = currentPuzzle.pieces.findIndex(piece => `piece-${piece.id}` === activeId);
+        const newIndex = currentPuzzle.pieces.findIndex(piece => `piece-${piece.id}` === overId);
 
+        // No permitir mover a una posición que ya está correcta
         if (currentPuzzle.pieces[newIndex].isFixed) return;
 
+        // Crear un nuevo array de piezas con el intercambio
         const newPieces = [...currentPuzzle.pieces];
         const movingPiece = { ...newPieces[oldIndex] };
         const targetPiece = { ...newPieces[newIndex] };
@@ -107,9 +149,10 @@ const PuzzleGame = () => {
             currentPosition: oldIndex
         };
 
+        // Verificar si el movimiento fue correcto
         const isCorrect = movingPiece.correctPosition === newIndex;
 
-        // Mostrar feedback
+        // Mostrar feedback visual
         if (isCorrect) {
             setShowCorrectFeedback(true);
             setTimeout(() => setShowCorrectFeedback(false), 2000);
@@ -118,6 +161,7 @@ const PuzzleGame = () => {
             setTimeout(() => setShowWrongFeedback(false), 2000);
         }
 
+        // Actualizar el estado del juego
         const updatedPuzzles = [...gameState.puzzles];
         updatedPuzzles[gameState.currentPuzzleIndex] = {
             ...currentPuzzle,
@@ -132,6 +176,7 @@ const PuzzleGame = () => {
             }
         };
 
+        // Verificar si el puzzle está completo
         const isPuzzleComplete = newPieces.every(piece => piece.correctPosition === piece.currentPosition);
         if (isPuzzleComplete) {
             updatedPuzzles[gameState.currentPuzzleIndex].completed = true;
@@ -157,6 +202,7 @@ const PuzzleGame = () => {
         }));
     };
 
+    // Mostrar la imagen completa temporalmente (ayuda)
     const handleToggleHelp = () => {
         const updatedPuzzles = [...gameState.puzzles];
         updatedPuzzles[gameState.currentPuzzleIndex].stats.helpCount += 1;
@@ -164,6 +210,7 @@ const PuzzleGame = () => {
         setGameState(prev => ({
             ...prev,
             showHelp: true,
+            helpCount: prev.helpCount + 1,
             puzzles: updatedPuzzles
         }));
 
@@ -175,6 +222,7 @@ const PuzzleGame = () => {
         }, 3000);
     };
 
+    // Pausar o reanudar el juego
     const handleTogglePause = () => {
         setGameState(prev => {
             const now = Date.now();
@@ -190,34 +238,84 @@ const PuzzleGame = () => {
             return {
                 ...prev,
                 isPaused: true,
+                pauseCount: prev.pauseCount + 1,
                 lastPauseTime: now
             };
         });
     };
 
+    // Finalizar el juego y navegar a la pantalla de resultados
     const handleFinishGame = () => {
         const endTime = Date.now();
         const totalTime = Math.floor((endTime - gameState.startTime - gameState.totalPauseTime) / 1000);
-
+      
+        // Calcular estadísticas totales del juego
         const stats = {
             successMoves: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.successMoves, 0),
             failedMoves: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.failedMoves, 0),
-            helpCount: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.helpCount, 0),
+            helpCount: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.helpCount, 0) + gameState.helpCount,
             totalTime,
-            totalPauses: Math.floor(gameState.totalPauseTime / 1000)
+            pauseCount: gameState.pauseCount,
+            completed: gameState.puzzles.every(puzzle => puzzle.completed)
         };
-
-        navigate('/games/puzzle/end', { state: { stats, config, configId, patientId } });
+      
+        // Intentar guardar las estadísticas temporales si hay configId
+        if (configId) {
+            try {
+                puzzleService.saveStats(configId, stats)
+                    .then(() => console.log('Estadísticas guardadas temporalmente'))
+                    .catch(err => console.error('Error al guardar estadísticas temporales:', err));
+            } catch (error) {
+                console.error('Error al guardar estadísticas:', error);
+            }
+        }
+      
+        // Navegar a la pantalla de resultados
+        navigate('/games/puzzle/end', { 
+            state: { 
+                stats, 
+                config: config || {}, // Usar configuración disponible
+                sessionId,
+                patientId,
+                configId
+            } 
+        });
     };
 
+    // Si está cargando, mostrar indicador
+    if (loading) {
+        return (
+            <div className="fixed inset-0 bg-gray-100 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#00398A]"></div>
+            </div>
+        );
+    }
+
+    // Si hay un error, mostrar mensaje
+    if (error) {
+        return (
+            <div className="fixed inset-0 bg-gray-100 flex flex-col items-center justify-center">
+                <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">Error al cargar el juego</h2>
+                <p className="text-gray-600 mb-6">{error}</p>
+                <button
+                    onClick={() => navigate(-1)}
+                    className="bg-[#00398A] text-white px-6 py-2 rounded hover:bg-[#002d6f] transition-colors"
+                >
+                    Volver
+                </button>
+            </div>
+        );
+    }
+
     const currentPuzzle = gameState.puzzles[gameState.currentPuzzleIndex] || {};
-    const gridSize = parseInt(config.gridSize);
+    const gridSize = parseInt(config?.gridSize || 4);
 
     return (
         <div className="fixed inset-0 bg-gray-100">
             {/* Barra superior */}
             <div className="absolute top-0 left-0 right-0 bg-[#00398A] text-white p-4 flex justify-between items-center">
-                <div>Puzzle {gameState.currentPuzzleIndex + 1} de {config.selectedPuzzles.length}</div>
+                <div>Puzzle {gameState.currentPuzzleIndex + 1} de {gameState.puzzles.length}</div>
                 <div className="flex gap-4">
                     <button
                         onClick={handleToggleHelp}

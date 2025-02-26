@@ -181,6 +181,48 @@ const NewSession = () => {
             })}
           </tbody>
         </table>
+        <div className="mt-8 p-4 bg-yellow-50 border border-yellow-300 rounded-lg">
+  <h3 className="text-lg font-semibold text-yellow-800 mb-2">Modo Desarrollo</h3>
+  <p className="text-sm text-yellow-700 mb-4">
+    Utilice los siguientes botones para acceder directamente a los juegos (solo para pruebas)
+  </p>
+  <div className="flex flex-wrap gap-3">
+    <button
+      onClick={() => navigate('/games/puzzle/game', {
+        state: {
+          config: {
+            difficulty: 'medium',
+            gridSize: '4',
+            selectedPuzzles: [{
+              id: '1M',
+              name: 'Alpacas',
+              url: '/src/assets/images/puzzle/medium/Alpacas.jpg',
+              difficulty: 'medium'
+            }]
+          },
+          patientId: 1
+        }
+      })}
+      className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+    >
+      Rompecabezas (Directo)
+    </button>
+    <button
+      onClick={() => navigate('/games/puzzle/config', {
+        state: {
+          patientId: 1
+        }
+      })}
+      className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+    >
+      Configurar Rompecabezas
+    </button>
+    {/* Añade más botones para otros juegos si lo necesitas */}
+  </div>
+  <p className="text-xs text-red-500 mt-2">
+    ⚠️ Eliminar este componente antes de pasar a producción
+  </p>
+</div>
         {patients.length === 0 && !loading && !error && (
           <div className="text-center py-8 text-gray-500">
             No hay pacientes asignados

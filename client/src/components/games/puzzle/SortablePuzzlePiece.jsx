@@ -18,7 +18,7 @@ const SortablePuzzlePiece = ({ piece, index, gridSize }) => {
 
     const style = {
         transform: CSS.Transform.toString(transform),
-        transition: transition || 'all 0.5s ease', // Transición más lenta y suave
+        transition: transition || 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)', // Transición más lenta y suave
         aspectRatio: '1',
         backgroundImage: `url(${piece.imageUrl})`,
         backgroundSize: `${gridSize * 100}%`,
