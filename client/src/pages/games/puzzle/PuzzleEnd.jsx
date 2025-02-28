@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { puzzleService } from '../../../services/puzzleService';
 import { sessionService } from '../../../services/sessionService'; // Añadido
+import { statsService } from '../../../services/statsService';
 import { useAuth } from '@/context/AuthContext';
 import { AlertTriangle } from 'lucide-react';
 
@@ -27,32 +28,28 @@ const PuzzleEnd = () => {
         throw new Error('No se pudo encontrar el ID del paciente');
       }
 
-      // Modo simple: crear una nueva sesión y guardar datos
-      const sessionData = {
+      if (!user?.id) {
+        throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
+      }
+
+      await sessionService.createSession({
         id_paciente: patientId,
-        id_terapeuta: user?.id || 1,
-        id_juego: 1 // ID del juego de rompecabezas
-      };
-      
-      console.log('Creando nueva sesión con:', sessionData);
-      const sessionResponse = await sessionService.createSession(sessionData);
-      const newSessionId = sessionResponse.id;
-      
-      console.log('Sesión creada exitosamente con ID:', newSessionId);
-      
-      // Guardar configuración y estadísticas
-      await puzzleService.savePuzzleSessionComplete(
-        newSessionId,
-        config,
-        {
-          ...stats,
-          successes: stats.successMoves,
-          errors: stats.failedMoves,
-          pauses: stats.pauseCount || 0
-        },
-        observations
-      );
-      
+        id_juego: 1, // ID del juego de rompecabezas
+        id_terapeuta: user.id,
+        observaciones_terapeuta: observations
+      });
+
+      const id_sesion = await sessionService.getLastSession(patientId);
+      await statsService.registerStats({
+        id_sesion: id_sesion.id_sesion,
+        tiempo_transcurrido: stats.totalTime,
+        num_errores: stats.failedMoves,
+        num_aciertos: stats.successMoves,
+        num_pausas: stats.pauseCount || 0,
+        num_ayudas: stats.helpCount || 0,
+        completado: stats.completed
+      });
+
       // Navegar a la página de sesiones
       navigate('/new-session', { 
         state: { 
