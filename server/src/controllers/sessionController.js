@@ -12,10 +12,15 @@ export const getAllSessions = async (req, res) => {
 
 export const createSession = async (req, res) => {
   try {
-    const { id_paciente, id_juego, id_terapeuta } = req.body;
+    const { 
+      id_paciente, 
+      id_juego, 
+      id_terapeuta,
+      observaciones_terapeuta
+     } = req.body;
     const [result] = await pool.query(
-      'INSERT INTO sesion (id_paciente, id_juego, id_terapeuta) VALUES (?, ?, ?)',
-      [id_paciente, id_juego, id_terapeuta]
+      'INSERT INTO sesion (id_paciente, id_juego, id_terapeuta, observaciones_terapeuta) VALUES (?, ?, ?, ?)',
+      [id_paciente, id_juego, id_terapeuta, observaciones_terapeuta]
     );
     res.status(201).json({ id: result.insertId });
   } catch (error) {
@@ -26,10 +31,10 @@ export const createSession = async (req, res) => {
 export const updateSession = async (req, res) => {
   try {
     const { id } = req.params;
-    const { duracion, aciertos, fallos, observaciones_terapeuta } = req.body;
+    const { observaciones_terapeuta } = req.body;
     await pool.query(
-      'UPDATE sesion SET duracion = ?, aciertos = ?, fallos = ?, observaciones_terapeuta = ? WHERE id_sesion = ?',
-      [duracion, aciertos, fallos, observaciones_terapeuta, id]
+      'UPDATE sesion SET observaciones_terapeuta = ? WHERE id_sesion = ?',
+      [observaciones_terapeuta, id]
     );
     res.json({ message: 'Session updated successfully' });
   } catch (error) {
@@ -104,36 +109,55 @@ export const getTotalSessionsPerWeek = async (req, res) => {
   };
 };
 
-  export const getSessionToday = async (req, res) => {
-    try {
-      const { id_paciente } = req.params;
-      // Obtener fecha actual y configurar para inicio del día
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      // Configurar para final del día
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+export const getSessionToday = async (req, res) => {
+  try {
+    const { id_paciente } = req.params;
+    // Obtener fecha actual y configurar para inicio del día
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Configurar para final del día
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-      const [results] = await pool.query(
-          `SELECT COUNT(*) as has_session 
-           FROM sesion 
-           WHERE fecha_sesion >= ? 
-           AND fecha_sesion < ?
-           AND id_paciente = ?`,
-          [today, tomorrow, id_paciente]
-      );
+    const [results] = await pool.query(
+        `SELECT COUNT(*) as has_session 
+          FROM sesion 
+          WHERE fecha_sesion >= ? 
+          AND fecha_sesion < ?
+          AND id_paciente = ?`,
+        [today, tomorrow, id_paciente]
+    );
 
-      res.json({
-          success: true,
-          has_session: results[0].has_session > 0
+    res.json({
+        success: true,
+        has_session: results[0].has_session > 0
+    });
+
+  } catch (error) {
+      console.error('Error al verificar la sesión del día:', error);
+      res.status(500).json({
+          success: false,
+          message: 'Error al verificar la sesión del día'
       });
-
-    } catch (error) {
-        console.error('Error al verificar la sesión del día:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error al verificar la sesión del día'
-        });
-    }
   }
+}
+
+export const getLastSession = async (req, res) => {
+  try {
+    const { id_paciente } = req.params;
+    const [rows] = await pool.query(
+        `SELECT * 
+         FROM sesion 
+         WHERE id_paciente = ? 
+         ORDER BY fecha_sesion DESC 
+         LIMIT 1`,
+        [id_paciente]
+    );
+    res.json(rows[0]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+

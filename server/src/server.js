@@ -9,6 +9,7 @@ import therapistRoutes from './routes/therapistRoutes.js';
 import puzzleRoutes from './routes/games/puzzleRoutes.js'; 
 import sequenceRoutes from './routes/games/sequenceRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import statsRoutes from './routes/statsRoutes.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/games/puzzle', puzzleRoutes);
 app.use('/api/games/sequence', sequenceRoutes);
+app.use('/api/games/stats', statsRoutes);
 
 app.get('*', (req, res) => {
     // Si la ruta no empieza con /api, asume que es una ruta del cliente

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { sessionService } from '../../../services/sessionService';
+import { statsService } from '../../../services/statsService';
 import { useAuth } from '@/context/AuthContext';
 
 const MemoryEnd = () => {
@@ -19,23 +20,6 @@ const MemoryEnd = () => {
         ? Math.round((stats.num_aciertos / (stats.attempts + 1)) * 100)
         : stats && stats.completado ? 100 : 0;
 
-    // Preparar datos para guardar en la base de datos
-    const prepareStatsForDatabase = () => {
-        return {
-            id_paciente: patientId,
-            id_juego: 2, // ID del juego de memoria
-            id_terapeuta: user?.id,
-            tiempo_transcurrido: stats.totalTime,
-            num_errores: stats.num_errores,
-            num_aciertos: stats.num_aciertos,
-            num_pausas: stats.totalPauses,
-            num_ayudas: stats.helpCount + (config.gameMode === 'memoria' ? stats.memoryShows : 0),
-            completado: stats.completado,
-            fecha_inicio: new Date(Date.now() - stats.totalTime * 1000).toISOString(),
-            fecha_fin: new Date().toISOString()
-        };
-    };
-
     const handleFinishSession = async () => {
         setLoading(true);
         try {
@@ -47,27 +31,25 @@ const MemoryEnd = () => {
             if (!patientId) {
                 throw new Error('No se pudo encontrar el ID del paciente.');
             }
-    
-            const sessionData = {
+
+            await sessionService.createSession({
                 id_paciente: patientId,
                 id_juego: 2, // ID del juego de memoria
                 id_terapeuta: user.id,
-                observaciones: observations
-            };
-            
-            // Crear sesión y obtener el ID
-            const sessionResponse = await sessionService.createSession(sessionData);
-            
-            if (sessionResponse && sessionResponse.id) {
-                // Guardar estadísticas con el ID de sesión
-                const gameStats = {
-                    ...prepareStatsForDatabase(),
-                    id_sesion: sessionResponse.id
-                };
-                
-                await sessionService.saveGameStats(gameStats);
-            }
-            
+                observaciones_terapeuta: observations
+            });
+
+            const id_sesion = await sessionService.getLastSession(patientId);
+            await statsService.registerStats({
+                id_sesion: id_sesion.id_sesion,
+                tiempo_transcurrido: stats.totalTime, 
+                num_errores: stats.num_errores,
+                num_aciertos: stats.num_aciertos,
+                num_pausas: stats.totalPauses,
+                num_ayudas: stats.helpCount,
+                completado: stats.completado
+            });
+    
             navigate('/new-session');
         } catch (error) {
             console.error('Error al guardar la sesión:', error);

@@ -47,9 +47,15 @@ export const sessionService = {
       console.error('Error en getSessionToday:', error);
       throw error;
     }
+  },
+
+  getLastSession: async (id_paciente) => {
+    try {
+      const response = await axios.get(`${API_URL}/sessions/last-session/${id_paciente}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error en getLastSession:', error);
+      throw error;
+    }
   }
 };
-
-
-
-

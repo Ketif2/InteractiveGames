@@ -147,7 +147,6 @@ export const AppRoutes = () => {
           <Layout>
             <MemoryEnd />
           </Layout>
-          <MemoryEnd />
         </PrivateRoute>
       } />
 
