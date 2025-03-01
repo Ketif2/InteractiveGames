@@ -10,7 +10,10 @@ export const getStatsPerSession = async (req, res) => {
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Estadísticas no encontradas' });
         }
-        res.json(rows[0]);
+        res.status(200).json({
+            success: true,
+            stats: rows[0]
+        });
     } catch (error) {
         console.error('Error al obtener estadisticas:', error);
         res.status(500).json({ message: 'Error interno del servidor' });

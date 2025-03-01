@@ -1,7 +1,6 @@
 // src/pages/games/puzzle/PuzzleEnd.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { puzzleService } from '../../../services/puzzleService';
 import { sessionService } from '../../../services/sessionService'; // Añadido
 import { statsService } from '../../../services/statsService';
 import { useAuth } from '@/context/AuthContext';
@@ -10,7 +9,7 @@ import { AlertTriangle } from 'lucide-react';
 const PuzzleEnd = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { stats, config, sessionId, patientId } = location.state || {};
+  const { stats, config, patientId } = location.state || {};
   const [loading, setLoading] = useState(false);
   const [observations, setObservations] = useState('');
   const [error, setError] = useState(null);

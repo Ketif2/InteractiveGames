@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5000/api/games/puzzle';
+const BASE_URL = 'http://localhost:5000/api/games';
 
 // Definición de imágenes como JSON
 const PUZZLE_IMAGES = {
@@ -41,118 +41,14 @@ export const puzzleService = {
         return PUZZLE_IMAGES[difficulty];
     },
 
-    // Obtener URL de imagen por ID
-    getImageUrlById: (imageId) => {
-        const difficulty = imageId.endsWith('M') ? 'medium' : 'hard';
-        const image = PUZZLE_IMAGES[difficulty].find(img => img.id === imageId);
-        if (!image) return null;
-        return `/src/assets/images/puzzle/${difficulty}/${image.path}`;
-    },
-
-    // Obtener imágenes ya jugadas por un paciente
-    getPlayedImages: async (patientId) => {
+    getStats: async (sessionId) => {
         try {
-            const response = await axios.get(`${BASE_URL}/patient/${patientId}/images`);
-            return response.data?.playedImages || [];
-        } catch (error) {
-            console.log('Advertencia: No se pudieron cargar imágenes jugadas.', error);
-            return []; // Retornar array vacío para no interrumpir el flujo
-        }
-    },
-
-    // Guardar configuración del juego
-    saveConfig: async (sessionId, configData) => {
-        try {
-            const response = await axios.post(
-                `${BASE_URL}/session/${sessionId}/config`,
-                configData
-            );
+            const response = await axios.get(`${BASE_URL}/stats/${sessionId}`);
             return response.data;
         } catch (error) {
-            console.error('Error al guardar configuración:', error);
-            throw new Error(error.response?.data?.message || 'Error al guardar configuración');
+            console.error('Error al obtener estadísticas:', error);
+            throw new Error('Error al obtener las estadísticas del puzzle');
         }
     },
 
-    // Obtener configuración por ID
-    getConfig: async (configId) => {
-        try {
-            const response = await axios.get(`${BASE_URL}/config/${configId}`);
-            return response.data;
-        } catch (error) {
-            console.error('Error al obtener configuración:', error);
-            throw new Error('Error al obtener la configuración');
-        }
-    },
-
-    // Guardar estadísticas del juego
-    saveStats: async (configId, stats) => {
-        try {
-            const response = await axios.post(
-                `${BASE_URL}/config/${configId}/stats`,
-                stats
-            );
-            return response.data;
-        } catch (error) {
-            console.error('Error al guardar estadísticas:', error);
-            throw new Error(error.response?.data?.message || 'Error al guardar estadísticas');
-        }
-    },
-
-    // Guardar sesión completa (configuración, estadísticas y observaciones)
-    savePuzzleSessionComplete: async (sessionId, configData, statsData, observations) => {
-        try {
-            const response = await axios.post(
-                `${BASE_URL}/session/${sessionId}/complete`,
-                {
-                    config: configData,
-                    stats: statsData,
-                    observations
-                }
-            );
-            return response.data;
-        } catch (error) {
-            console.error('Error al guardar los datos de la sesión:', error);
-            throw new Error(error.response?.data?.message || 'Error al guardar los datos de la sesión');
-        }
-    },
-
-    // Obtener estadísticas de una sesión
-    getSessionStats: async (sessionId) => {
-        try {
-            const response = await axios.get(`${BASE_URL}/session/${sessionId}/stats`);
-            return response.data;
-        } catch (error) {
-            console.error('Error al obtener estadísticas de la sesión:', error);
-            throw new Error('Error al obtener estadísticas de la sesión');
-        }
-    },
-
-    // Actualizar configuración
-    updateConfig: async (configId, configData) => {
-        try {
-            const response = await axios.put(
-                `${BASE_URL}/config/${configId}`,
-                configData
-            );
-            return response.data;
-        } catch (error) {
-            console.error('Error al actualizar configuración:', error);
-            throw new Error(error.response?.data?.message || 'Error al actualizar configuración');
-        }
-    },
-
-    // Obtener imágenes recomendadas según el historial del paciente
-    getRecommendedImages: async (patientId, difficulty) => {
-        try {
-            const response = await axios.get(
-                `${BASE_URL}/patient/${patientId}/recommended?difficulty=${difficulty}`
-            );
-            return response.data;
-        } catch (error) {
-            console.error('Error al obtener imágenes recomendadas:', error);
-            // Si falla, devolver todas las imágenes de esa dificultad
-            return puzzleService.getImages(difficulty);
-        }
-    }
 };

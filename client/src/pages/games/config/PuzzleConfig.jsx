@@ -6,10 +6,6 @@ const PuzzleConfig = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { patientId } = location.state || {};
-    
-    console.log('PuzzleConfig - Iniciando componente');
-    console.log('PuzzleConfig - PatientId recibido:', patientId);
-    console.log('PuzzleConfig - Location state completo:', location.state);
 
     const [config, setConfig] = useState({
         selectedImages: [],
@@ -25,7 +21,6 @@ const PuzzleConfig = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // Cargar imágenes estáticamente sin solicitudes al backend que puedan causar problemas
     useEffect(() => {
         console.log('PuzzleConfig - useEffect para cargar imágenes');
         const loadImages = () => {
@@ -33,17 +28,12 @@ const PuzzleConfig = () => {
                 setLoading(true);
                 console.log('PuzzleConfig - Cargando imágenes...');
                 
-                // Obtener imágenes directamente del servicio sin solicitudes al backend
                 const medium = puzzleService.getImages('medium');
                 const hard = puzzleService.getImages('hard');
-                
-                console.log('PuzzleConfig - Imágenes medium cargadas:', medium.length);
-                console.log('PuzzleConfig - Imágenes hard cargadas:', hard.length);
                 
                 setMediumImages(medium);
                 setHardImages(hard);
                 
-                // Array vacío para historial, sin solicitudes problemáticas
                 setPlayedImageIds([]);
                 
                 setLoading(false);
@@ -58,35 +48,27 @@ const PuzzleConfig = () => {
     }, []);
 
     const handleImageSelect = (imageId, imageUrl, difficulty) => {
-        console.log(`PuzzleConfig - Seleccionando imagen: ${imageId}, difficulty: ${difficulty}`);
-        // Si estamos usando imágenes aleatorias, no permitimos selección manual
         if (config.useRandomImages) return;
 
         setConfig(prev => {
             const newSelectedImages = [...prev.selectedImages];
             const existingIndex = newSelectedImages.findIndex(img => img.id === imageId);
 
-            // Si la imagen ya está seleccionada, la removemos
             if (existingIndex !== -1) {
                 newSelectedImages.splice(existingIndex, 1);
-                console.log(`PuzzleConfig - Imagen ${imageId} removida`);
                 return { ...prev, selectedImages: newSelectedImages };
             }
 
-            // Si ya tenemos el máximo de imágenes permitidas, removemos la primera
             if (newSelectedImages.length >= parseInt(prev.puzzleCount)) {
-                console.log(`PuzzleConfig - Removiendo primera imagen para hacer espacio`);
                 newSelectedImages.shift();
             }
 
-            // Agregamos la nueva imagen
             const newImage = {
                 id: imageId,
                 url: imageUrl,
                 difficulty: difficulty
             };
             newSelectedImages.push(newImage);
-            console.log(`PuzzleConfig - Imagen añadida:`, newImage);
 
             return { ...prev, selectedImages: newSelectedImages };
         });
@@ -94,15 +76,11 @@ const PuzzleConfig = () => {
 
     const handleConfigChange = (e) => {
         const { name, value } = e.target;
-        console.log(`PuzzleConfig - Cambio de configuración: ${name} = ${value}`);
         
         if (name === 'useRandomImages') {
-            // Checkbox de imágenes aleatorias
             const useRandom = e.target.checked;
-            console.log(`PuzzleConfig - Imágenes aleatorias: ${useRandom}`);
             
             if (useRandom) {
-                // Generar imágenes aleatorias según cantidad necesaria
                 const randomCount = parseInt(config.puzzleCount);
                 const randomImages = Array(randomCount).fill().map((_, i) => ({
                     id: `R${Math.floor(Math.random() * 10000) + i}`,
@@ -110,7 +88,6 @@ const PuzzleConfig = () => {
                     difficulty: 'random'
                 }));
                 
-                console.log(`PuzzleConfig - Generadas ${randomImages.length} imágenes aleatorias`);
                 setRandomImage(randomImages);
                 setConfig(prev => ({
                     ...prev,
@@ -118,8 +95,6 @@ const PuzzleConfig = () => {
                     selectedImages: randomImages
                 }));
             } else {
-                // Desactivar imágenes aleatorias
-                console.log(`PuzzleConfig - Desactivando imágenes aleatorias`);
                 setRandomImage(null);
                 setConfig(prev => ({
                     ...prev,
@@ -130,13 +105,10 @@ const PuzzleConfig = () => {
             return;
         }
         
-        // Para otros cambios de configuración
         setConfig(prev => {
             if (name === 'puzzleCount') {
                 const newCount = parseInt(value);
-                console.log(`PuzzleConfig - Cambiada cantidad de puzzles a: ${newCount}`);
                 
-                // Si estamos usando imágenes aleatorias, actualizamos también esas
                 if (prev.useRandomImages) {
                     const randomImages = Array(newCount).fill().map((_, i) => ({
                         id: `R${Math.floor(Math.random() * 10000) + i}`,
@@ -153,7 +125,6 @@ const PuzzleConfig = () => {
                     };
                 }
                 
-                // Si no, solo ajustamos el array de seleccionadas
                 return {
                     ...prev,
                     [name]: value,
@@ -169,41 +140,29 @@ const PuzzleConfig = () => {
     };
 
     const handleBack = () => {
-        console.log('PuzzleConfig - Navegando hacia atrás');
-        navigate('/games/1');
+        navigate('/games'+ patientId);
     };
 
     const handlePlay = () => {
-        console.log('PuzzleConfig - Iniciando handlePlay');
-        console.log('PuzzleConfig - Imágenes seleccionadas:', config.selectedImages.length);
-        console.log('PuzzleConfig - Imágenes necesarias:', parseInt(config.puzzleCount));
 
         if (config.selectedImages.length !== parseInt(config.puzzleCount)) {
-            console.log('PuzzleConfig - Error: número incorrecto de imágenes seleccionadas');
             setError(`Por favor, selecciona ${config.puzzleCount} imagen${config.puzzleCount > 1 ? 'es' : ''} para continuar.`);
             return;
         }
 
         try {
-            console.log('PuzzleConfig - Preparando navegación al juego');
             const gameConfig = {
                 difficulty: config.useRandomImages ? 'random' : config.selectedImages[0].difficulty,
                 gridSize: config.gridSize.split('x')[0],
                 selectedPuzzles: config.selectedImages
             };
-            
-            console.log('PuzzleConfig - Configuración para juego:', gameConfig);
-            console.log('PuzzleConfig - PatientId para juego:', patientId || 1);
-            
-            // Navegar directamente al juego
-            console.log('PuzzleConfig - Intentando navegar a /games/puzzle/paly');
+
             navigate('/games/puzzle/play', {
                 state: {
                     config: gameConfig,
-                    patientId: patientId || 1 // Valor por defecto si no hay patientId
+                    patientId: patientId 
                 }
             });
-            console.log('PuzzleConfig - Navegación iniciada');
         } catch (error) {
             console.error('PuzzleConfig - Error en handlePlay:', error);
             setError('Error al iniciar el juego. Por favor, intente nuevamente.');
