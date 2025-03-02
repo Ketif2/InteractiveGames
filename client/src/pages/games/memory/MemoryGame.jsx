@@ -46,8 +46,8 @@ const MemoryGame = () => {
         attempts: 0,
         memoryShows: 0,
         totalPauses: 0,
-        num_errores: 0,          // contador de errores
-        num_aciertos: 0,         // contador de aciertos
+        num_errores: 0,          // contador de errores (acumulativo en todas las rondas)
+        num_aciertos: 0,         // contador de aciertos (acumulativo en todas las rondas)
         currentRound: 1,         // ronda actual
         totalRounds: config?.rounds || 3  // total de rondas a jugar (configurable)
     });
@@ -134,6 +134,7 @@ const MemoryGame = () => {
     const handleErrorsChange = useCallback((errors, successes) => {
         setGameState(prev => ({ 
             ...prev, 
+            // Acumulación de errores y aciertos - los errores son permanentes
             num_errores: prev.num_errores + errors,
             num_aciertos: prev.num_aciertos + successes
         }));
@@ -148,7 +149,7 @@ const MemoryGame = () => {
             currentOrder: []
         }));
 
-        // Inicializar nueva ronda manteniendo estadísticas
+        // Inicializar nueva ronda manteniendo estadísticas acumuladas
         initializeGame(true);
         
         // Ocultar mensaje de siguiente ronda
@@ -156,13 +157,12 @@ const MemoryGame = () => {
     }, []);
 
     // Handle check result
-    const handleCheckResult = (isCorrect, errors, successes) => {
+    const handleCheckResult = (isCorrect) => {
         if (isCorrect) {
-            // Actualizar estadísticas con los valores de esta ronda
+            // Solo actualizamos el contador de intentos
+            // Los errores y aciertos ya están acumulados mediante handleErrorsChange
             setGameState(prev => ({
                 ...prev,
-                num_errores: prev.num_errores + errors,
-                num_aciertos: prev.num_aciertos + successes,
                 attempts: prev.attempts + 1
             }));
             

@@ -25,7 +25,7 @@ const MemoryArea = ({
   // Keep track of placed items to avoid duplicates
   const [placedItemIndices, setPlacedItemIndices] = useState(new Set());
   
-  // Track errors and successes for current round
+  // Track errors and successes for current round (solo para el estado local del componente)
   const [errors, setErrors] = useState(0);
   const [successes, setSuccesses] = useState(0);
 
@@ -60,13 +60,6 @@ const MemoryArea = ({
     }
   }, [items]);
 
-  // Notify parent component of errors count when needed
-  useEffect(() => {
-    if (onErrorsChange) {
-      onErrorsChange(errors, successes);
-    }
-  }, [errors, successes, onErrorsChange]);
-
   // Handle dropping an item from source to target zone
   const handleDrop = (sourceIndex, targetIndex, itemId) => {
     // Create copies of current states
@@ -90,7 +83,7 @@ const MemoryArea = ({
     // Update correctness status
     newCorrectPositions[targetIndex] = isCorrectPosition;
     
-    // Count error or success
+    // Count error or success (for local component state only)
     if (!isCorrectPosition) {
       setErrors(prev => prev + 1);
     } else {
@@ -114,6 +107,12 @@ const MemoryArea = ({
     
     // Call parent callback
     onOrderChange(newTargetItems);
+    
+    // Notify parent component about the correctness
+    // Siempre contamos los errores y aciertos sin restar nunca (son acumulativos)
+    if (onErrorsChange) {
+      onErrorsChange(isCorrectPosition ? 0 : 1, isCorrectPosition ? 1 : 0);
+    }
   };
   
   // Handle removing an item from target zone
@@ -131,9 +130,14 @@ const MemoryArea = ({
     const newCorrectPositions = [...correctPositions];
     const newPlacedItemIndices = new Set(placedItemIndices);
     
-    // Adjust error/success count if removing an item
-    if (newCorrectPositions[targetIndex]) {
+    // Was this item correctly positioned (solo para estado local)
+    const wasCorrect = newCorrectPositions[targetIndex];
+    
+    // Adjust local error/success count if removing an item (solo para el estado local)
+    if (wasCorrect) {
       setSuccesses(prev => Math.max(0, prev - 1));
+    } else {
+      setErrors(prev => Math.max(0, prev - 1));
     }
     
     // Remove item from target
@@ -152,6 +156,9 @@ const MemoryArea = ({
     
     // Call parent callback
     onOrderChange(newTargetItems);
+    
+    // No notificamos cambios en errores/aciertos al eliminar un elemento
+    // Los errores son permanentes y se mantienen en el contador global
   };
   
   // Check if all slots are filled
@@ -173,8 +180,9 @@ const MemoryArea = ({
     
     const isCorrect = areAllPositionsCorrect();
     
-    // Send result to parent
-    onCheckResult(isCorrect, errors, successes);
+    // Send result to parent - no enviamos errores/éxitos aquí porque ya se han
+    // notificado incrementalmente durante los drops
+    onCheckResult(isCorrect, 0, 0);
     return isCorrect;
   };
   
