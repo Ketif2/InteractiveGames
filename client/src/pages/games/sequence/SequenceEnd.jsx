@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { sessionService } from '../../../services/sessionService';
+import { statsService } from '../../../services/statsService';
 import { useAuth } from '@/context/AuthContext';
 
 const SequenceEnd = () => {
@@ -36,6 +37,17 @@ const SequenceEnd = () => {
                 id_juego: 3, // ID del juego de rompecabezas
                 id_terapeuta: user.id//localStorage.getItem('userId') // Asumiendo que guardas el ID del terapeuta en localStorage
             });
+
+            const id_sesion = await sessionService.getLastSession(patientId);
+                  await statsService.registerStats({
+                    id_sesion: id_sesion.id_sesion,
+                    tiempo_transcurrido: stats.totalTime,
+                    num_errores: stats.failedMoves,
+                    num_aciertos: stats.successMoves,
+                    num_pausas: stats.pauseCount || 0,
+                    num_ayudas: stats.helpCount || 0,
+                    completado: stats.completed
+                  });
 
             navigate('/new-session');
         } catch (error) {
