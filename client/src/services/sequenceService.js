@@ -1,35 +1,23 @@
 // src/services/sequenceService.js
-import axios from 'axios';
+import api from './api';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = 'http://localhost:5000/api';
 
-const sequenceService = {
-  saveConfig: async (configData) => {
-    try {
-      const response = await axios.post(`${API_URL}/sequence/config`, configData);
-      return response.data;
-    } catch (error) {
-      throw new Error('Error al guardar la configuración');
+export const sequenceService = {
+    getSequenceConfig: async (id_sesion) => {
+        try {
+            const response = await api.get(`${API_URL}/games/sequence/config/${id_sesion}`);
+            return response.data;
+        } catch (error) {
+            throw new Error(error.response?.data?.message || 'Error al obtener configuración de secuencia');
+        }
+    },
+    registerSequenceConfig: async (config) => {
+        try {
+            const response = await api.post(`${API_URL}/games/sequence/save-config`, config);
+            return response.data;
+        } catch (error) {
+            throw new Error(error.response?.data?.message || 'Error al registrar configuración de secuencia');
+        }
     }
-  },
-
-  saveStats: async (statsData) => {
-    try {
-      const response = await axios.post(`${API_URL}/sequence/stats`, statsData);
-      return response.data;
-    } catch (error) {
-      throw new Error('Error al guardar las estadísticas');
-    }
-  },
-
-  getSessionStats: async (sessionId) => {
-    try {
-      const response = await axios.get(`${API_URL}/sequence/stats/${sessionId}`);
-      return response.data;
-    } catch (error) {
-      throw new Error('Error al obtener las estadísticas');
-    }
-  }
 };
-
-export default sequenceService;

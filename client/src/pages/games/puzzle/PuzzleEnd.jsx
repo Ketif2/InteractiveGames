@@ -1,8 +1,9 @@
 // src/pages/games/puzzle/PuzzleEnd.jsx
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { sessionService } from '../../../services/sessionService'; // Añadido
+import { sessionService } from '../../../services/sessionService';
 import { statsService } from '../../../services/statsService';
+import { puzzleService } from '../../../services/puzzleService'; // Importamos el nuevo servicio
 import { useAuth } from '@/context/AuthContext';
 import { AlertTriangle } from 'lucide-react';
 
@@ -15,14 +16,11 @@ const PuzzleEnd = () => {
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
-  console.log('Estado recibido en PuzzleEnd:', location.state);
-
   const handleFinishSession = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      // Verificar si tenemos patientId
       if (!patientId) {
         throw new Error('No se pudo encontrar el ID del paciente');
       }
@@ -31,6 +29,7 @@ const PuzzleEnd = () => {
         throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
       }
 
+      // 1. Crear la sesión
       await sessionService.createSession({
         id_paciente: patientId,
         id_juego: 1, // ID del juego de rompecabezas
@@ -38,7 +37,10 @@ const PuzzleEnd = () => {
         observaciones_terapeuta: observations
       });
 
+      // 2. Obtener el ID de la sesión creada
       const id_sesion = await sessionService.getLastSession(patientId);
+      
+      // 3. Registrar las estadísticas
       await statsService.registerStats({
         id_sesion: id_sesion.id_sesion,
         tiempo_transcurrido: stats.totalTime,
@@ -46,7 +48,19 @@ const PuzzleEnd = () => {
         num_aciertos: stats.successMoves,
         num_pausas: stats.pauseCount || 0,
         num_ayudas: stats.helpCount || 0,
-        completado: stats.completed
+        completado: stats.completed ? 1 : 0
+      });
+
+      const imageIds = config.difficulty === 'random'
+      ? Array(config.selectedPuzzles.length).fill('RANDOM').join(',')
+      : config.selectedPuzzles.map(img => img.id || 'RANDOM').join(',');
+
+      // 4. Registrar la configuración del puzzle
+      await puzzleService.registerPuzzleConfig({
+        id_sesion: id_sesion.id_sesion,
+        tamano_grid: `${config.gridSize}x${config.gridSize}`,
+        cantidad_puzzles: config.selectedPuzzles.length,
+        ids_imagenes: imageIds
       });
 
       // Navegar a la página de sesiones
@@ -71,6 +85,7 @@ const PuzzleEnd = () => {
       return;
     }
 
+    console.log(`PuzzleEnd - Redirigiendo a /games/${patientId}`);
     navigate(`/games/${patientId}`);
   };
 
@@ -164,6 +179,11 @@ const PuzzleEnd = () => {
               label="Errores por minuto" 
               value={`${((stats.failedMoves / (stats.totalTime / 60)) || 0).toFixed(1)} errores/min`} 
             />
+            <StatItem 
+              label="Completado" 
+              value={stats.completed ? 'Sí' : 'No'} 
+              highlightPositive={stats.completed}
+            />
           </div>
         </div>
       </div>
@@ -196,10 +216,12 @@ const PuzzleEnd = () => {
   );
 };
 
-const StatItem = ({ label, value }) => (
+const StatItem = ({ label, value, highlightPositive, highlightNegative }) => (
   <div className="flex justify-between items-center py-1.5">
     <span className="text-gray-600">{label}:</span>
-    <span className="font-medium">{value}</span>
+    <span className={`font-medium ${highlightPositive ? 'text-green-600' : ''} ${highlightNegative ? 'text-red-600' : ''}`}>
+      {value}
+    </span>
   </div>
 );
 

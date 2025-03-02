@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { sessionService } from '../../../services/sessionService';
 import { statsService } from '../../../services/statsService';
+import { sequenceService } from '../../../services/sequenceService'; // Importamos el servicio
 import { useAuth } from '@/context/AuthContext';
 import { AlertTriangle } from 'lucide-react';
 
@@ -50,6 +51,7 @@ const SequenceEnd = () => {
                 throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
             }
 
+            // 1. Crear la sesión
             await sessionService.createSession({
                 id_paciente: patientId,
                 id_juego: 3, // ID del juego de secuencia
@@ -57,7 +59,10 @@ const SequenceEnd = () => {
                 observaciones_terapeuta: observations
             });
 
+            // 2. Obtener el ID de la sesión creada
             const id_sesion = await sessionService.getLastSession(patientId);
+            
+            // 3. Registrar las estadísticas
             // Asegurarse de que los valores booleanos se conviertan correctamente a 0 o 1
             const isCompleted = stats.completed === true ? 1 : 0;
             
@@ -69,6 +74,32 @@ const SequenceEnd = () => {
                 num_pausas: stats.totalPauses || 0,
                 num_ayudas: stats.helpCount || 0,
                 completado: isCompleted
+            });
+
+            // 4. Registrar la configuración de la secuencia
+            // Asegurarse de que modo_juego sea uno de los valores permitidos por el ENUM
+            let modoJuego = config.gameMode.toLowerCase();
+            
+            // Validar que el modo de juego esté dentro de los valores permitidos
+            if (!['normal', 'desvanecimiento', 'memoria', 'revuelto'].includes(modoJuego)) {
+                // Si no es un valor válido, usar 'normal' como predeterminado
+                modoJuego = 'normal';
+            }
+            
+            console.log('Guardando configuración de secuencia:', {
+                id_sesion: id_sesion.id_sesion,
+                rango_inicial: config.startRange,
+                rango_final: config.endRange,
+                numeros_ocultar: config.numbersToHide,
+                modo_juego: modoJuego
+            });
+            
+            await sequenceService.registerSequenceConfig({
+                id_sesion: id_sesion.id_sesion,
+                rango_inicial: config.startRange,
+                rango_final: config.endRange,
+                numeros_ocultar: config.numbersToHide,
+                modo_juego: modoJuego
             });
 
             // Navegar a la página de sesiones
