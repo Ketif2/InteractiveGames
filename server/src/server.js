@@ -6,10 +6,11 @@ import cookieParser from 'cookie-parser';
 import sessionRoutes from './routes/sessionRoutes.js';
 import patientRoutes from './routes/patientRoutes.js';
 import therapistRoutes from './routes/therapistRoutes.js';
-import sequenceRoutes from './routes/games/sequenceRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import memoryRoutes from './routes/games/memoryRoutes.js';
+import puzzleRoutes from './routes/games/puzzleRoutes.js';
+import sequenceRoutes from './routes/games/sequenceRoutes.js';
 
 dotenv.config();
 
@@ -29,6 +30,8 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/games/sequence', sequenceRoutes);
 app.use('/api/games/stats', statsRoutes);
 app.use('/api/games/memory', memoryRoutes);
+app.use('/api/games/puzzle', puzzleRoutes);
+
 
 app.get('*', (req, res) => {
     if (!req.url.startsWith('/api')) {
