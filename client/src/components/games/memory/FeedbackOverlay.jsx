@@ -10,7 +10,9 @@ const FeedbackOverlay = ({
     onPauseResume,
     onExitConfirm,
     onExitCancel,
-    onGameComplete
+    onGameComplete,
+    currentRound,
+    totalRounds
 }) => {
     // Estado para animación de entrada/salida
     const [animation, setAnimation] = useState('');
@@ -32,10 +34,10 @@ const FeedbackOverlay = ({
                         <span className="text-green-500 text-5xl">✓</span>
                     </div>
                     <h2 className="text-2xl font-bold text-green-700 mb-4">
-                        ¡Correcto!
+                        ¡Completado!
                     </h2>
                     <p className="text-gray-600 mb-6">
-                        Has ordenado correctamente todos los objetos.
+                        Has finalizado correctamente todas las rondas.
                     </p>
                     <div className="flex justify-center space-x-2 mb-4">
                         {/* Estrellas de gamificación */}
@@ -49,7 +51,7 @@ const FeedbackOverlay = ({
                             className="w-full px-6 py-3 bg-green-500 text-white rounded-lg 
                                      hover:bg-green-600 transition-colors font-medium"
                         >
-                            Continuar
+                            Ver Resultados
                         </button>
                     )}
                 </div>
@@ -115,7 +117,7 @@ const FeedbackOverlay = ({
                         ¿Deseas terminar el juego?
                     </h2>
                     <p className="text-gray-600 mb-6">
-                        Tu progreso será guardado.
+                        Tu progreso y estadísticas serán guardados.
                     </p>
                     <div className="flex justify-end gap-4">
                         <button

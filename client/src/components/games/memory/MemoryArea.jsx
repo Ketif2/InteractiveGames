@@ -9,22 +9,36 @@ const MemoryArea = ({
   gameMode,
   showItems, 
   onOrderChange,
-  onCheckResult 
+  onCheckResult,
+  onErrorsChange,
+  rows = 2 // Valor por defecto para compatibilidad: 2 filas
 }) => {
-  // Calculate items per row based on difficulty
-  const itemsPerRow = difficulty === 'fácil' ? 5 : 7;
+  // El número de items por fila siempre es 5
+  const itemsPerRow = 5;
   
   // State for source and target items
   const [sourceItems, setSourceItems] = useState([]);
   const [targetItems, setTargetItems] = useState([]);
   const [droppedStatus, setDroppedStatus] = useState([]);
+  const [correctPositions, setCorrectPositions] = useState([]);
   
   // Keep track of placed items to avoid duplicates
   const [placedItemIndices, setPlacedItemIndices] = useState(new Set());
   
+  // Track errors and successes for current round
+  const [errors, setErrors] = useState(0);
+  const [successes, setSuccesses] = useState(0);
+
+  // Store the correct order of items based on their IDs
+  const [correctOrder, setCorrectOrder] = useState([]);
+  
   // Initialize items on component mount or when items change
   useEffect(() => {
     if (items && items.length > 0) {
+      // Reset error and success counters for new round
+      setErrors(0);
+      setSuccesses(0);
+      
       // Initialize source items from props
       setSourceItems(items);
       
@@ -34,17 +48,32 @@ const MemoryArea = ({
       // Initialize dropped status array
       setDroppedStatus(Array(items.length).fill(false));
       
+      // Initialize correctness array
+      setCorrectPositions(Array(items.length).fill(false));
+      
       // Clear placed items
       setPlacedItemIndices(new Set());
+
+      // Set correct order based on item IDs
+      const sorted = [...items].sort((a, b) => a.id - b.id);
+      setCorrectOrder(sorted);
     }
   }, [items]);
 
+  // Notify parent component of errors count when needed
+  useEffect(() => {
+    if (onErrorsChange) {
+      onErrorsChange(errors, successes);
+    }
+  }, [errors, successes, onErrorsChange]);
+
   // Handle dropping an item from source to target zone
-  const handleDrop = (sourceIndex, targetIndex) => {
+  const handleDrop = (sourceIndex, targetIndex, itemId) => {
     // Create copies of current states
     const newSourceItems = [...sourceItems];
     const newTargetItems = [...targetItems];
     const newDroppedStatus = [...droppedStatus];
+    const newCorrectPositions = [...correctPositions];
     const newPlacedItemIndices = new Set(placedItemIndices);
     
     // Check if target position is already occupied
@@ -54,6 +83,19 @@ const MemoryArea = ({
     
     // Get the item being moved
     const movedItem = newSourceItems[sourceIndex];
+    
+    // Check if this item is correctly placed
+    const isCorrectPosition = correctOrder[targetIndex]?.id === movedItem.id;
+    
+    // Update correctness status
+    newCorrectPositions[targetIndex] = isCorrectPosition;
+    
+    // Count error or success
+    if (!isCorrectPosition) {
+      setErrors(prev => prev + 1);
+    } else {
+      setSuccesses(prev => prev + 1);
+    }
     
     // Move item from source to target
     newTargetItems[targetIndex] = movedItem;
@@ -67,6 +109,7 @@ const MemoryArea = ({
     // Update states
     setTargetItems(newTargetItems);
     setDroppedStatus(newDroppedStatus);
+    setCorrectPositions(newCorrectPositions);
     setPlacedItemIndices(newPlacedItemIndices);
     
     // Call parent callback
@@ -85,11 +128,18 @@ const MemoryArea = ({
     // Create copies of current states
     const newTargetItems = [...targetItems];
     const newDroppedStatus = [...droppedStatus];
+    const newCorrectPositions = [...correctPositions];
     const newPlacedItemIndices = new Set(placedItemIndices);
+    
+    // Adjust error/success count if removing an item
+    if (newCorrectPositions[targetIndex]) {
+      setSuccesses(prev => Math.max(0, prev - 1));
+    }
     
     // Remove item from target
     newTargetItems[targetIndex] = null;
     newDroppedStatus[targetIndex] = false;
+    newCorrectPositions[targetIndex] = false;
     
     // Remove from placed items tracking
     newPlacedItemIndices.delete(sourceIndex);
@@ -97,6 +147,7 @@ const MemoryArea = ({
     // Update states
     setTargetItems(newTargetItems);
     setDroppedStatus(newDroppedStatus);
+    setCorrectPositions(newCorrectPositions);
     setPlacedItemIndices(newPlacedItemIndices);
     
     // Call parent callback
@@ -108,6 +159,11 @@ const MemoryArea = ({
     return targetItems.every(item => item !== null);
   };
   
+  // Check if all positions are correct
+  const areAllPositionsCorrect = () => {
+    return correctPositions.every(isCorrect => isCorrect === true) && areAllSlotsFilled();
+  };
+  
   // Check button click handler
   const handleCheckOrder = () => {
     if (!areAllSlotsFilled()) {
@@ -115,43 +171,39 @@ const MemoryArea = ({
       return false;
     }
     
-    // Check if order is correct (ascending by ID)
-    const isCorrect = targetItems.every((item, index, arr) => {
-      if (index === 0) return true;
-      return item.id > arr[index - 1].id;
-    });
+    const isCorrect = areAllPositionsCorrect();
     
     // Send result to parent
-    onCheckResult(isCorrect);
+    onCheckResult(isCorrect, errors, successes);
     return isCorrect;
   };
   
   // Calculate number of rows needed and distribute items
   const generateRows = () => {
-    const rows = [];
+    const totalRows = [];
     const totalItems = items.length;
     
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < rows; i++) {
       const startIdx = i * itemsPerRow;
       const endIdx = Math.min(startIdx + itemsPerRow, totalItems);
-      rows.push(sourceItems.slice(startIdx, endIdx));
+      totalRows.push(sourceItems.slice(startIdx, endIdx));
     }
     
-    return rows;
+    return totalRows;
   };
 
   // Generate target item rows
   const generateTargetRows = () => {
-    const rows = [];
+    const totalRows = [];
     const totalItems = items.length;
     
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < rows; i++) {
       const startIdx = i * itemsPerRow;
       const endIdx = Math.min(startIdx + itemsPerRow, totalItems);
-      rows.push(Array(endIdx - startIdx).fill(null).map((_, idx) => startIdx + idx));
+      totalRows.push(Array(endIdx - startIdx).fill(null).map((_, idx) => startIdx + idx));
     }
     
-    return rows;
+    return totalRows;
   };
 
   // Only render if we have items
@@ -209,9 +261,10 @@ const MemoryArea = ({
                     index={position}
                     item={targetItems[position]}
                     isEmpty={targetItems[position] === null}
-                    isCorrect={true} // This will be determined when checking
+                    isCorrect={correctPositions[position]}
+                    expectedItemId={correctOrder[position]?.id}
                     onDrop={handleDrop}
-                    onRemove={() => handleRemoveFromTarget(position)}
+                    onRemove={handleRemoveFromTarget}
                   />
                 );
               })}
@@ -229,7 +282,7 @@ const MemoryArea = ({
                   hover:bg-[#002d6f] transition-colors text-lg font-semibold
                   disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Verificar Orden
+          Completar Ronda
         </button>
       </div>
     </div>

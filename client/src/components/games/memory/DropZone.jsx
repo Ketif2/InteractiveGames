@@ -1,7 +1,7 @@
 // src/components/games/memory/DropZone.jsx
 import React from 'react';
 
-const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect }) => {
+const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect, expectedItemId }) => {
     const handleDragOver = (e) => {
         e.preventDefault();
     };
@@ -10,7 +10,8 @@ const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect }) => {
         e.preventDefault();
         try {
             const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-            onDrop(data.index, index);
+            // Pasar el ID del item que está siendo soltado para validación
+            onDrop(data.index, index, data.id);
         } catch (err) {
             console.error("Error en drop:", err);
         }
@@ -18,7 +19,7 @@ const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect }) => {
     
     const handleClick = () => {
         if (!isEmpty) {
-            onRemove();
+            onRemove(index);
         }
     };
 
@@ -35,13 +36,16 @@ const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect }) => {
                     ? 'bg-gray-100 border-dashed border-2 border-gray-300 cursor-default' 
                     : isCorrect 
                         ? 'bg-green-100 border-2 border-green-500 cursor-pointer' 
-                        : 'bg-white border-2 border-blue-500 cursor-pointer hover:bg-gray-50'}
+                        : 'bg-red-100 border-2 border-red-500 cursor-pointer hover:bg-red-50'}
                 shadow-sm
             `}
+            data-expected-id={expectedItemId}
         >
             {!isEmpty && (
                 <div className="flex justify-between items-center w-full">
-                    <span className="text-base font-medium">{item?.name}</span>
+                    <span className={`text-base font-medium ${!isCorrect ? 'text-red-600' : 'text-green-600'}`}>
+                        {item?.name}
+                    </span>
                     <span className="text-xs text-gray-500 ml-1">×</span>
                 </div>
             )}

@@ -9,6 +9,7 @@ import therapistRoutes from './routes/therapistRoutes.js';
 import sequenceRoutes from './routes/games/sequenceRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
+import memoryRoutes from './routes/games/memoryRoutes.js';
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/games/sequence', sequenceRoutes);
 app.use('/api/games/stats', statsRoutes);
+app.use('/api/games/memory', memoryRoutes);
 
 app.get('*', (req, res) => {
     if (!req.url.startsWith('/api')) {

@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { sessionService } from '../../../services/sessionService';
 import { statsService } from '../../../services/statsService';
 import { useAuth } from '@/context/AuthContext';
+import { memoryService } from '../../../services/memoryService';
+import { availableCategories } from '../../../data/memoryObjects';
 
 const MemoryEnd = () => {
     const navigate = useNavigate();
@@ -19,6 +21,12 @@ const MemoryEnd = () => {
     const successRate = stats && (stats.attempts > 0) 
         ? Math.round((stats.num_aciertos / (stats.attempts + 1)) * 100)
         : stats && stats.completado ? 100 : 0;
+    
+    // Obtener el nombre de la categoría
+    const getCategoryLabel = (categoryValue) => {
+        const category = availableCategories.find(cat => cat.value === categoryValue);
+        return category ? category.label : 'No disponible';
+    };
 
     const handleFinishSession = async () => {
         setLoading(true);
@@ -49,7 +57,20 @@ const MemoryEnd = () => {
                 num_ayudas: stats.helpCount,
                 completado: stats.completado
             });
-    
+
+            const dificultadFormatted = 
+            config.difficulty === 'fácil' ? 'Fácil' : 
+            config.difficulty === 'medio' ? 'Medio' : 
+            config.difficulty === 'difícil' ? 'Difícil' : 'Medio';
+        
+            // Usar los valores formateados al guardar
+            await memoryService.registerMemoryConfig({ 
+                id_sesion: id_sesion.id_sesion,
+                dificultad: dificultadFormatted,
+                categoria: config.category,
+                numero_rondas: stats.totalRounds
+            });
+        
             navigate('/new-session');
         } catch (error) {
             console.error('Error al guardar la sesión:', error);
@@ -95,9 +116,15 @@ const MemoryEnd = () => {
                                 </span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-gray-600">Nombres visibles:</span>
+                                <span className="text-gray-600">Categoría:</span>
                                 <span className="bg-blue-100 px-3 py-1 rounded">
-                                    {config?.showObjectName ? 'Sí' : 'No'}
+                                    {getCategoryLabel(config?.category) || 'Todos los objetos'}
+                                </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-600">Número de rondas configuradas:</span>
+                                <span className="bg-green-100 px-3 py-1 rounded text-green-700 font-semibold">
+                                    {stats?.totalRounds || 3}
                                 </span>
                             </div>
                         </div>
@@ -120,7 +147,7 @@ const MemoryEnd = () => {
                 {/* Columna derecha - Estadísticas */}
                 <div className="bg-white rounded-lg shadow p-4 flex flex-col h-full">
                     <h2 className="text-lg font-semibold text-[#00398A] mb-4">
-                        Estadísticas
+                        Estadísticas Acumuladas
                     </h2>
                     <div className="space-y-3 flex-1">
                         <StatItem 
@@ -128,16 +155,14 @@ const MemoryEnd = () => {
                             value={`${timeInMinutes}m ${timeInSeconds}s`} 
                         />
                         <StatItem 
-                            label="Intentos realizados" 
-                            value={stats?.attempts || 0} 
-                        />
-                        <StatItem 
                             label="Respuestas correctas" 
                             value={stats?.num_aciertos || 0} 
+                            highlightPositive={true}
                         />
                         <StatItem 
                             label="Errores cometidos" 
                             value={stats?.num_errores || 0} 
+                            highlightNegative={true}
                         />
                         <StatItem 
                             label="Ayudas utilizadas" 
@@ -152,6 +177,7 @@ const MemoryEnd = () => {
                         <StatItem 
                             label="Tasa de éxito" 
                             value={`${successRate}%`} 
+                            highlightPositive={true}
                         />
                         <StatItem 
                             label="Número de pausas" 
@@ -160,7 +186,23 @@ const MemoryEnd = () => {
                         <StatItem 
                             label="Completado" 
                             value={stats?.completado ? 'Sí' : 'No'} 
+                            highlightPositive={stats?.completado}
                         />
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <h3 className="text-md font-semibold text-[#00398A] mb-2">
+                                Promedio por ronda
+                            </h3>
+                            <StatItem 
+                                label="Aciertos por ronda" 
+                                value={(stats?.num_aciertos / stats?.totalRounds).toFixed(1)} 
+                                highlightPositive={true}
+                            />
+                            <StatItem 
+                                label="Errores por ronda" 
+                                value={(stats?.num_errores / stats?.totalRounds).toFixed(1)} 
+                                highlightNegative={true}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -186,10 +228,12 @@ const MemoryEnd = () => {
     );
 };
 
-const StatItem = ({ label, value }) => (
+const StatItem = ({ label, value, highlightPositive = false, highlightNegative = false }) => (
     <div className="flex justify-between items-center py-1.5">
         <span className="text-gray-600">{label}:</span>
-        <span className="font-medium">{value}</span>
+        <span className={`font-medium ${highlightPositive ? 'text-green-600' : ''} ${highlightNegative ? 'text-red-600' : ''}`}>
+            {value}
+        </span>
     </div>
 );
 

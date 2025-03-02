@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { availableCategories } from '../../../data/memoryObjects';
 
 const MemoryConfig = () => {
     const navigate = useNavigate();
@@ -12,7 +13,9 @@ const MemoryConfig = () => {
     const [config, setConfig] = useState({
         difficulty: 'fácil',     // fácil: 5 objetos separados, medio/difícil: 7 objetos
         gameMode: 'normal',      // normal o memoria
-        showObjectName: true     // mostrar u ocultar nombres
+        showObjectName: true,    // mostrar u ocultar nombres
+        category: 'todos',       // categoría de objetos
+        rounds: 3                // número de rondas (por defecto 3)
     });
 
     const handleConfigChange = (e) => {
@@ -20,7 +23,8 @@ const MemoryConfig = () => {
         setConfig(prev => ({
             ...prev,
             [name]: value === 'true' ? true : 
-                    value === 'false' ? false : value
+                    value === 'false' ? false : 
+                    name === 'rounds' ? parseInt(value, 10) : value
         }));
     };
 
@@ -71,9 +75,9 @@ const MemoryConfig = () => {
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
                                      focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
-                            <option value="fácil">Fácil (5 objetos muy diferentes)</option>
-                            <option value="medio">Medio (7 objetos con diferencias moderadas)</option>
-                            <option value="difícil">Difícil (7 objetos similares)</option>
+                            <option value="fácil">Fácil (2 filas de objetos)</option>
+                            <option value="medio">Medio (3 filas de objetos)</option>
+                            <option value="difícil">Difícil (4 filas de objetos)</option>
                         </select>
                         <p className="text-sm text-gray-500 mt-1">
                             {config.difficulty === 'fácil' ? 
@@ -83,46 +87,53 @@ const MemoryConfig = () => {
                                 'Los objetos tendrán pesos muy similares entre sí'}
                         </p>
                     </div>
-
-                    {/* Modo de juego */}
+                    
+                    {/* Categoría de objetos */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
-                            Modo de Juego
+                            Categoría de Objetos
                         </label>
                         <select
-                            name="gameMode"
-                            value={config.gameMode}
+                            name="category"
+                            value={config.category}
                             onChange={handleConfigChange}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
                                      focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
-                            <option value="normal">Normal</option>
-                            <option value="memoria">Memoria</option>
+                            {availableCategories.map(category => (
+                                <option key={category.value} value={category.value}>
+                                    {category.label}
+                                </option>
+                            ))}
                         </select>
                         <p className="text-sm text-gray-500 mt-1">
-                            {config.gameMode === 'normal' ? 
-                                'Los objetos permanecerán visibles durante todo el juego' :
-                                'Los objetos se mostrarán brevemente y luego deberás recordar su orden'}
+                            Selecciona la categoría de objetos que quieres ordenar por peso
                         </p>
                     </div>
-
-                    {/* Mostrar nombres */}
+                    
+                    {/* Número de rondas - NUEVO */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
-                            Mostrar Nombres de Objetos
+                            Número de Rondas
                         </label>
                         <select
-                            name="showObjectName"
-                            value={config.showObjectName}
+                            name="rounds"
+                            value={config.rounds}
                             onChange={handleConfigChange}
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
                                      focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
-                            <option value={true}>Sí</option>
-                            <option value={false}>No</option>
+                            {[1, 2, 3, 4, 5, 6, 7].map(num => (
+                                <option key={num} value={num}>
+                                    {num} {num === 1 ? 'ronda' : 'rondas'}
+                                </option>
+                            ))}
                         </select>
+                        <p className="text-sm text-gray-500 mt-1">
+                            Selecciona cuántas rondas tendrá la sesión de juego
+                        </p>
                     </div>
-
+                    
                     {/* Botones */}
                     <div className="flex justify-between pt-6">
                         <button

@@ -1,7 +1,7 @@
 // src/pages/games/memory/MemoryGame.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { selectObjectsByDifficulty } from '../../../data/memoryObjects';
+import { selectObjectsByDifficultyAndCategory } from '../../../data/memoryObjects';
 import MemoryArea from '../../../components/games/memory/MemoryArea';
 import GameControls from '../../../components/games/memory/GameControls';
 import FeedbackOverlay from '../../../components/games/memory/FeedbackOverlay';
@@ -45,13 +45,18 @@ const MemoryGame = () => {
         helpCount: 0,
         attempts: 0,
         memoryShows: 0,
-        totalPauses: 0
+        totalPauses: 0,
+        num_errores: 0,          // contador de errores
+        num_aciertos: 0,         // contador de aciertos
+        currentRound: 1,         // ronda actual
+        totalRounds: config?.rounds || 3  // total de rondas a jugar (configurable)
     });
 
     // Feedback states
     const [showCorrectFeedback, setShowCorrectFeedback] = useState(false);
     const [showWrongFeedback, setShowWrongFeedback] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
+    const [showNextRoundMessage, setShowNextRoundMessage] = useState(false);
     const [gameCompleted, setGameCompleted] = useState(false);
 
     // Game initialization
@@ -68,17 +73,49 @@ const MemoryGame = () => {
         };
     }, []);
 
-    const initializeGame = () => {
-        const selectedItems = selectObjectsByDifficulty(config?.difficulty || 'fácil');
+    const initializeGame = (preserveStats = false) => {
+        // Seleccionar nuevos objetos para esta ronda
+        const selectedItems = selectObjectsByDifficultyAndCategory(
+            config?.difficulty || 'Fácil', 
+            config?.category || 'Todos'
+        );
+        
+        // Ordenar los items por ID para tener el orden correcto
+        const sortedItems = [...selectedItems].sort((a, b) => a.id - b.id);
         
         // Set initial game state
-        setGameState(prev => ({
-            ...prev,
-            items: selectedItems,
-            currentOrder: Array(selectedItems.length).fill(null),
-            correctOrder: [...selectedItems].sort((a, b) => a.id - b.id),
-            showItems: config?.gameMode !== 'memoria'
-        }));
+        setGameState(prev => {
+            // Si preserveStats es true, mantener las estadísticas acumuladas
+            if (preserveStats) {
+                return {
+                    ...prev,
+                    items: selectedItems,
+                    currentOrder: Array(selectedItems.length).fill(null),
+                    correctOrder: sortedItems,
+                    showItems: config?.gameMode !== 'memoria'
+                };
+            } else {
+                // Si es la primera ronda, inicializar todo
+                return {
+                    ...prev,
+                    items: selectedItems,
+                    currentOrder: Array(selectedItems.length).fill(null),
+                    correctOrder: sortedItems,
+                    showItems: config?.gameMode !== 'memoria',
+                    startTime: Date.now(),
+                    totalPauseTime: 0,
+                    lastPauseTime: null,
+                    helpCount: 0,
+                    attempts: 0,
+                    memoryShows: 0,
+                    totalPauses: 0,
+                    num_errores: 0,
+                    num_aciertos: 0,
+                    currentRound: 1,
+                    totalRounds: config?.rounds || 3
+                };
+            }
+        });
 
         // In memory mode, hide objects after initial viewing time
         if (config?.gameMode === 'memoria') {
@@ -93,17 +130,65 @@ const MemoryGame = () => {
         setGameState(prev => ({ ...prev, currentOrder: newOrder }));
     }, []);
 
+    // Handle errors count changes
+    const handleErrorsChange = useCallback((errors, successes) => {
+        setGameState(prev => ({ 
+            ...prev, 
+            num_errores: prev.num_errores + errors,
+            num_aciertos: prev.num_aciertos + successes
+        }));
+    }, []);
+
+    // Función para pasar a la siguiente ronda
+    const startNextRound = useCallback(() => {
+        setGameState(prev => ({
+            ...prev,
+            currentRound: prev.currentRound + 1,
+            items: [],
+            currentOrder: []
+        }));
+
+        // Inicializar nueva ronda manteniendo estadísticas
+        initializeGame(true);
+        
+        // Ocultar mensaje de siguiente ronda
+        setShowNextRoundMessage(false);
+    }, []);
+
     // Handle check result
-    const handleCheckResult = (isCorrect) => {
+    const handleCheckResult = (isCorrect, errors, successes) => {
         if (isCorrect) {
-            setShowCorrectFeedback(true);
-            setGameCompleted(true);
+            // Actualizar estadísticas con los valores de esta ronda
+            setGameState(prev => ({
+                ...prev,
+                num_errores: prev.num_errores + errors,
+                num_aciertos: prev.num_aciertos + successes,
+                attempts: prev.attempts + 1
+            }));
             
-            // Hide feedback after delay and go to results
-            setTimeout(() => {
-                setShowCorrectFeedback(false);
-                handleFinishGame(true);
-            }, 3000);
+            // Verificar si es la última ronda
+            setGameState(prev => {
+                if (prev.currentRound >= prev.totalRounds) {
+                    // Es la última ronda, mostrar mensaje de juego completado
+                    setShowCorrectFeedback(true);
+                    setGameCompleted(true);
+                    
+                    // Hide feedback after delay and go to results
+                    setTimeout(() => {
+                        setShowCorrectFeedback(false);
+                        handleFinishGame(true);
+                    }, 3000);
+                } else {
+                    // No es la última ronda, mostrar mensaje para siguiente ronda
+                    setShowNextRoundMessage(true);
+                    
+                    // Después de un tiempo, ocultar mensaje y pasar a siguiente ronda
+                    setTimeout(() => {
+                        startNextRound();
+                    }, 3000);
+                }
+                return prev;
+            });
         } else {
             setShowWrongFeedback(true);
             setGameState(prev => ({
@@ -174,7 +259,10 @@ const MemoryGame = () => {
             memoryShows: gameState.memoryShows,
             totalTime: totalTimeSeconds,
             totalPauses: gameState.totalPauses,
-            completed: completed
+            num_errores: gameState.num_errores,
+            num_aciertos: gameState.num_aciertos,
+            completado: completed,
+            totalRounds: gameState.totalRounds
         };
 
         // Navigate to results page
@@ -185,6 +273,20 @@ const MemoryGame = () => {
                 patientId
             } 
         });
+    };
+
+    // Obtener el número de filas según la dificultad
+    const getRowsForDifficulty = () => {
+        switch (config?.difficulty) {
+            case 'fácil':
+                return 2;
+            case 'medio':
+                return 3;
+            case 'difícil':
+                return 4;
+            default:
+                return 2;
+        }
     };
 
     return (
@@ -210,6 +312,14 @@ const MemoryGame = () => {
                     <p className="text-gray-600">
                         Arrastra las palabras desde arriba hacia los espacios de abajo para ordenarlas
                     </p>
+                    {config?.category && config.category !== 'todos' && (
+                        <p className="text-blue-600 mt-2">
+                            Categoría: {config.category.charAt(0).toUpperCase() + config.category.slice(1)}
+                        </p>
+                    )}
+                    <p className="text-green-600 font-medium mt-2">
+                        Ronda {gameState.currentRound} de {gameState.totalRounds}
+                    </p>
                 </div>
 
                 {/* Game area component */}
@@ -221,6 +331,8 @@ const MemoryGame = () => {
                         showItems={gameState.showItems}
                         onOrderChange={handleOrderChange}
                         onCheckResult={handleCheckResult}
+                        onErrorsChange={handleErrorsChange}
+                        rows={getRowsForDifficulty()}
                     />
                 )}
             </div>
@@ -237,6 +349,29 @@ const MemoryGame = () => {
                 onExitCancel={() => setShowExitConfirm(false)}
                 onGameComplete={() => handleFinishGame(true)}
             />
+
+            {/* Mensaje de siguiente ronda */}
+            {showNextRoundMessage && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto">
+                    <div className="bg-white p-8 rounded-lg shadow-xl text-center max-w-md w-full mx-4 animate-fadeIn">
+                        <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                            <span className="text-green-500 text-5xl">✓</span>
+                        </div>
+                        <h2 className="text-2xl font-bold text-green-700 mb-4">
+                            ¡Muy bien!
+                        </h2>
+                        <p className="text-gray-600 mb-6">
+                            Has completado la ronda {gameState.currentRound}. Preparando siguiente ronda...
+                        </p>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                            <div 
+                                className="bg-green-600 h-2.5 rounded-full" 
+                                style={{ width: `${(gameState.currentRound / gameState.totalRounds) * 100}%` }}
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
