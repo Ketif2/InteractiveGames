@@ -157,26 +157,31 @@ const SequenceGame = () => {
             setTimeout(() => setShowWrongFeedback(false), 2000);
             return;
         }
-
+    
         // Encontrar respuestas incorrectas
         const incorrect = [];
-        answers.forEach((answer, index) => {
-            if (!gameState.hiddenNumbers.includes(Number(answer))) {
-                incorrect.push(index);
-                setGameState(prev => ({
-                    ...prev,
-                    failedCount: prev.failedCount + 1
-                }));
+        let correctCount = 0;
+        
+        // Verificar cada respuesta individualmente
+        Object.keys(gameState.userAnswers).forEach((index) => {
+            const userAnswer = Number(gameState.userAnswers[index]);
+            if (gameState.hiddenNumbers.includes(userAnswer)) {
+                correctCount++; // Contar cada respuesta correcta individualmente
+            } else {
+                incorrect.push(Number(index));
             }
         });
-
+    
+        // Actualizar contador de aciertos y fallos
+        setGameState(prev => ({
+            ...prev,
+            successCount: prev.successCount + correctCount, // Sumamos solo los aciertos reales
+            failedCount: prev.failedCount + (answers.length - correctCount) // Sumamos solo los fallos reales
+        }));
+    
         setIncorrectAnswers(incorrect);
-
+    
         if (incorrect.length === 0) {
-            setGameState(prev => ({
-                ...prev,
-                successCount: prev.successCount + answers.length
-            }));
             setGameCompleted(true);
             setShowCorrectFeedback(true);
             setTimeout(() => setShowCorrectFeedback(false), 2000);
@@ -198,7 +203,8 @@ const SequenceGame = () => {
             helpCount: gameState.helpCount,
             memoryShows: gameState.memoryShows,
             totalTime,
-            totalPauses: Math.floor(gameState.totalPauseTime / 1000)
+            totalPauses: Math.floor(gameState.totalPauseTime / 1000),
+            complete:   gameCompleted,
         };
 
         // Navegar a la pantalla de resultados con toda la información necesaria

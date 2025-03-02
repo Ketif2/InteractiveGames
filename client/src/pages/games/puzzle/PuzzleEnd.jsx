@@ -71,7 +71,6 @@ const PuzzleEnd = () => {
       return;
     }
 
-    console.log(`PuzzleEnd - Redirigiendo a /games/${patientId}`);
     navigate(`/games/${patientId}`);
   };
 

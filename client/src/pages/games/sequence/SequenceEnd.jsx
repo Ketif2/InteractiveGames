@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { sessionService } from '../../../services/sessionService';
 import { statsService } from '../../../services/statsService';
 import { useAuth } from '@/context/AuthContext';
+import { AlertTriangle } from 'lucide-react';
 
 const SequenceEnd = () => {
     const navigate = useNavigate();
@@ -11,7 +12,23 @@ const SequenceEnd = () => {
     const { stats, config, patientId } = location.state || {};
     const [loading, setLoading] = useState(false);
     const [observations, setObservations] = useState('');
+    const [error, setError] = useState(null);
     const { user } = useAuth();
+
+    console.log('Estado recibido en SequenceEnd:', location.state);
+    
+    // Debugueando las propiedades específicas de stats
+    if (stats) {
+        console.log('Stats detallados:', {
+            totalTime: stats.totalTime,
+            failedCount: stats.failedCount,
+            successCount: stats.successCount,
+            totalPauses: stats.totalPauses,
+            helpCount: stats.helpCount,
+            completed: stats.completed,
+            completedType: typeof stats.completed
+        });
+    }
 
     // Cálculos adicionales para estadísticas
     const accuracy = stats ? Math.round((stats.successCount / (stats.successCount + stats.failedCount)) * 100) : 0;
@@ -21,47 +38,83 @@ const SequenceEnd = () => {
 
     const handleFinishSession = async () => {
         setLoading(true);
+        setError(null);
+        
         try {
-            
-        // Verificar que el usuario esté autenticado y exista el paciente
+            // Verificar si tenemos patientId
+            if (!patientId) {
+                throw new Error('No se pudo encontrar el ID del paciente');
+            }
+
             if (!user?.id) {
                 throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
             }
 
-            if (!patientId) {
-                throw new Error('No se pudo encontrar el ID del paciente.');
-            }
-    
             await sessionService.createSession({
-                id_paciente: patientId, // ID del paciente
-                id_juego: 3, // ID del juego de rompecabezas
-                id_terapeuta: user.id//localStorage.getItem('userId') // Asumiendo que guardas el ID del terapeuta en localStorage
+                id_paciente: patientId,
+                id_juego: 3, // ID del juego de secuencia
+                id_terapeuta: user.id,
+                observaciones_terapeuta: observations
             });
 
             const id_sesion = await sessionService.getLastSession(patientId);
-                  await statsService.registerStats({
-                    id_sesion: id_sesion.id_sesion,
-                    tiempo_transcurrido: stats.totalTime,
-                    num_errores: stats.failedMoves,
-                    num_aciertos: stats.successMoves,
-                    num_pausas: stats.pauseCount || 0,
-                    num_ayudas: stats.helpCount || 0,
-                    completado: stats.completed
-                  });
+            // Asegurarse de que los valores booleanos se conviertan correctamente a 0 o 1
+            const isCompleted = stats.completed === true ? 1 : 0;
+            
+            await statsService.registerStats({
+                id_sesion: id_sesion.id_sesion,
+                tiempo_transcurrido: stats.totalTime,
+                num_errores: stats.failedCount,
+                num_aciertos: stats.successCount,
+                num_pausas: stats.totalPauses || 0,
+                num_ayudas: stats.helpCount || 0,
+                completado: isCompleted
+            });
 
-            navigate('/new-session');
+            // Navegar a la página de sesiones
+            navigate('/new-session', { 
+                state: { 
+                    success: true,
+                    message: 'Sesión completada y guardada correctamente'
+                }
+            });
         } catch (error) {
-            console.error('Error al guardar la sesión:', error);
+            console.error('Error al guardar resultados:', error);
+            setError(error.message || 'Error al guardar los resultados');
         } finally {
             setLoading(false);
         }
     };
 
     const handlePlayAgain = () => {
+        if (!patientId) {
+            console.error("SequenceEnd - No se encontró el ID del paciente.");
+            setError("No se pudo encontrar el ID del paciente.");
+            return;
+        }
+
+        console.log(`SequenceEnd - Redirigiendo a /games/sequence/config con patientId: ${patientId}`);
         navigate('/games/sequence/config', { 
             state: { patientId } 
         });
     };
+
+    // Si no hay estadísticas o configuración, mostrar error
+    if (!stats || !config) {
+        return (
+            <div className="h-[calc(100vh-10rem)] flex flex-col items-center justify-center bg-gray-50">
+                <AlertTriangle className="w-16 h-16 text-yellow-500 mb-4" />
+                <h2 className="text-xl font-semibold text-gray-800 mb-2">No se encontraron datos del juego</h2>
+                <p className="text-gray-600 mb-6">No se pudieron cargar las estadísticas o la configuración del juego.</p>
+                <button
+                    onClick={() => navigate('/games')}
+                    className="px-6 py-2 bg-[#00398A] text-white rounded-lg hover:bg-[#002d6f] transition-colors"
+                >
+                    Volver a Juegos
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div className="h-[calc(100vh-10rem)] flex flex-col bg-gray-50">
@@ -109,7 +162,7 @@ const SequenceEnd = () => {
                         <textarea
                             value={observations}
                             onChange={(e) => setObservations(e.target.value)}
-                            className="w-full h-[calc(100%-8rem)] p-3 border rounded-lg resize-none"
+                            className="w-full h-[calc(100%-2rem)] p-3 border rounded-lg resize-none"
                             placeholder="Ingrese sus observaciones aquí..."
                         />
                     </section>
@@ -123,7 +176,7 @@ const SequenceEnd = () => {
                     <div className="space-y-3 flex-1">
                         <StatItem 
                             label="Tiempo transcurrido" 
-                            value={`${timeInMinutes}min`} 
+                            value={`${timeInMinutes}min ${stats.totalTime % 60}s`} 
                         />
                         <StatItem 
                             label="Número de errores" 
@@ -163,8 +216,15 @@ const SequenceEnd = () => {
                 </div>
             </div>
 
+            {/* Mensaje de error */}
+            {error && (
+                <div className="p-4 bg-red-100 border border-red-200 text-red-700 text-center rounded mx-4 mb-4">
+                    {error}
+                </div>
+            )}
+
             {/* Botones */}
-            <div className="p-4 bg-white border-t flex justify-center gap-4 mt-auto">
+            <div className="mt-2 bg-white flex justify-center gap-4">
                 <button
                     onClick={handleFinishSession}
                     disabled={loading}
