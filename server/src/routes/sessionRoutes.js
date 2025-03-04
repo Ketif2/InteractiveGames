@@ -8,7 +8,6 @@ import {
   getSessionToday,
   getLastSession
 } from '../controllers/sessionController.js';
-import authenticate from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 

@@ -1,105 +1,93 @@
-// src/pages/stats/PatientStats.jsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { statsService } from '@/services/statsService';
 import patientService from '@/services/patientService';
-import SessionCard from '@/components/sessions/SessionCard';
 
 const PatientStats = () => {
   const { id } = useParams();
   const [sessions, setSessions] = useState([]);
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // 1. Obtener información del paciente
+        const patientData = await patientService.getPatientById(id);
+        setPatient(patientData?.data || patientData);
+        
+        // 2. Obtener sesiones directamente
+        const sessionsData = await statsService.getSessionsByPatient(id);
+        setSessions(Array.isArray(sessionsData) ? sessionsData : []);
+      } catch (err) {
+        console.error('Error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
     fetchData();
   }, [id]);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Obtener información del paciente
-      const patientData = await patientService.getPatientById(id);
-      setPatient(patientData);
-      
-      // Obtener sesiones del paciente
-      const sessionsData = await statsService.getPatientSessions(id);
-      setSessions(Array.isArray(sessionsData) ? sessionsData : []);
-      
-      setError(null);
-    } catch (err) {
-      setError(err.message || 'Error al cargar datos del paciente');
-      console.error('Error fetching patient data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoBack = () => {
-    navigate('/stats');
-  };
-
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00398A]"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mx-4 my-4">
-        <p>{error}</p>
-      </div>
-    );
+    return <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00398A] mx-auto mt-12"></div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="flex items-center mb-6">
-        <button 
-          onClick={handleGoBack} 
-          className="mr-4 text-[#00398A] hover:text-[#00A8E3]"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="h-6 w-6">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-        </button>
-        <h1 className="text-2xl font-bold text-[#00398A]">
-          Historial de {patient?.nombre} {patient?.apellido}
-        </h1>
-      </div>
+      <button onClick={() => navigate('/stats')} className="text-[#00398A] mb-4">← Volver</button>
+      
+      <h1 className="text-2xl font-bold text-[#00398A] mb-6">
+        Historial de {patient?.nombre} {patient?.apellido}
+      </h1>
       
       {/* Información del paciente */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white rounded-lg shadow p-4 mb-6">
+        <div className="grid grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-gray-600">ID del paciente</p>
-            <p className="text-lg font-semibold">{patient?.id_paciente}</p>
+            <p className="font-medium">{patient?.id_paciente}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Nombre completo</p>
-            <p className="text-lg font-semibold">{patient?.nombre} {patient?.apellido}</p>
+            <p className="font-medium">{patient?.nombre} {patient?.apellido}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Diagnóstico</p>
-            <p className="text-lg font-semibold">{patient?.diagnostico || 'No especificado'}</p>
+            <p className="font-medium">{patient?.diagnostico || 'No especificado'}</p>
           </div>
         </div>
       </div>
       
-      {/* Título de sesiones */}
       <h2 className="text-xl font-semibold text-[#00398A] mb-4">Sesiones</h2>
       
-      {/* Lista de sesiones */}
       {sessions.length > 0 ? (
-        <div>
+        <div className="space-y-4">
           {sessions.map(session => (
-            <SessionCard key={session.id_sesion} session={session} />
+            <div key={session.id_sesion} className="bg-white rounded-lg shadow p-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-gray-600">ID Sesión: {session.id_sesion}</p>
+                  <p className="text-sm text-gray-600">Fecha: {new Date(session.fecha_sesion).toLocaleDateString()}</p>
+                  <p className="text-sm text-gray-600">Juego: {session.nombre_juego}</p>
+                  <span className={`px-2 py-1 text-xs rounded-full ${
+                    session.estado === 'Completada' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {session.estado}
+                  </span>
+                </div>
+                <button
+                  onClick={() => navigate(`/stats/session/${session.id_sesion}/details`)}
+                  className="px-4 py-2 bg-[#00A8E3] text-white rounded-md"
+                  disabled={session.estado !== 'Completada'}
+                >
+                  Ver
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       ) : (
