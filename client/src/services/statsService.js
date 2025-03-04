@@ -11,6 +11,7 @@ export const statsService = {
             throw new Error(error.response?.data?.message || 'Error al obtener estadísticas');
         }
     },
+    
     registerStats: async (statsData) => {
         try {
             const response = await api.post(`${API_URL}/games/stats/register`, statsData);
@@ -18,5 +19,25 @@ export const statsService = {
         } catch (error) {
             throw new Error(error.response?.data?.message || 'Error al registrar estadísticas');
         }
+    },
+
+    getPatientSessions: async (id_paciente) => {
+        try {
+            const response = await api.get(`${API_URL}/stats/patient/${id_paciente}/sessions`);
+            return response.data;
+        } catch (error) {
+            throw new Error(error.response?.data?.message || 'Error al obtener sesiones del paciente');
+        }
+    },
+    
+    getSessionDetails: async (id_sesion) => {
+        try {
+            const response = await api.get(`${API_URL}/stats/session/${id_sesion}/details`);
+            return response.data;
+        } catch (error) {
+            throw new Error(error.response?.data?.message || 'Error al obtener detalles de la sesión');
+        }
     }
 };
+
+export default statsService;

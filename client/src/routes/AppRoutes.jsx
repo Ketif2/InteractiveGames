@@ -23,6 +23,10 @@ import PuzzleEnd from '../pages/games/puzzle/PuzzleEnd';
 import SequenceEnd from '../pages/games/sequence/SequenceEnd';
 import MemoryEnd from '../pages/games/memory/MemoryEnd';
 
+import Stats from '../pages/stats/Stats';
+import PatientStats from '../pages/stats/PatientStats';
+import SessionStats from '../pages/stats/SessionStats';
+
 export const AppRoutes = () => {
   return (
     <Routes>
@@ -73,15 +77,33 @@ export const AppRoutes = () => {
        </PrivateRoute>
      } />
 
-     <Route path="/sessions/:sessionId/stats" element={
+     {/* Estadísticas -------------------------------------------*/}
+
+     <Route path="/stats" element={
        <PrivateRoute>
          <Layout>
-           {/* Aquí irá el componente de estadísticas*/}
+           <Stats/>
          </Layout>
        </PrivateRoute>
      } />
 
-     {/* Juego Puzzle */}
+      <Route path="/stats/patient/:id/sessions" element={
+       <PrivateRoute>
+         <Layout>
+           <PatientStats />
+         </Layout>
+       </PrivateRoute>
+     } />
+
+      <Route path="/stats/session/:id/details" element={
+       <PrivateRoute>
+         <Layout>
+           <SessionStats />
+         </Layout>
+       </PrivateRoute>
+     } />
+
+     {/* Juego Puzzle -------------------------------------------*/}
      <Route path="/games/puzzle/config" element={
         <PrivateRoute>
           <Layout>

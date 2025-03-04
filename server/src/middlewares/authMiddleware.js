@@ -12,7 +12,6 @@ const authenticate = (req, res, next) => {
         req.user = decoded;
         next();
     } catch (error) {
-        // Si el token es inválido, limpia la cookie
         res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',

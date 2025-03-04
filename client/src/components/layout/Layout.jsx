@@ -43,6 +43,16 @@ const Layout = ({ children }) => {
             >
               Nueva Sesión
             </Link>
+            <Link 
+              to="/stats"
+              className={`text-base font-medium px-4 py-2 ${
+                pathName.includes('/stats')
+                  ? 'bg-[#00A8E3] text-white rounded-md'
+                  : 'text-gray-700 hover:text-[#00A8E3]'
+              }`}
+            >
+              Estadísticas
+            </Link>
           </div>
         </div>
       </nav>

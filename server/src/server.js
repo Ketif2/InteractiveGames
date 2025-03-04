@@ -8,6 +8,7 @@ import patientRoutes from './routes/patientRoutes.js';
 import therapistRoutes from './routes/therapistRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
+import generalStatsRoutes from './routes/generalStatsRoutes.js';
 import memoryRoutes from './routes/games/memoryRoutes.js';
 import puzzleRoutes from './routes/games/puzzleRoutes.js';
 import sequenceRoutes from './routes/games/sequenceRoutes.js';
@@ -27,8 +28,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/therapist', therapistRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/sessions', sessionRoutes);
-app.use('/api/games/sequence', sequenceRoutes);
 app.use('/api/games/stats', statsRoutes);
+app.use('/api/stats', generalStatsRoutes);
+
+app.use('/api/games/sequence', sequenceRoutes);
 app.use('/api/games/memory', memoryRoutes);
 app.use('/api/games/puzzle', puzzleRoutes);
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { 
     getStatsPerSession,
-    registerStats 
+    registerStats,
 } from '../controllers/statsController.js';
 import authenticate from '../middlewares/authMiddleware.js';
 
