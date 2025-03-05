@@ -80,7 +80,10 @@ const PatientStats = () => {
                   </span>
                 </div>
                 <button
-                  onClick={() => navigate(`/stats/session/${session.id_sesion}/details`)}
+                  onClick={() => {
+                    console.log("ID Sesión:", session.id_sesion); // Para depuración
+                    navigate(`/stats/session/${session.id_sesion}/details`);
+                  }}
                   className="px-4 py-2 bg-[#00A8E3] text-white rounded-md"
                   disabled={session.estado !== 'Completada'}
                 >

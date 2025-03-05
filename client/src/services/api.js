@@ -10,13 +10,10 @@ const api = axios.create({
   withCredentials: true // Habilita el envío de cookies
 });
 
-// Interceptor para manejar errores
 api.interceptors.response.use(
-  (response) => response.data, // Mantenemos tu lógica de devolver directamente response.data
+  (response) => response.data, 
   (error) => {
     if (error.response?.status === 401) {
-      // Ya no necesitamos remover el token del localStorage
-      // La cookie se maneja desde el servidor
       window.location.href = '/login';
     }
     return Promise.reject(error.response?.data || error);

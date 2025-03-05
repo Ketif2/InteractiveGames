@@ -9,6 +9,6 @@ import authenticate from '../middlewares/authMiddleware.js';
 const router = Router();
 
 router.get('/patient/:id_paciente/sessions', authenticate, getSessionsByPatient);
-router.get('/session/:id_sesion/details', authenticate, getSessionDetails);
+router.get('/session/:id/details', authenticate, getSessionDetails);
 
 export default router;

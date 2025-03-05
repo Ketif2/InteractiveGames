@@ -25,13 +25,8 @@ export const statsService = {
     getSessionsByPatient: async (id_paciente) => {
         try {
             const numericId = parseInt(id_paciente, 10);
-            console.log(`Solicitando sesiones para paciente ID: ${numericId}`);
-            
             const url = `${API_URL}/stats/patient/${numericId}/sessions`;
-            console.log('URL completa:', url);
-            
             const response = await api.get(url);
-            console.log('Respuesta completa:', response);
             
             // Verifica si la respuesta ya es un array (y no tiene una propiedad data)
             if (Array.isArray(response)) {
@@ -55,14 +50,24 @@ export const statsService = {
     },
     
     getSessionDetails: async (id_sesion) => {
+        if (!id_sesion) {
+            console.error('ID de sesión vacío');
+            throw new Error('ID de sesión no proporcionado');
+        }
+        
         try {
-            const response = await api.get(`${API_URL}/stats/session/${id_sesion}/details`);
-            return response.data;
+            console.log(`Llamando a API con sesión ID: ${id_sesion}`);
+            // Eliminemos la conversión a número si no es necesaria
+            // const numericId = parseInt(id_sesion, 10);
+            const response = await api.get(`/stats/session/${id_sesion}/details`);
+            console.log('Respuesta completa:', response);
+            return response;
         } catch (error) {
-            if (error.response?.status === 401) {
-                throw new Error('Su sesión ha expirado. Por favor inicie sesión nuevamente.');
+            console.error('Error en getSessionDetails:', error);
+            if (error.response) {
+                console.error('Datos de error:', error.response);
             }
-            throw new Error(error.response?.data?.message || 'Error al obtener detalles de la sesión');
+            throw new Error(error.message || 'Error al obtener detalles de la sesión');
         }
     }
     

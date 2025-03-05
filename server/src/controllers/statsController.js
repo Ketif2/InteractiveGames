@@ -84,21 +84,70 @@ export const getSessionsByPatient = async (req, res) => {
 };
 
 export const getSessionDetails = async (req, res) => {
-    const { id_sesion } = req.params;
-    try {
-        console.log(`Procesando solicitud para sesión ID: ${id_sesion}`);
-        
-        // Verificar primero si la sesión existe
-        const [sessionCheck] = await pool.query('SELECT * FROM sesion WHERE id_sesion = ?', [id_sesion]);
-        
-        if (sessionCheck.length === 0) {
-            console.log(`No se encontró la sesión con ID: ${id_sesion}`);
-            return res.status(404).json({ message: 'Sesión no encontrada' });
-        }
-        
-        // Continuar con el resto de las consultas...
-    } catch (error) {
-        console.error('Error al obtener detalles de la sesión:', error);
-        res.status(500).json({ message: 'Error interno del servidor' });
+  console.log('Params recibidos:', req.params);
+  const { id } = req.params;
+  
+  if (!id) {
+    console.error('ID de sesión no proporcionado en los parámetros');
+    return res.status(400).json({ message: 'ID de sesión no proporcionado' });
+  }
+  
+  try {
+    // Obtenemos información básica de la sesión
+    console.log(`Procesando petición para sesión ID: ${id}`);
+    const [sessionRows] = await pool.query(`
+      SELECT s.id_sesion, s.id_paciente, s.id_juego, s.id_terapeuta, s.fecha_sesion, s.observaciones_terapeuta,
+             j.nombre_juego, j.categoria_cognitiva,
+             CONCAT(p.nombre, ' ', p.apellido) AS nombre_paciente,
+             p.diagnostico
+      FROM sesion s
+      JOIN juego j ON s.id_juego = j.id_juego
+      JOIN paciente p ON s.id_paciente = p.id_paciente
+      WHERE s.id_sesion = ?
+    `, [id]);
+    
+    if (!sessionRows || sessionRows.length === 0) {
+      return res.status(404).json({ message: 'Sesión no encontrada' });
     }
+    
+    const sessionInfo = sessionRows[0];
+    
+    // Obtenemos estadísticas generales del juego
+    const [statsRows] = await pool.query(`
+      SELECT * FROM estadisticas_juego
+      WHERE id_sesion = ?
+    `, [id]);
+    
+    // Obtenemos configuración específica según el tipo de juego
+    let configRows = [];
+    
+    if (sessionInfo.nombre_juego === 'Rompecabezas') {
+      [configRows] = await pool.query(`
+        SELECT * FROM configuracion_puzzle
+        WHERE id_sesion = ?
+      `, [id]);
+    } else if (sessionInfo.nombre_juego === 'Secuencia Lógica') {
+      [configRows] = await pool.query(`
+        SELECT * FROM configuracion_secuencia
+        WHERE id_sesion = ?
+      `, [id]);
+    } else if (sessionInfo.nombre_juego === 'Ordena' || sessionInfo.nombre_juego === 'Sendero del Bosque') {
+      [configRows] = await pool.query(`
+        SELECT * FROM configuracion_memoria
+        WHERE id_sesion = ?
+      `, [id]);
+    }
+    
+    // Construimos el objeto de respuesta
+    const sessionDetails = {
+      session: sessionInfo,
+      statistics: statsRows[0] || null,
+      configuration: configRows[0] || null
+    };
+    
+    res.status(200).json(sessionDetails);
+  } catch (error) {
+    console.error('Error al obtener detalles de la sesión:', error);
+    return res.status(500).json({ message: 'Error al obtener detalles de la sesión', error: error.message });
+  }
 };
