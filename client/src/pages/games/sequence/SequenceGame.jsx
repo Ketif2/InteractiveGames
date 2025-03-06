@@ -22,15 +22,13 @@ const SequenceGame = () => {
         lastPauseTime: null,
         helpCount: 0,
         successCount: 0,
-        failedCount: 0,
-        memoryShows: 0
+        failedCount: 0
     });
     
     const [showCorrectFeedback, setShowCorrectFeedback] = useState(false);
     const [showWrongFeedback, setShowWrongFeedback] = useState(false);
     const [gameCompleted, setGameCompleted] = useState(false);
     const [showExitConfirm, setShowExitConfirm] = useState(false);
-    const [showMemoryNumbers, setShowMemoryNumbers] = useState(false);
     const [incorrectAnswers, setIncorrectAnswers] = useState([]);
 
     useEffect(() => {
@@ -67,11 +65,6 @@ const SequenceGame = () => {
             hiddenNumbers: hiddenNums,
             userAnswers: {}
         }));
-
-        if (config.gameMode === 'memoria') {
-            setShowMemoryNumbers(true);
-            setTimeout(() => setShowMemoryNumbers(false), 10000);
-        }
     };
 
     const shuffleNumbers = () => {
@@ -110,23 +103,14 @@ const SequenceGame = () => {
     };
 
     const handleToggleHelp = () => {
-        if (config.gameMode === 'memoria') {
-            setShowMemoryNumbers(true);
-            setGameState(prev => ({
-                ...prev,
-                memoryShows: prev.memoryShows + 1
-            }));
-            setTimeout(() => setShowMemoryNumbers(false), 10000);
-        } else {
-            setGameState(prev => ({
-                ...prev,
-                showHelp: true,
-                helpCount: prev.helpCount + 1
-            }));
-            setTimeout(() => {
-                setGameState(prev => ({ ...prev, showHelp: false }));
-            }, 3000);
-        }
+        setGameState(prev => ({
+            ...prev,
+            showHelp: true,
+            helpCount: prev.helpCount + 1
+        }));
+        setTimeout(() => {
+            setGameState(prev => ({ ...prev, showHelp: false }));
+        }, 3000);
     };
 
     const handleTogglePause = () => {
@@ -201,10 +185,9 @@ const SequenceGame = () => {
             successCount: gameState.successCount,
             failedCount: gameState.failedCount,
             helpCount: gameState.helpCount,
-            memoryShows: gameState.memoryShows,
             totalTime,
             totalPauses: Math.floor(gameState.totalPauseTime / 1000),
-            complete:   gameCompleted,
+            complete: gameCompleted,
         };
 
         // Navegar a la pantalla de resultados con toda la información necesaria
@@ -254,7 +237,6 @@ const SequenceGame = () => {
                                 numbers={gameState.numbers}
                                 hiddenNumbers={gameState.hiddenNumbers}
                                 showHelp={gameState.showHelp}
-                                showMemoryNumbers={showMemoryNumbers}
                                 gameMode={config.gameMode}
                             />
                         </div>

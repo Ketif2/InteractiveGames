@@ -181,7 +181,6 @@ const SequenceConfig = () => {
                         >
                             <option value="normal">Normal</option>
                             <option value="desvanecimiento">Desvanecimiento</option>
-                            <option value="memoria">Memoria</option>
                             <option value="revuelto">Revuelto</option>
                         </select>
                     </div>

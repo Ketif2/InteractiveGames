@@ -81,7 +81,7 @@ const SequenceEnd = () => {
             let modoJuego = config.gameMode.toLowerCase();
             
             // Validar que el modo de juego esté dentro de los valores permitidos
-            if (!['normal', 'desvanecimiento', 'memoria', 'revuelto'].includes(modoJuego)) {
+            if (!['normal', 'desvanecimiento', 'revuelto'].includes(modoJuego)) {
                 // Si no es un valor válido, usar 'normal' como predeterminado
                 modoJuego = 'normal';
             }
@@ -225,12 +225,6 @@ const SequenceEnd = () => {
                             label="Número de ayudas" 
                             value={stats?.helpCount || 0} 
                         />
-                        {config.gameMode === 'memoria' && (
-                            <StatItem 
-                                label="Veces mostrados números" 
-                                value={stats?.memoryShows || 0} 
-                            />
-                        )}
                         <StatItem 
                             label="Aciertos por minuto" 
                             value={`${successesPerMinute} aciertos/min`} 
