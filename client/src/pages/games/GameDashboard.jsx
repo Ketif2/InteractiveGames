@@ -1,36 +1,39 @@
 // pages/games/GameDashboard.jsx
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { AlertTriangle } from 'lucide-react';
+import puzzleImage from '../../assets/images/puzzleImage.png';
+import sequenceImage from '../../assets/images/sequenceImage.png';
+import forestImage from '../../assets/images/forestImage.png';
+import orderImage from '../../assets/images/orderImage.png';
 
 const GAMES = [
   {
-    id: 1, // ID numérico para la base de datos
+    id: 1, 
     slug: 'puzzle',
     title: 'Rompecabezas',
     category: 'Asociaciones Visuales y Resolución de Problemas',
-    image: '/src/assets/games/puzzle.png'
+    image: puzzleImage
   },
   {
     id: 2,
     slug: 'memory',
     title: 'Ordena',
     category: 'Memoria y Concentración',
-    image: '/src/assets/games/memory.png'
+    image: orderImage
   },
   {
     id: 3,
     slug: 'sequence',
     title: 'Secuencia Lógica',
     category: 'Asociaciones Visuales y Resolución de Problemas',
-    image: '/src/assets/games/sequence.png'
+    image: sequenceImage
   },
   {
     id: 4,
     slug: 'forest',
     title: 'Sendero del Bosque',
     category: 'Memoria y Concentración',
-    image: '/src/assets/games/forest.png'
+    image: forestImage
   }
 ];
 
