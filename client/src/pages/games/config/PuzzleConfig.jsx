@@ -298,7 +298,6 @@ const PuzzleConfig = () => {
                         </div>
                     </div>
 
-                    {/* Opción de imágenes aleatorias */}
                     <div className="flex items-center space-x-2 bg-blue-50 p-3 rounded-lg border border-blue-200">
                         <input
                             type="checkbox"
@@ -309,11 +308,10 @@ const PuzzleConfig = () => {
                             className="h-5 w-5 text-[#00398A] focus:ring-[#00398A]"
                         />
                         <label htmlFor="useRandomImages" className="text-gray-700 font-medium">
-                            Usar imágenes aleatorias
+                            Usar imágenes aleatorias (Difícil)
                         </label>
                     </div>
 
-                    {/* Mostrar imágenes aleatorias si están activadas */}
                     {config.useRandomImages && (
                         <div>
                             <h3 className="text-xl font-semibold text-[#00398A] mb-4">
@@ -323,26 +321,24 @@ const PuzzleConfig = () => {
                         </div>
                     )}
 
-                    {/* Selección de Imágenes (solo visible si no estamos usando aleatorias) */}
                     {!config.useRandomImages && (
                         <>
                             <div>
                                 <h3 className="text-xl font-semibold text-[#00398A] mb-4">
-                                    Imágenes de Dificultad Media
+                                    Imágenes de Dificultad Fácil
                                 </h3>
                                 {renderImageGrid(mediumImages, 'medium')}
                             </div>
 
                             <div>
                                 <h3 className="text-xl font-semibold text-[#00398A] mt-8 mb-4">
-                                    Imágenes de Dificultad Alta
+                                    Imágenes de Dificultad Media
                                 </h3>
                                 {renderImageGrid(hardImages, 'hard')}
                             </div>
                         </>
                     )}
 
-                    {/* Botones */}
                     <div className="flex justify-between pt-6">
                         <button
                             onClick={handleBack}

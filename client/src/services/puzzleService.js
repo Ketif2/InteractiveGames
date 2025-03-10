@@ -6,8 +6,8 @@ const PUZZLE_IMAGES = {
     medium: [
         { id: '1M', name: 'Alpacas', path: 'Alpacas.jpg' },
         { id: '2M', name: 'Cangrejos', path: 'Cangrejos.jpg' },
-        { id: '3M', name: 'Foca', path: 'Foca.jpg' },
-        { id: '4M', name: 'Laguna', path: 'Laguna.jpg' },
+        { id: '3M', name: 'FocaM', path: 'FocaM.jpg' },
+        { id: '4M', name: 'LagunaM', path: 'LagunaM.jpg' },
         { id: '5M', name: 'MitadMund', path: 'MitadMund.jpg' },
         { id: '6M', name: 'Pajarito', path: 'Pajarito.jpg' },
         { id: '7M', name: 'Pajaritos', path: 'Pajaritos.jpg' },
@@ -16,16 +16,16 @@ const PUZZLE_IMAGES = {
         { id: '10M', name: 'Volcan', path: 'Volcan.jpg' }
     ],
     hard: [
-        { id: '1H', name: 'Bandera ECU', path: 'BanderaECU.jpg' },
+        { id: '1H', name: 'BanderaECU', path: 'BanderaECU.jpg' },
         { id: '2H', name: 'Birds', path: 'Birds.jpg' },
         { id: '3H', name: 'Capillas', path: 'Capillas.jpg' },
         { id: '4H', name: 'Colibri', path: 'Colibri.jpg' },
-        { id: '5H', name: 'Fin Año', path: 'FinAnio.jpg' },
-        { id: '6H', name: 'Foca', path: 'Foca.jpg' },
-        { id: '7H', name: 'Laguna', path: 'Laguna.jpg' },
+        { id: '5H', name: 'Fin de Año', path: 'FinAnio.jpg' },
+        { id: '6H', name: 'FocaH', path: 'FocaH.jpg' },
+        { id: '7H', name: 'LagunaH', path: 'LagunaH.jpg' },
         { id: '8H', name: 'Panecillo', path: 'Panecillo.jpg' },
-        { id: '9H', name: 'Quito Centro', path: 'QuitoCentro.jpg' },
-        { id: '10H', name: 'Quito Centro B', path: 'QuitoCentroD.jpg' }
+        { id: '9H', name: 'QuitoCentro', path: 'QuitoCentro.jpg' },
+        { id: '10H', name: 'QuitoCentroD', path: 'QuitoCentroD.jpg' }
     ]
 };
 

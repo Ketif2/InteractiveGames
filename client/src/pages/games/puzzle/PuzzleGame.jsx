@@ -42,13 +42,11 @@ const PuzzleGame = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Efecto para inicializar el juego y cargar configuración si es necesario
     useEffect(() => {
         async function initialize() {
             try {
                 setLoading(true);
                 
-                // Si no tenemos la configuración pero sí el configId, la cargamos
                 if (!config && configId) {
                     const response = await puzzleService.getConfig(configId);
                     if (response.success && response.config) {
@@ -57,7 +55,6 @@ const PuzzleGame = () => {
                         throw new Error('No se pudo cargar la configuración del juego');
                     }
                 } else if (config) {
-                    // Si ya tenemos la configuración, inicializamos directamente
                     initializePuzzles(config);
                 } else {
                     throw new Error('No se encontró configuración para el juego');
@@ -74,7 +71,6 @@ const PuzzleGame = () => {
         initialize();
     }, [configId, config]);
 
-    // Inicializar puzzles basado en la configuración
     const initializePuzzles = (configData) => {
         const { selectedPuzzles } = configData;
         const gridSize = parseInt(configData.gridSize);
@@ -83,7 +79,6 @@ const PuzzleGame = () => {
             const totalPieces = gridSize * gridSize;
             const positions = Array.from({ length: totalPieces }, (_, i) => i);
             
-            // Mezclar posiciones
             for (let i = positions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [positions[i], positions[j]] = [positions[j], positions[i]];
@@ -115,26 +110,21 @@ const PuzzleGame = () => {
         }));
     };
 
-    // Manejar el fin de una acción de arrastrar
     const handleDragEnd = (event) => {
         const { active, over } = event;
         
         if (!over || active.id === over.id) return;
 
-        // Obtener el puzzle actual
         const currentPuzzle = gameState.puzzles[gameState.currentPuzzleIndex];
         
-        // Encontrar las piezas involucradas
         const activeId = active.id.toString();
         const overId = over.id.toString();
         
         const oldIndex = currentPuzzle.pieces.findIndex(piece => `piece-${piece.id}` === activeId);
         const newIndex = currentPuzzle.pieces.findIndex(piece => `piece-${piece.id}` === overId);
 
-        // No permitir mover a una posición que ya está correcta
         if (currentPuzzle.pieces[newIndex].isFixed) return;
 
-        // Crear un nuevo array de piezas con el intercambio
         const newPieces = [...currentPuzzle.pieces];
         const movingPiece = { ...newPieces[oldIndex] };
         const targetPiece = { ...newPieces[newIndex] };
@@ -149,10 +139,8 @@ const PuzzleGame = () => {
             currentPosition: oldIndex
         };
 
-        // Verificar si el movimiento fue correcto
         const isCorrect = movingPiece.correctPosition === newIndex;
 
-        // Mostrar feedback visual
         if (isCorrect) {
             setShowCorrectFeedback(true);
             setTimeout(() => setShowCorrectFeedback(false), 2000);
@@ -161,7 +149,6 @@ const PuzzleGame = () => {
             setTimeout(() => setShowWrongFeedback(false), 2000);
         }
 
-        // Actualizar el estado del juego
         const updatedPuzzles = [...gameState.puzzles];
         updatedPuzzles[gameState.currentPuzzleIndex] = {
             ...currentPuzzle,
@@ -176,16 +163,13 @@ const PuzzleGame = () => {
             }
         };
 
-        // Verificar si el puzzle está completo
         const isPuzzleComplete = newPieces.every(piece => piece.correctPosition === piece.currentPosition);
         if (isPuzzleComplete) {
             updatedPuzzles[gameState.currentPuzzleIndex].completed = true;
             
-            // Si todos los puzzles están completos, terminamos el juego
             if (updatedPuzzles.every(puzzle => puzzle.completed)) {
                 setGameCompleted(true);
             } else if (gameState.currentPuzzleIndex < updatedPuzzles.length - 1) {
-                // Si hay más puzzles, mostramos el mensaje de éxito y preparamos el siguiente
                 setTimeout(() => {
                     setGameState(prev => ({
                         ...prev,
@@ -219,10 +203,9 @@ const PuzzleGame = () => {
                 ...prev,
                 showHelp: false
             }));
-        }, 3000);
+        }, 10000);
     };
 
-    // Pausar o reanudar el juego
     const handleTogglePause = () => {
         setGameState(prev => {
             const now = Date.now();
