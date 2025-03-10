@@ -371,6 +371,13 @@ const PuzzleGame = () => {
                 isWrong={showWrongFeedback}
                 gameCompleted={gameCompleted}
                 onFinish={handleFinishGame}
+                stats={{
+                    successMoves: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.successMoves, 0),
+                    failedMoves: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.failedMoves, 0),
+                    helpCount: gameState.puzzles.reduce((total, puzzle) => total + puzzle.stats.helpCount, 0),
+                    totalTime: Math.floor((Date.now() - gameState.startTime - gameState.totalPauseTime) / 1000),
+                    pauseCount: gameState.pauseCount || 0
+                }}
             />
 
             {/* Overlay de pausa */}
