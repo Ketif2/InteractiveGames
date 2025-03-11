@@ -1,53 +1,177 @@
-import React from 'react';
+// src/pages/games/forest/ForestGame.jsx
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
+// Componentes modulares
+import ForestHeader from '../../../components/games/forest/ForestHeader';
+import ForestObjects from '../../../components/games/forest/ForestObjects';
+import ForestFeedback from '../../../components/games/forest/ForestFeedback';
+import ForestPath from '../../../components/games/forest/ForestPath';
+import ForestInstructions from '../../../components/games/forest/ForestInstructions';
+import ForestAudio from '../../../components/games/forest/ForestAudio';
+import ForestBackground from '../../../components/games/forest/ForestBackground';
+
+// Hooks y utilidades
+import useForestGame from '../../../hooks/useForestGame';
+import { applyAnimationStyles } from '../../../utils/forestAnimations';
+import { forestPatterns } from '../../../data/forestPatterns';
+
+// Tipos de objetos disponibles en el bosque
+const forestObjects = {
+  flowers: [
+    { id: 'flower-blue-1', type: 'flower', color: 'blue', src: '/assets/forest/flower-blue-1.svg' },
+    { id: 'flower-blue-2', type: 'flower', color: 'blue', src: '/assets/forest/flower-blue-2.svg' },
+    { id: 'flower-red-1', type: 'flower', color: 'red', src: '/assets/forest/flower-red-1.svg' },
+    { id: 'flower-red-2', type: 'flower', color: 'red', src: '/assets/forest/flower-red-2.svg' },
+    { id: 'flower-yellow-1', type: 'flower', color: 'yellow', src: '/assets/forest/flower-yellow-1.svg' },
+    { id: 'flower-purple-1', type: 'flower', color: 'purple', src: '/assets/forest/flower-purple-1.svg' },
+  ],
+  mushrooms: [
+    { id: 'mushroom-red-1', type: 'mushroom', color: 'red', src: '/assets/forest/mushroom-red-1.svg' },
+    { id: 'mushroom-red-2', type: 'mushroom', color: 'red', src: '/assets/forest/mushroom-red-2.svg' },
+    { id: 'mushroom-brown-1', type: 'mushroom', color: 'brown', src: '/assets/forest/mushroom-brown-1.svg' },
+    { id: 'mushroom-white-1', type: 'mushroom', color: 'white', src: '/assets/forest/mushroom-white-1.svg' },
+  ],
+  trees: [
+    { id: 'tree-green-1', type: 'tree', color: 'green', src: '/assets/forest/tree-green-1.svg' },
+    { id: 'tree-green-2', type: 'tree', color: 'green', src: '/assets/forest/tree-green-2.svg' },
+    { id: 'tree-autumn-1', type: 'tree', color: 'autumn', src: '/assets/forest/tree-autumn-1.svg' },
+  ],
+  animals: [
+    { id: 'animal-rabbit-1', type: 'animal', species: 'rabbit', src: '/assets/forest/animal-rabbit-1.svg' },
+    { id: 'animal-fox-1', type: 'animal', species: 'fox', src: '/assets/forest/animal-fox-1.svg' },
+    { id: 'animal-bird-1', type: 'animal', species: 'bird', src: '/assets/forest/animal-bird-1.svg' },
+  ]
+};
+
+// Componente principal del juego
 const ForestGame = () => {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const { config, configId, patientId } = location.state || {};
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { config, patientId } = location.state || {};
+  
+  // Aplicar estilos de animación al montar el componente
+  useEffect(() => {
+    const cleanupStyles = applyAnimationStyles();
+    return cleanupStyles;
+  }, []);
+  
+  // Usar el hook principal que maneja toda la lógica del juego
+  const {
+    gameState,
+    showCorrectFeedback,
+    showWrongFeedback,
+    showTimeoutFeedback,
+    showLevelComplete,
+    showExitConfirm,
+    showNextRoundMessage,
+    gameCompleted,
+    showCompletedMessage,
+    audioEnabled,
+    handleObjectClick,
+    handleHelp,
+    handleTogglePause,
+    handleExitClick,
+    handleExitCancel,
+    handleFinishGame,
+    startNextRound,
+    toggleAudio,
+    pathRef
+  } = useForestGame(config, forestPatterns, forestObjects, null, navigate, patientId);
 
-    const handleFinishGame = () => {
-        navigate('/games/forest/end', {
-            state: {
-                configId,
-                patientId,
-                stats: {
-                    // Aquí irán las estadísticas del juego
-                }
-            }
-        });
-    };
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {/* Barra de control */}
+      <ForestHeader
+        currentLevel={gameState.currentLevel}
+        currentRound={gameState.currentRound}
+        totalRounds={gameState.totalRounds}
+        remainingTime={gameState.remainingTime}
+        timerActive={gameState.timerActive}
+        onHelp={handleHelp}
+        onTogglePause={handleTogglePause}
+        isPaused={gameState.isPaused}
+        onExit={handleExitClick}
+      />
 
-    return (
-        <div className="fixed inset-0 bg-gray-100">
-            {/* Barra superior con tiempo y controles */}
-            <div className="absolute top-0 left-0 right-0 bg-[#00398A] text-white p-4 flex justify-between items-center">
-                <div>Tiempo: 00:00</div>
-                <div className="flex gap-4">
-                    <button className="bg-[#00A8E3] px-4 py-2 rounded">Instrucciones</button>
-                    <button className="bg-[#00A8E3] px-4 py-2 rounded">Pausa</button>
-                    <button 
-                        onClick={handleFinishGame}
-                        className="bg-red-500 px-4 py-2 rounded"
-                    >
-                        Terminar
-                    </button>
-                </div>
+      {/* Área principal del juego */}
+      <div 
+        className="p-4" 
+        style={{
+          opacity: gameState.isPaused ? 0.5 : 1, 
+          pointerEvents: gameState.isPaused ? 'none' : 'auto'
+        }}
+      >
+        {/* Instrucciones */}
+        <ForestInstructions
+          currentLevel={gameState.currentLevel}
+          currentRound={gameState.currentRound}
+          totalRounds={gameState.totalRounds}
+          showInstructions={gameState.showInstructions}
+        />
+        
+        {/* Área del juego con límites claros */}
+        <div className="px-4 py-2">
+          <div 
+            className="bg-white rounded-lg shadow-lg p-4 relative overflow-hidden" 
+            style={{
+              height: 'calc(100vh - 180px)', // Altura responsive basada en la altura de la ventana
+              minHeight: '500px', // Altura mínima para asegurar visibilidad en pantallas pequeñas
+              maxHeight: '800px', // Altura máxima para evitar exceso en pantallas muy grandes
+              width: '100%', // Ancho completo del contenedor
+              border: '3px solid #e0e0e0', // Borde más visible para definir claramente los límites
+              boxSizing: 'border-box', // Asegurar que los bordes no afecten las dimensiones
+              marginBottom: '20px'
+            }}
+          >
+            {/* Capa de clip para asegurar que nada salga del área */}
+            <div className="absolute inset-0 overflow-hidden">
+              {/* Control de audio */}
+              <ForestAudio
+                audioEnabled={audioEnabled}
+                onToggleAudio={toggleAudio}
+              />
+              
+              {/* Fondo del bosque mejorado */}
+              <ForestBackground />
+              
+              {/* Camino - Ahora responsive */}
+              <ForestPath
+                pathString={gameState.pathString}
+                pathWidth={40} // Pasar el ancho del camino desde el estado
+                ref={pathRef}
+              />
+              
+              {/* Objetos en el camino - Ahora más grandes y dentro de los límites */}
+              <ForestObjects 
+                objects={gameState.objects} 
+                onObjectClick={handleObjectClick} 
+              />
             </div>
-
-            {/* Área del juego */}
-            <div className="absolute inset-0 mt-16 p-4 flex items-center justify-center">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold text-[#00398A] mb-4">
-                        Sendero del Bosque
-                    </h2>
-                    <p className="text-gray-600">
-                        Aquí irá el juego del sendero
-                    </p>
-                </div>
-            </div>
+          </div>
         </div>
-    );
+      </div>
+      
+      {/* Feedback y modales */}
+      <ForestFeedback 
+        showCorrect={showCorrectFeedback}
+        showWrong={showWrongFeedback}
+        showPause={gameState.isPaused}
+        showExit={showExitConfirm}
+        showTimeout={showTimeoutFeedback}
+        showLevelComplete={showLevelComplete}
+        showNextRound={showNextRoundMessage}
+        showGameCompleted={gameCompleted}
+        showCompleted={showCompletedMessage}
+        currentRound={gameState.currentRound}
+        totalRounds={gameState.totalRounds}
+        onResumeGame={handleTogglePause}
+        onExitConfirm={() => handleFinishGame(false)}
+        onExitCancel={handleExitCancel}
+        onGameComplete={() => handleFinishGame(true)}
+        />
+    </div>
+  );
 };
 
 export default ForestGame;
