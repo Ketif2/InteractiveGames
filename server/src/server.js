@@ -14,6 +14,7 @@ import generalStatsRoutes from './routes/generalStatsRoutes.js';
 import memoryRoutes from './routes/games/memoryRoutes.js';
 import puzzleRoutes from './routes/games/puzzleRoutes.js';
 import sequenceRoutes from './routes/games/sequenceRoutes.js';
+import forestRoutes from './routes/games/forestRoutes.js';
 
 dotenv.config();
 
@@ -37,7 +38,7 @@ app.use('/api/stats', generalStatsRoutes);
 app.use('/api/games/sequence', sequenceRoutes);
 app.use('/api/games/memory', memoryRoutes);
 app.use('/api/games/puzzle', puzzleRoutes);
-
+app.use('/api/games/forest', forestRoutes);
 
 app.get('*', (req, res) => {
     if (!req.url.startsWith('/api')) {

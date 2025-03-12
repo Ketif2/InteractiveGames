@@ -91,7 +91,7 @@ const ForestConfig = () => {
                     {/* Nivel inicial */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
-                            Nivel Inicial
+                            Nivel
                         </label>
                         <select
                             name="startingLevel"
@@ -163,7 +163,7 @@ const ForestConfig = () => {
                     {/* Tiempo límite */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700">
-                            Tiempo Límite por Nivel
+                            Tiempo Límite por Ronda
                         </label>
                         <select
                             name="timeLimit"
@@ -172,15 +172,14 @@ const ForestConfig = () => {
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
                                      focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
                         >
-                            <option value={0}>Sin límite de tiempo</option>
                             <option value={30}>30 segundos</option>
                             <option value={60}>1 minuto</option>
-                            <option value={90}>1 minuto y 30 segundos</option>
                             <option value={120}>2 minutos</option>
                             <option value={180}>3 minutos</option>
+                            <option value={300}>5 minutos</option>
                         </select>
                         <p className="text-sm text-gray-500 mt-1">
-                            Establece un límite de tiempo para cada nivel o deja sin límite para pacientes que necesiten más tiempo
+                            Establece un límite de tiempo para cada ronda
                         </p>
                     </div>
                     
