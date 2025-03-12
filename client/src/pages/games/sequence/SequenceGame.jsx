@@ -278,6 +278,12 @@ const SequenceGame = () => {
                 onExitConfirm={handleFinishGame}
                 onExitCancel={() => setShowExitConfirm(false)}
                 onGameComplete={handleFinishGame}
+                stats={{
+                    successCount: gameState.successCount,
+                    failedCount: gameState.failedCount,
+                    helpCount: gameState.helpCount,
+                    totalTime: Math.floor((Date.now() - gameState.startTime - gameState.totalPauseTime) / 1000),
+                }}
             />
         </div>
     );
