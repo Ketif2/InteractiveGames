@@ -32,9 +32,13 @@ const PuzzleGame = () => {
         helpCount: 0,
         successMoves: 0,
         failedMoves: 0,
-        pauseCount: 0
+        pauseCount: 0,
+        initialPreview: true // Nuevo estado para mostrar la imagen al inicio
     });
 
+    const [screenOrientation, setScreenOrientation] = useState(
+        window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+    );
     const [showCorrectFeedback, setShowCorrectFeedback] = useState(false);
     const [showWrongFeedback, setShowWrongFeedback] = useState(false);
     const [gameCompleted, setGameCompleted] = useState(false);
@@ -42,6 +46,19 @@ const PuzzleGame = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Detectar cambios en la orientación de la pantalla
+    useEffect(() => {
+        const handleResize = () => {
+            setScreenOrientation(
+                window.innerWidth > window.innerHeight ? 'landscape' : 'portrait'
+            );
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Inicializar el juego
     useEffect(() => {
         async function initialize() {
             try {
@@ -70,6 +87,21 @@ const PuzzleGame = () => {
 
         initialize();
     }, [configId, config]);
+
+    // Mostrar la imagen por 10 segundos al inicio
+    useEffect(() => {
+        if (gameState.initialPreview) {
+            const timer = setTimeout(() => {
+                setGameState(prev => ({
+                    ...prev,
+                    initialPreview: false,
+                    showHelp: false
+                }));
+            }, 10000);
+            
+            return () => clearTimeout(timer);
+        }
+    }, [gameState.initialPreview]);
 
     const initializePuzzles = (configData) => {
         const { selectedPuzzles } = configData;
@@ -106,7 +138,9 @@ const PuzzleGame = () => {
 
         setGameState(prev => ({
             ...prev,
-            puzzles
+            puzzles,
+            showHelp: true, // Mostrar la imagen al inicio
+            initialPreview: true // Indicar que estamos en el periodo inicial
         }));
     };
 
@@ -241,23 +275,15 @@ const PuzzleGame = () => {
             completed: gameState.puzzles.every(puzzle => puzzle.completed)
         };
       
-        console.log('PuzzleGame - Datos para navegación a PuzzleEnd:', {
-            stats, 
-            config,
-            patientId,
-            sessionId // Verificar si esto existe
-        });
-      
         // Para pruebas, crear un sessionId falso si no existe
         const fakeSessionId = sessionId || Date.now();
-        console.log('PuzzleGame - Usando sessionId:', sessionId || 'FALLBACK: ' + fakeSessionId);
       
         navigate('/games/puzzle/end', { 
             state: { 
                 stats, 
                 config,
                 patientId,
-                sessionId: sessionId || fakeSessionId // Usar fallback si no hay sessionId
+                sessionId: sessionId || fakeSessionId
             } 
         });
     };
@@ -294,24 +320,27 @@ const PuzzleGame = () => {
     return (
         <div className="fixed inset-0 bg-gray-100">
             {/* Barra superior */}
-            <div className="absolute top-0 left-0 right-0 bg-[#00398A] text-white p-4 flex justify-between items-center">
-                <div>Puzzle {gameState.currentPuzzleIndex + 1} de {gameState.puzzles.length}</div>
-                <div className="flex gap-4">
+            <div className="absolute top-0 left-0 right-0 bg-[#00398A] text-white py-3 px-4 flex justify-between items-center shadow-md">
+                <div className="text-lg font-medium">Puzzle {gameState.currentPuzzleIndex + 1} de {gameState.puzzles.length}</div>
+                <div className="flex gap-2 md:gap-3">
                     <button
                         onClick={handleToggleHelp}
-                        className="bg-[#00A8E3] px-4 py-2 rounded hover:bg-[#0096cc] transition-colors"
+                        className="bg-[#00A8E3] px-3 md:px-5 py-2 rounded-lg text-white font-medium shadow hover:bg-[#0096cc] transition-colors text-base md:text-lg flex items-center justify-center min-w-[100px]"
+                        aria-label="Ver imagen original"
                     >
                         Ver Imagen
                     </button>
                     <button
                         onClick={handleTogglePause}
-                        className="bg-[#00A8E3] px-4 py-2 rounded hover:bg-[#0096cc] transition-colors"
+                        className="bg-[#00A8E3] px-3 md:px-5 py-2 rounded-lg text-white font-medium shadow hover:bg-[#0096cc] transition-colors text-base md:text-lg flex items-center justify-center min-w-[100px]"
+                        aria-label={gameState.isPaused ? "Reanudar juego" : "Pausar juego"}
                     >
                         {gameState.isPaused ? 'Reanudar' : 'Pausar'}
                     </button>
                     <button
                         onClick={() => setShowExitConfirm(true)}
-                        className="bg-red-500 px-4 py-2 rounded hover:bg-red-600 transition-colors"
+                        className="bg-red-500 px-3 md:px-5 py-2 rounded-lg text-white font-medium shadow hover:bg-red-600 transition-colors text-base md:text-lg flex items-center justify-center min-w-[100px]"
+                        aria-label="Terminar juego"
                     >
                         Terminar
                     </button>
@@ -319,50 +348,116 @@ const PuzzleGame = () => {
             </div>
 
             {/* Área del juego */}
-            <div className="absolute inset-0 mt-16 p-4">
-                <div className="flex justify-center items-start gap-8 h-full">
-                    {/* Imagen original */}
-                    <div className="w-1/2 max-w-[600px] aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                        <img
-                            src={currentPuzzle.imageUrl}
-                            alt="Imagen original"
-                            className={`w-full h-full object-cover transition-opacity duration-300 ${
-                                gameState.showHelp ? 'opacity-100' : 'opacity-0'
-                            }`}
-                        />
-                    </div>
+            <div className="absolute inset-0 mt-16 pb-2">
+                {screenOrientation === 'landscape' ? (
+                    // Diseño horizontal
+                    <div className="flex h-full justify-center items-center">
+                        {/* Panel izquierdo - imagen original (solo visible cuando se activa) */}
+                        <div className={`h-full flex items-center justify-center transition-all duration-500 ${
+                            gameState.showHelp || gameState.initialPreview ? 'w-[40%]' : 'w-0 opacity-0'
+                        }`}>
+                            <div className="relative w-full h-full p-1 flex items-center justify-center">
+                                <img
+                                    src={currentPuzzle.imageUrl}
+                                    alt="Imagen original"
+                                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                                />
+                            </div>
+                        </div>
 
-                    {/* Puzzle */}
-                    {currentPuzzle.pieces && (
-                        <DndContext 
-                            sensors={sensors}
-                            onDragEnd={handleDragEnd}
-                        >
-                            <SortableContext 
-                                items={currentPuzzle.pieces.map(piece => `piece-${piece.id}`)}
-                                strategy={rectSortingStrategy}
-                            >
-                                <div
-                                    className="grid gap-1"
-                                    style={{
-                                        gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
-                                        width: '600px',
-                                        height: '600px'
-                                    }}
+                        {/* Rompecabezas - ocupa todo el ancho cuando la imagen no es visible */}
+                        <div className={`h-full flex items-center justify-center transition-all duration-500 ${
+                            gameState.showHelp || gameState.initialPreview ? 'w-[60%]' : 'w-full'
+                        }`}>
+                            {currentPuzzle.pieces && (
+                                <DndContext 
+                                    sensors={sensors}
+                                    onDragEnd={handleDragEnd}
                                 >
-                                    {currentPuzzle.pieces.map((piece, index) => (
-                                        <SortablePuzzlePiece
-                                            key={piece.id}
-                                            piece={piece}
-                                            index={index}
-                                            gridSize={gridSize}
-                                        />
-                                    ))}
-                                </div>
-                            </SortableContext>
-                        </DndContext>
-                    )}
-                </div>
+                                    <SortableContext 
+                                        items={currentPuzzle.pieces.map(piece => `piece-${piece.id}`)}
+                                        strategy={rectSortingStrategy}
+                                    >
+                                        <div
+                                            className="grid gap-1 mx-auto"
+                                            style={{
+                                                gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+                                                width: 'min(90vh, 90%)',
+                                                height: 'min(90vh, 90%)',
+                                                aspectRatio: '1',
+                                                maxWidth: '85vh',
+                                                maxHeight: '85vh'
+                                            }}
+                                        >
+                                            {currentPuzzle.pieces.map((piece, index) => (
+                                                <SortablePuzzlePiece
+                                                    key={piece.id}
+                                                    piece={piece}
+                                                    index={index}
+                                                    gridSize={gridSize}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    // Diseño vertical
+                    <div className="flex flex-col h-full">
+                        {/* Rompecabezas - ocupa la mayor parte de la altura */}
+                        <div className={`w-full flex justify-center items-center transition-all duration-500 ${
+                            gameState.showHelp || gameState.initialPreview ? 'h-2/3' : 'h-full'
+                        }`}>
+                            {currentPuzzle.pieces && (
+                                <DndContext 
+                                    sensors={sensors}
+                                    onDragEnd={handleDragEnd}
+                                >
+                                    <SortableContext 
+                                        items={currentPuzzle.pieces.map(piece => `piece-${piece.id}`)}
+                                        strategy={rectSortingStrategy}
+                                    >
+                                        <div
+                                            className="grid gap-1 m-2"
+                                            style={{
+                                                gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
+                                                width: 'min(95vw, 95%)',
+                                                height: 'min(95vw, 95%)',
+                                                aspectRatio: '1',
+                                                maxWidth: '90vw',
+                                                maxHeight: '90vw'
+                                            }}
+                                        >
+                                            {currentPuzzle.pieces.map((piece, index) => (
+                                                <SortablePuzzlePiece
+                                                    key={piece.id}
+                                                    piece={piece}
+                                                    index={index}
+                                                    gridSize={gridSize}
+                                                />
+                                            ))}
+                                        </div>
+                                    </SortableContext>
+                                </DndContext>
+                            )}
+                        </div>
+                        
+                        {/* Imagen original - solo visible cuando está activa */}
+                        <div className={`w-full flex justify-center items-center transition-all duration-500 ${
+                            gameState.showHelp || gameState.initialPreview ? 'opacity-100 h-1/3' : 'opacity-0 h-0'
+                        }`}>
+                            <div className="relative w-full h-full p-2 flex items-center justify-center">
+                                <img
+                                    src={currentPuzzle.imageUrl}
+                                    alt="Imagen original"
+                                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Feedback y Overlay */}
