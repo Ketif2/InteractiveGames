@@ -8,13 +8,18 @@ const NumberGrid = ({
     gameMode,
     correctAnswers = [],
     userAnswers = {},
-    currentHelpNumber = null
+    currentHelpNumber = null,
+    timeInterval = 10, // Valor predeterminado (en segundos)
+    isPaused = false // Estado de pausa
 }) => {
     // Estado para mantener los números actuales que se muestran
     const [displayNumbers, setDisplayNumbers] = useState([...numbers]);
     
     // Estado para controlar la animación de ayuda
     const [animatingHelp, setAnimatingHelp] = useState(false);
+    
+    // Estado para controlar la visibilidad en el modo desvanecimiento
+    const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false);
     
     // Efecto para actualizar los números cuando cambian
     useEffect(() => {
@@ -37,6 +42,34 @@ const NumberGrid = ({
             setAnimatingHelp(false);
         }
     }, [showHelp, currentHelpNumber]);
+    
+    // Efecto para manejar el modo desvanecimiento
+    useEffect(() => {
+        let fadeTimer;
+        let fadeRestoreTimer;
+        
+        if (gameMode === 'desvanecimiento' && !isPaused) {
+            // Configuramos un intervalo para iniciar el desvanecimiento cada X segundos
+            fadeTimer = setInterval(() => {
+                // Activar el desvanecimiento
+                setIsTemporarilyHidden(true);
+                
+                // Configurar un temporizador para restaurar la visibilidad después de 2 segundos
+                fadeRestoreTimer = setTimeout(() => {
+                    setIsTemporarilyHidden(false);
+                }, 2000);
+            }, timeInterval * 1000); // Intervalo completo en milisegundos
+        } else {
+            // Si el juego está pausado o no estamos en modo desvanecimiento,
+            // aseguramos que los números sean visibles
+            setIsTemporarilyHidden(false);
+        }
+        
+        return () => {
+            if (fadeTimer) clearInterval(fadeTimer);
+            if (fadeRestoreTimer) clearTimeout(fadeRestoreTimer);
+        };
+    }, [gameMode, timeInterval, isPaused]);
 
     const renderNumber = (number) => {
         const isHidden = hiddenNumbers.includes(number);
@@ -51,10 +84,18 @@ const NumberGrid = ({
         
         // Determinar si se debe mostrar el número
         const shouldShow = !isHidden || showMemoryNumbers || isCorrectlyAnswered || isCurrentHelp;
+        
+        // Para el modo desvanecimiento, controlamos la visibilidad temporal
+        // Solo los números correctamente respondidos y el número de ayuda actual no se desvanecen
+        const shouldFade = gameMode === 'desvanecimiento' && 
+                           isTemporarilyHidden && 
+                           !isCorrectlyAnswered && 
+                           !isCurrentHelp;
 
         // Determinar las clases CSS para diferentes estados
         let bgColorClass = 'bg-[#00398A] text-white';
         let animationClass = '';
+        let opacityClass = shouldFade ? 'opacity-0' : 'opacity-100';
 
         if (isHidden && !shouldShow) {
             bgColorClass = 'bg-white border-4 border-[#00398A] text-[#00398A]';
@@ -69,14 +110,8 @@ const NumberGrid = ({
             }
         }
 
-        if (gameMode === 'desvanecimiento') {
-            animationClass = 'animate-pulse';
-        }
-
         if (gameMode === 'memoria' && !showMemoryNumbers && !isCurrentHelp && !isCorrectlyAnswered) {
-            animationClass += ' opacity-0';
-        } else {
-            animationClass += ' opacity-100';
+            opacityClass = 'opacity-0';
         }
 
         return (
@@ -85,7 +120,7 @@ const NumberGrid = ({
                     w-28 h-28 flex items-center justify-center text-3xl font-bold
                     ${bgColorClass}
                     rounded-xl transition-all duration-300 shadow-md
-                    ${animationClass}
+                    ${animationClass} ${opacityClass}
                 `}
             >
                 {isHidden && !shouldShow ? '?' : number}

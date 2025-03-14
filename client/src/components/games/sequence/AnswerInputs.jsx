@@ -14,6 +14,19 @@ const AnswerInputs = ({
     // Crear un array con el número de inputs necesarios
     const inputs = Array.from({ length: hiddenCount }, (_, i) => i);
     
+    // Manejar cambios en los campos de entrada
+    const handleInputChange = (index, value) => {
+        // Si el valor está vacío, permitimos borrarlo pasando un valor vacío
+        if (value === '') {
+            onChange(index, '');
+            return;
+        }
+        
+        // Para valores numéricos, los procesamos normalmente
+        const numValue = value.replace(/\D/g, ''); // Elimina cualquier carácter no numérico
+        onChange(index, numValue);
+    };
+    
     return (
         <div className="bg-white py-4 px-6 shadow-lg rounded-t-3xl">
             <div className="flex flex-col items-center">
@@ -37,9 +50,11 @@ const AnswerInputs = ({
                                 className={`relative ${isIncorrect ? 'animate-pulse' : ''}`}
                             >
                                 <input
-                                    type="number"
+                                    type="text" // Cambiado de 'number' a 'text' para mejor control
+                                    inputMode="numeric" // Sugerencia para mostrar teclado numérico en móviles
+                                    pattern="[0-9]*" // Restringe la entrada a sólo números
                                     value={answers[index] || ''}
-                                    onChange={(e) => onChange(index, e.target.value)}
+                                    onChange={(e) => handleInputChange(index, e.target.value)}
                                     disabled={isPaused}
                                     className={`
                                         w-16 h-16 text-center text-2xl font-bold 

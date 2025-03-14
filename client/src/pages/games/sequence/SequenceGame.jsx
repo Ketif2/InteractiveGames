@@ -46,12 +46,13 @@ const SequenceGame = () => {
     useEffect(() => {
         let intervalId;
         if (config.gameMode === 'revuelto' && !gameState.isPaused) {
+            // Configurar el intervalo para el modo revuelto
             intervalId = setInterval(shuffleNumbers, config.timeInterval * 1000);
         }
         return () => {
             if (intervalId) clearInterval(intervalId);
         };
-    }, [config.gameMode, gameState.isPaused]);
+    }, [config.gameMode, config.timeInterval, gameState.isPaused]);
 
     const initializeGame = () => {
         const { startRange, endRange, numbersToHide } = config;
@@ -103,16 +104,29 @@ const SequenceGame = () => {
     };
 
     const handleAnswerChange = (index, value) => {
-        const numValue = parseInt(value);
-        if (isNaN(numValue)) return;
-
-        setGameState(prev => ({
-            ...prev,
-            userAnswers: {
-                ...prev.userAnswers,
-                [index]: numValue
+        // Si el valor está vacío, eliminamos esa entrada de userAnswers
+        if (value === '') {
+            setGameState(prev => {
+                const newAnswers = { ...prev.userAnswers };
+                delete newAnswers[index];
+                return {
+                    ...prev,
+                    userAnswers: newAnswers
+                };
+            });
+        } else {
+            // Si tiene valor, lo intentamos convertir a número
+            const numValue = parseInt(value);
+            if (!isNaN(numValue)) {
+                setGameState(prev => ({
+                    ...prev,
+                    userAnswers: {
+                        ...prev.userAnswers,
+                        [index]: numValue
+                    }
+                }));
             }
-        }));
+        }
 
         // Limpiar los errores cuando el usuario modifica una respuesta
         if (incorrectAnswers.includes(index)) {
@@ -345,6 +359,8 @@ const SequenceGame = () => {
                                 correctAnswers={correctAnswers}
                                 userAnswers={gameState.userAnswers}
                                 currentHelpNumber={helpState.currentHelpNumber}
+                                timeInterval={config.timeInterval} // Pasamos el intervalo de tiempo configurado
+                                isPaused={gameState.isPaused} // Pasamos el estado de pausa
                             />
                         </div>
                     </div>
