@@ -22,6 +22,7 @@ import ForestGame from '../pages/games/forest/ForestGame';
 import PuzzleEnd from '../pages/games/puzzle/PuzzleEnd';
 import SequenceEnd from '../pages/games/sequence/SequenceEnd';
 import MemoryEnd from '../pages/games/memory/MemoryEnd';
+import ForestEnd from '../pages/games/forest/ForestEnd';
 
 import Stats from '../pages/stats/Stats';
 import PatientStats from '../pages/stats/PatientStats';
@@ -184,6 +185,14 @@ export const AppRoutes = () => {
       <Route path="/games/forest/play" element={
         <PrivateRoute>
           <ForestGame />
+        </PrivateRoute>
+      } />
+
+      <Route path="/games/forest/end" element={
+        <PrivateRoute>
+          <Layout>
+            <ForestEnd />
+          </Layout>
         </PrivateRoute>
       } />
 

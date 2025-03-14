@@ -8,7 +8,7 @@ export const memoryService = {
             const response = await api.get(`${API_URL}/games/memory/config/${id_sesion}`);
             return response.data;
         } catch (error) {
-            throw new Error(error.response?.data?.message || 'Error al obtener estadísticas');
+            throw new Error(error.response?.data?.message || 'Error al obtener configuración');
         }
     },
     registerMemoryConfig: async (config) => {
@@ -16,7 +16,7 @@ export const memoryService = {
             const response = await api.post(`${API_URL}/games/memory/save-config`, config);
             return response.data;
         } catch (error) {
-            throw new Error(error.response?.data?.message || 'Error al registrar estadísticas');
+            throw new Error(error.response?.data?.message || 'Error al registrar configuración');
         }
     }
 };

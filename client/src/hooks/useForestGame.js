@@ -43,7 +43,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
 
   // Nuevos estados para el sistema de puntos (internos, no visibles)
   const [totalScore, setTotalScore] = useState(0);
-  const [rounds, setRounds] = useState(1); // Pantallas completadas en un nivel
+  const [rounds, setRounds] = useState(0); // Pantallas completadas en un nivel (iniciar en 0)
   const [showCompletedMessage, setShowCompletedMessage] = useState(false);
 
   // Estado para feedback
@@ -127,8 +127,12 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
       currentRound: prev.currentRound + 1
     }));
     
-    // También actualiza directamente el contador de rondas visual
-    setRounds(prev => prev + 1);
+    // Mostrar mensaje de siguiente ronda
+    setShowNextRoundMessage(true);
+    setTimeout(() => {
+      setShowNextRoundMessage(false);
+    }, 2000);
+    
   }, []);
 
   // Inicialización del nivel (genera nuevo camino y objetos)
@@ -250,6 +254,8 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     }
     
     // NIVEL 1: Contar flores azules con precisión
+    let allObjectivesComplete = false;
+    
     if (currentLevel === 1) {
       // Buscar todas las flores azules
       const blueFlowers = currentObjects.filter(obj => 
@@ -272,27 +278,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
       });
       
       // Verificar si se encontraron todas
-      if (foundBlueFlowers.length === blueFlowers.length && blueFlowers.length > 0) {
-        console.log("¡TODAS LAS FLORES AZULES ENCONTRADAS!");
-        
-        // Mostrar mensaje de completado
-        setShowCompletedMessage(true);
-        playSound('level-complete');
-        
-        // Programar la recarga nivel
-        setTimeout(() => {
-          console.log("Recargando nivel para la siguiente ronda...");
-          setShowCompletedMessage(false);
-          
-          // Avanzar a la siguiente ronda
-          advanceToNextRound();
-          
-          // Inicializar el mismo nivel manteniendo estadísticas
-          initializeLevel(true, true);
-        }, 2000);
-        
-        return true;
-      }
+      allObjectivesComplete = (foundBlueFlowers.length === blueFlowers.length && blueFlowers.length > 0);
     } 
     else if (currentLevel === 2) {
       // NIVEL 2: Flores azules Y hongos rojos
@@ -310,29 +296,9 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
       console.log(`Hongos rojos encontrados: ${foundRedMushrooms.length} de ${redMushrooms.length}`);
       
       // Verificar si se encontraron todos los objetivos
-      if (blueFlowers.length === foundBlueFlowers.length && 
+      allObjectivesComplete = (blueFlowers.length === foundBlueFlowers.length && 
           redMushrooms.length === foundRedMushrooms.length &&
-          (blueFlowers.length > 0 || redMushrooms.length > 0)) {
-        console.log("¡Todos los objetivos encontrados!");
-        
-        // Mostrar mensaje de completado
-        setShowCompletedMessage(true);
-        playSound('level-complete');
-        
-        // Programar la recarga del nivel
-        setTimeout(() => {
-          console.log("Recargando nivel para la siguiente ronda...");
-          setShowCompletedMessage(false);
-          
-          // Avanzar a la siguiente ronda
-          advanceToNextRound();
-          
-          // Inicializar el mismo nivel manteniendo estadísticas
-          initializeLevel(true, true);
-        }, 2000);
-        
-        return true;
-      }
+          (blueFlowers.length > 0 || redMushrooms.length > 0));
     } 
     else if (currentLevel === 3 || currentLevel === 4) {
       // Nivel 3 y 4: Objetos marcados como objetivo
@@ -342,31 +308,39 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
       console.log(`Objetivos encontrados: ${foundTargets.length} de ${targets.length}`);
       
       // Verificar si se encontraron todos los objetivos
-      if (targets.length === foundTargets.length && targets.length > 0) {
-        console.log("¡Todos los objetivos encontrados!");
+      allObjectivesComplete = (targets.length === foundTargets.length && targets.length > 0);
+    }
+    
+    // Si se completaron todos los objetivos
+    if (allObjectivesComplete) {
+      console.log("¡Todos los objetivos encontrados!");
+      
+      // Mostrar mensaje de completado
+      setShowCompletedMessage(true);
+      playSound('level-complete');
+      
+      // Añadir la puntuación de la ronda actual al total
+      setTotalScore(prev => prev + stateRef.current.roundScore);
+      
+      // Incrementar el contador de pantallas completadas
+      setRounds(prev => prev + 1);
+      
+      // Programar la recarga del nivel SIN AVANZAR DE RONDA
+      // CAMBIO IMPORTANTE: Sólo refrescamos el juego sin contar como nueva ronda
+      setTimeout(() => {
+        console.log("Reiniciando nivel para continuar en la misma ronda...");
+        setShowCompletedMessage(false);
         
-        // Mostrar mensaje de completado
-        setShowCompletedMessage(true);
-        playSound('level-complete');
-        
-        // Programar la recarga del nivel
-        setTimeout(() => {
-          console.log("Recargando nivel para la siguiente ronda...");
-          setShowCompletedMessage(false);
-          
-          // Avanzar a la siguiente ronda
-          advanceToNextRound();
-          
-          // Inicializar el mismo nivel manteniendo estadísticas
-          initializeLevel(true, true);
-        }, 2000);
-        
-        return true;
-      }
+        // Inicializar el mismo nivel manteniendo estadísticas
+        // No avanzamos de ronda, simplemente refrescamos la pantalla
+        initializeLevel(true, true);
+      }, 2000);
+      
+      return true;
     }
     
     return false;
-  }, [config?.startingLevel, advanceToNextRound, initializeLevel, playSound]);
+  }, [config?.startingLevel, initializeLevel, playSound]);
 
   // Manejar clic en objeto
   const handleObjectClick = useCallback((objectId) => {
@@ -539,99 +513,101 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
   }, [forceVerification]);
   
   // Temporizador
-  useEffect(() => {
-    if (gameState.timerActive && !gameState.isPaused && gameState.remainingTime > 0 && !showCompletedMessage) {
-      timerRef.current = setInterval(() => {
-        setGameState(prev => {
-          const newTime = prev.remainingTime - 1;
-          if (newTime <= 0) {
-            clearInterval(timerRef.current);
-            handleTimeOut();
-            return { ...prev, remainingTime: 0 };
-          }
-          return { ...prev, remainingTime: newTime };
-        });
-      }, 1000);
-    } else if (!gameState.timerActive || gameState.isPaused || showCompletedMessage) {
-      clearInterval(timerRef.current);
-    }
-    
-    return () => clearInterval(timerRef.current);
-  }, [gameState.timerActive, gameState.isPaused, gameState.remainingTime, showCompletedMessage, handleTimeOut]);
+// Temporizador
+useEffect(() => {
+  if (gameState.timerActive && !gameState.isPaused && gameState.remainingTime > 0 && !showCompletedMessage) {
+    timerRef.current = setInterval(() => {
+      setGameState(prev => {
+        const newTime = prev.remainingTime - 1;
+        if (newTime <= 0) {
+          clearInterval(timerRef.current);
+          handleTimeOut();
+          return { ...prev, remainingTime: 0 };
+        }
+        return { ...prev, remainingTime: newTime };
+      });
+    }, 1000);
+  } else if (!gameState.timerActive || gameState.isPaused || showCompletedMessage) {
+    clearInterval(timerRef.current);
+  }
   
-  // Funciones para control del juego
-  const handleHelp = useCallback(() => {
-    setGameState(prev => ({
-      ...prev,
-      helpCount: prev.helpCount + 1
-    }));
-    
-    // Reproducir sonido de ayuda
-    playSound('help');
-    
-    // Dar pista visual sobre los objetivos
-    const highlightedElements = document.querySelectorAll('.object-highlight');
-    highlightedElements.forEach(el => el.classList.remove('object-highlight'));
-    
-    // Añadir clase de animación a los objetivos
-    const targetElements = document.querySelectorAll('.target-object');
-    targetElements.forEach(el => {
-      el.classList.add('object-highlight');
-      setTimeout(() => el.classList.remove('object-highlight'), 3000);
-    });
-  }, [playSound]);
+  return () => clearInterval(timerRef.current);
+}, [gameState.timerActive, gameState.isPaused, gameState.remainingTime, showCompletedMessage, handleTimeOut]);
 
-  const handleTogglePause = useCallback(() => {
-    setGameState(prev => {
-      const now = Date.now();
-      if (prev.isPaused) {
-        // Resuming game
-        return {
-          ...prev,
-          isPaused: false,
-          totalPauseTime: prev.totalPauseTime + (now - (prev.lastPauseTime || now)),
-          lastPauseTime: null
-        };
-      }
-      // Pausing game
+// Funciones para control del juego
+const handleHelp = useCallback(() => {
+  setGameState(prev => ({
+    ...prev,
+    helpCount: prev.helpCount + 1
+  }));
+  
+  // Reproducir sonido de ayuda
+  playSound('help');
+  
+  // Dar pista visual sobre los objetivos
+  const highlightedElements = document.querySelectorAll('.object-highlight');
+  highlightedElements.forEach(el => el.classList.remove('object-highlight'));
+  
+  // Añadir clase de animación a los objetivos
+  const targetElements = document.querySelectorAll('.target-object');
+  targetElements.forEach(el => {
+    el.classList.add('object-highlight');
+    setTimeout(() => el.classList.remove('object-highlight'), 3000);
+  });
+}, [playSound]);
+
+const handleTogglePause = useCallback(() => {
+  setGameState(prev => {
+    const now = Date.now();
+    if (prev.isPaused) {
+      // Resuming game
       return {
         ...prev,
-        isPaused: true,
-        lastPauseTime: now,
-        totalPauses: prev.totalPauses + 1
+        isPaused: false,
+        totalPauseTime: prev.totalPauseTime + (now - (prev.lastPauseTime || now)),
+        lastPauseTime: null
       };
-    });
-  }, []);
+    }
+    // Pausing game
+    return {
+      ...prev,
+      isPaused: true,
+      lastPauseTime: now,
+      totalPauses: prev.totalPauses + 1
+    };
+  });
+}, []);
 
-  const handleExitClick = useCallback(() => {
-    setShowExitConfirm(true);
-  }, []);
+// Modificar el handleExitClick para que guarde las estadísticas y vaya a ForestEnd
+const handleExitClick = useCallback(() => {
+  setShowExitConfirm(true);
+}, []);
 
-  const handleExitCancel = useCallback(() => {
-    setShowExitConfirm(false);
-  }, []);
+const handleExitCancel = useCallback(() => {
+  setShowExitConfirm(false);
+}, []);
 
-  return {
-    gameState,
-    showCorrectFeedback,
-    showWrongFeedback,
-    showTimeoutFeedback,
-    showExitConfirm,
-    showNextRoundMessage,
-    gameCompleted,
-    showCompletedMessage,
-    audioEnabled,
-    handleObjectClick,
-    handleHelp,
-    handleTogglePause,
-    handleExitClick,
-    handleExitCancel,
-    handleFinishGame,
-    toggleAudio,
-    pathRef,
-    totalScore,
-    rounds
-  };
+return {
+  gameState,
+  showCorrectFeedback,
+  showWrongFeedback,
+  showTimeoutFeedback,
+  showExitConfirm,
+  showNextRoundMessage,
+  gameCompleted,
+  showCompletedMessage,
+  audioEnabled,
+  handleObjectClick,
+  handleHelp,
+  handleTogglePause,
+  handleExitClick,
+  handleExitCancel,
+  handleFinishGame,
+  toggleAudio,
+  pathRef,
+  totalScore,
+  rounds
+};
 };
 
 export default useForestGame;

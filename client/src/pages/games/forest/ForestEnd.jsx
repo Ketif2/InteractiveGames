@@ -4,9 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { sessionService } from '../../../services/sessionService';
 import { statsService } from '../../../services/statsService';
 import { useAuth } from '@/context/AuthContext';
-
-// Importar un nuevo servicio para guardar configuración específica del juego del bosque
-// (similar al memoryService del juego de memoria)
 import { forestService } from '../../../services/forestService';
 
 const ForestEnd = () => {
@@ -38,7 +35,7 @@ const ForestEnd = () => {
 
             await sessionService.createSession({
                 id_paciente: patientId,
-                id_juego: 3, // ID del juego del bosque (ajustar según corresponda en la BD)
+                id_juego: 4, // ID del juego del bosque (ajustar según corresponda en la BD)
                 id_terapeuta: user.id,
                 observaciones_terapeuta: observations
             });
@@ -54,25 +51,16 @@ const ForestEnd = () => {
                 completado: stats.completado,
                 puntuacion: stats.totalScore || 0 // Guardar la puntuación total
             });
-
-            // Formatear la dificultad para guardar en la BD
-            const dificultadFormatted = 
-                config.difficulty === 'fácil' ? 'Fácil' : 
-                config.difficulty === 'medio' ? 'Medio' : 
-                config.difficulty === 'difícil' ? 'Difícil' : 'Medio';
         
             // Guardar configuración específica del juego del bosque
             await forestService.registerForestConfig({ 
                 id_sesion: id_sesion.id_sesion,
-                dificultad: dificultadFormatted,
-                nivel_inicial: config.startingLevel,
+                nivel: config.startingLevel,
                 densidad_objetos: config.objectDensity,
                 numero_rondas: config.rounds,
                 tiempo_limite: config.timeLimit,
-                nivel_maximo: stats.maxLevel,
-                pantallas_completadas: stats.roundsCompleted || 0
             });
-        
+
             navigate('/new-session');
         } catch (error) {
             console.error('Error al guardar la sesión:', error);
