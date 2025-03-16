@@ -11,7 +11,7 @@ const MenuSlide = () => {
     const timer = setTimeout(() => {
       setShowWelcome(false);
       setTimeout(() => {
-        navigate('/menu'); // Cambiado a /menu ya que no tenemos psycho-info aún
+        navigate('/menu');
       }, 500); // Esperamos a que termine la animación de fade-out
     }, 2500); // 2.5 segundos para el mensaje de bienvenida
 
@@ -20,22 +20,25 @@ const MenuSlide = () => {
 
   return (
     <div 
-      className={`flex flex-col items-center justify-center min-h-screen bg-[#00398A] transition-opacity duration-500 ${
+      className={`flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-[#003380] to-[#0055b3] transition-opacity duration-500 ${
         showWelcome ? 'opacity-100' : 'opacity-0'
       }`}
     >
-      <img
-        src={brainLogo}
-        alt="Brain Logo"
-        className={`w-40 h-40 ${showWelcome ? 'animate-bounce' : ''}`}
-      />
+      <div className="bg-white/10 p-6 rounded-full mb-6">
+        <img
+          src={brainLogo}
+          alt="Brain Logo"
+          className={`w-40 h-40 ${showWelcome ? 'animate-pulse' : ''}`}
+        />
+      </div>
       <h1 
-        className={`text-4xl font-bold text-white mt-8 transition-transform duration-500 ${
+        className={`text-4xl font-light text-white mt-8 transition-transform duration-500 ${
           showWelcome ? 'scale-100' : 'scale-95'
         }`}
       >
-        BIENVENIDO
+        <span className="font-bold">BIENVENIDO</span>
       </h1>
+      <p className="text-blue-100 mt-4 opacity-80">Recuerda+</p>
     </div>
   );
 };
