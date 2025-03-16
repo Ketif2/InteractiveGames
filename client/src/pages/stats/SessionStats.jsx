@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { statsService } from '@/services/statsService';
+import patientService from '@/services/patientService';
 
 const SessionStats = () => {
   const { id } = useParams();
@@ -9,6 +10,7 @@ const SessionStats = () => {
   
   const [sessionDetails, setSessionDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [patientData, setPatientData] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -27,6 +29,13 @@ const SessionStats = () => {
         const data = await statsService.getSessionDetails(id);
         console.log("Datos recibidos:", data);
         setSessionDetails(data);
+
+        if (data && data.session && data.session.id_paciente) {
+          const patientResponse = await patientService.getPatientById(data.session.id_paciente);
+          setPatientData(patientResponse?.data || patientResponse);
+        }
+        console.log("Datos del paciente:", patientData);
+
       } catch (err) {
         console.error('Error al obtener detalles:', err);
         setError(err.message || 'Error al cargar los detalles de la sesión');
@@ -179,7 +188,7 @@ const SessionStats = () => {
           <div className="border-t border-gray-100 bg-gray-50 px-6 py-3">
             <div className="flex items-center">
               <div className="h-10 w-10 flex-shrink-0 mr-3 overflow-hidden rounded-full">
-                {session.sexo === 'Masculino' ? (
+                {patientData.sexo === 'Masculino' ? (
                   <img 
                     src="/src/assets/icons/old-man.png" 
                     alt="Avatar masculino" 
