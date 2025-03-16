@@ -193,7 +193,7 @@ const Patients = () => {
     </div>
   );
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-3">
       {/* Header con título */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-[#00398A]">Gestión de Pacientes</h1>
