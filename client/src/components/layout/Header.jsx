@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 import MainLogo from '../../assets/icons/logoApp.svg';
-import UserIcon from '../../assets/icons/user-icon.svg';
+import UserIcon from '../../assets/icons/doctor icon.png';
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -48,7 +48,7 @@ const Header = () => {
                 <span className="mr-2 text-sm font-light hidden md:inline">
                   {user?.nombre} {user?.apellido}
                 </span>
-                <div className="bg-blue-400 bg-opacity-20 p-2 rounded-full">
+                <div className="bg-blue-100 bg-opacity-20 p-2 rounded-full">
                   <img 
                     src={UserIcon}
                     alt="Usuario" 
