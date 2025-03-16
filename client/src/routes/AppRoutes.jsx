@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { PrivateRoute } from './PrivateRoute';
+import Header from '../components/layout/Header';
 import Layout from '../components/layout/Layout';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
@@ -38,9 +39,8 @@ export const AppRoutes = () => {
       {/* Rutas privadas */}
       <Route path="/dashboard" element={
         <PrivateRoute>
-          <Layout>
-            <Dashboard />
-          </Layout>
+          <Header/>
+          <Dashboard />
         </PrivateRoute>
       } />
 

@@ -55,7 +55,7 @@ export const getSessionById = async (req, res) => {
   }
 };
 
-export const getTotalSessionsPerWeek = async (req, res) => {
+export const getTotalSessions = async (req, res) => {
   try {
     const { id_paciente } = req.params; // O req.query, según prefieras
 
@@ -66,38 +66,18 @@ export const getTotalSessionsPerWeek = async (req, res) => {
         });
     }
 
-    // Obtener fecha actual
-    const today = new Date();
-    
-    // Obtener el inicio de la semana (Lunes)
-    const firstDay = new Date(today);
-    const day = today.getDay();
-    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
-    firstDay.setDate(diff);
-    firstDay.setHours(0, 0, 0, 0);
-    
-    // Obtener el fin de la semana (Domingo)
-    const lastDay = new Date(firstDay);
-    lastDay.setDate(lastDay.getDate() + 6);
-    lastDay.setHours(23, 59, 59, 999);
-
+    // Consulta simplificada para obtener todas las sesiones sin filtro de fecha
     const [results] = await pool.query(
         `SELECT COUNT(*) as total_sesiones 
          FROM sesion 
-         WHERE fecha_sesion >= ? 
-         AND fecha_sesion <= ?
-         AND id_paciente = ?`,
-        [firstDay, lastDay, id_paciente]
+         WHERE id_paciente = ?`,
+        [id_paciente]
     );
 
     res.json({
         success: true,
         id_paciente,
-        total_sesiones: results[0].total_sesiones,
-        semana: {
-            inicio: firstDay,
-            fin: lastDay
-        }
+        total_sesiones: results[0].total_sesiones
     });
 
   } catch (error) {

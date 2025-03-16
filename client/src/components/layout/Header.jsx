@@ -10,12 +10,20 @@ const Header = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
+  const { isLoading } = useAuth();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#D7D7D7]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00A8E3]"></div>
+      </div>
+    );
+  }
   return (
     <header className="bg-[#00398A] text-white">
       <div className="container mx-auto px-4">

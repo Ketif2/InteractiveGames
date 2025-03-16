@@ -40,7 +40,7 @@ const Stats = () => {
       const patientsWithStats = await Promise.all(patientsArray.map(async (patient) => {
         try {
           // Obtener datos de sesiones semanales y últimas sesiones
-          const weeklySession = await sessionService.getSessionsPerWeek(patient.id_paciente);
+          const weeklySession = await sessionService.getTotalSessions(patient.id_paciente);
           
           // Intenta obtener la última sesión del paciente
           let lastSession = null;
@@ -55,7 +55,6 @@ const Stats = () => {
   
           return {
             ...patient,
-            total_sesiones: 4, // Total fijo de 4 sesiones semanales
             sesiones_completadas: weeklySession.total_sesiones || 0,
             ultima_sesion: lastSession ? lastSession.fecha_sesion : null,
             status: weeklySession.total_sesiones > 0 ? 'Completado' : 'Pendiente'
@@ -144,31 +143,23 @@ const Stats = () => {
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-[#00398A]">Estadísticas de Pacientes</h1>
-        <div className="relative">
+      </div>
+      <div className="flex justify-between items-center mb-6">
+        <div className="relative w-auto" style={{ width: "300px" }}>
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"></path>
+            </svg>
+          </div>
           <input
             type="text"
-            placeholder="Buscar paciente..."
-            className="px-4 py-2 border rounded-md focus:ring-[#00A8E3] focus:border-[#00A8E3]"
+            className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#00A8E3] focus:border-[#00A8E3] block w-full pl-10 p-2.5"
+            placeholder="Buscar paciente"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <svg
-            className="absolute right-3 top-3 h-5 w-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            ></path>
-          </svg>
         </div>
       </div>
-
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -253,7 +244,7 @@ const Stats = () => {
                       {patient.nombre} {patient.apellido}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {patient.sesiones_completadas}/{patient.total_sesiones}
+                      {patient.sesiones_completadas}/{patient.num_sesiones}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}`}>
@@ -277,7 +268,7 @@ const Stats = () => {
             ) : (
               <tr>
                 <td colSpan="6" className="px-6 py-4 whitespace-nowrap text-center text-gray-500">
-                  No se encontraron pacientes
+                  {searchTerm ? 'No se encontraron pacientes que coincidan con la búsqueda.' : 'No hay pacientes registrados.'}
                 </td>
               </tr>
             )}

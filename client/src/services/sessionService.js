@@ -30,7 +30,7 @@ export const sessionService = {
     }
   },
 
-  getSessionsPerWeek: async (id_paciente) => {
+  getTotalSessions: async (id_paciente) => {
     try {
       const response = await axios.get(`${API_URL}/sessions/patient/${id_paciente}`);
       return response.data;

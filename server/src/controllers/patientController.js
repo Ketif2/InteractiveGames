@@ -43,17 +43,22 @@ export const createPaciente = async (req, res) => {
         fecha_nacimiento,
         sexo, 
         diagnostico, 
-        documentos 
+        evaluacion_inicial,
+        evaluacion_final,
+        num_sesiones,
+        documentos
     } = req.body;
     try {
         const [result] = await pool.query(
             `INSERT INTO paciente (
                 id_terapeuta, nombre, apellido, 
-                fecha_nacimiento, sexo, diagnostico, documentos
-            ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                fecha_nacimiento, sexo, diagnostico, evaluacion_inicial, 
+                evaluacion_final, num_sesiones, documentos
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 id_terapeuta, nombre, apellido, 
-                fecha_nacimiento, sexo, diagnostico, 
+                fecha_nacimiento, sexo, diagnostico,
+                evaluacion_inicial, evaluacion_final, num_sesiones,
                 documentos ? JSON.stringify(documentos) : null
             ]
         );
@@ -71,11 +76,14 @@ export const createPaciente = async (req, res) => {
 // Actualizar un paciente por ID
 export const updatePaciente = async (req, res) => {
     const { id } = req.params;
-    const { id_terapeuta, nombre, apellido, fecha_nacimiento, diagnostico } = req.body;
+    const { id_terapeuta, nombre, apellido, fecha_nacimiento, diagnostico, 
+            evaluacion_inicial,
+            evaluacion_final,
+            num_sesiones } = req.body;
     try {
         const [result] = await pool.query(
-            'UPDATE paciente SET id_terapeuta = ?, nombre = ?, apellido = ?, fecha_nacimiento = ?, diagnostico = ? WHERE id_paciente = ?',
-            [id_terapeuta, nombre, apellido, fecha_nacimiento, diagnostico, id]
+            'UPDATE paciente SET id_terapeuta = ?, nombre = ?, apellido = ?, fecha_nacimiento = ?, diagnostico = ?, evaluacion_inicial = ?, evaluacion_final = ?, num_sesiones = ? WHERE id_paciente = ?',
+            [id_terapeuta, nombre, apellido, fecha_nacimiento, diagnostico, evaluacion_inicial, evaluacion_final, num_sesiones, id]
         );
 
         if (result.affectedRows === 0) {

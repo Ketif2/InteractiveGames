@@ -31,6 +31,9 @@ const patientService = {
         fecha_nacimiento: patientData.fecha_nacimiento,
         sexo: patientData.sexo,
         diagnostico: patientData.diagnostico,
+        evaluacion_inicial: patientData.evaluacion_inicial,
+        evaluacion_final: patientData.evaluacion_final,
+        num_sesiones: patientData.num_sesiones,
         documentos: patientData.documentos
       });
     } catch (error) {
@@ -46,7 +49,10 @@ const patientService = {
         nombre: patientData.nombre,
         apellido: patientData.apellido,
         fecha_nacimiento: patientData.fecha_nacimiento,
-        diagnostico: patientData.diagnostico
+        diagnostico: patientData.diagnostico,
+        evaluacion_inicial: patientData.evaluacion_inicial,
+        evaluacion_final: patientData.evaluacion_final,
+        num_sesiones: patientData.num_sesiones
       });
     } catch (error) {
       throw error;
