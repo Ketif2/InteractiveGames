@@ -71,6 +71,62 @@ const patientService = {
     } catch (error) {
       throw error;
     }
+  },
+
+
+  // Subir documento para un paciente
+  uploadDocument: async (patientId, formData) => {
+    try {
+      return await api.post(`/patients/${patientId}/documents`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Obtener documento de un paciente
+
+  getDocument: async (patientId, documentId) => {
+    try {
+      // Incluir un parámetro para forzar una nueva solicitud y evitar caché
+      const timestamp = new Date().getTime();
+      
+      // Configurar las opciones adecuadas para recibir archivos binarios
+      return await api.get(`/patients/${patientId}/documents/${documentId}?t=${timestamp}`, {
+        responseType: 'blob', // Importante para recibir archivos binarios
+        headers: {
+          'Accept': '*/*',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
+        // Asegurar que no se aplique transformación de respuesta automática
+        transformResponse: [(data) => data]
+      });
+    } catch (error) {
+      console.error('Error obteniendo documento:', error);
+      throw error;
+    }
+  },
+  
+  // Eliminar documento de un paciente
+  deleteDocument: async (patientId, documentId) => {
+    try {
+      return await api.delete(`/patients/${patientId}/documents/${documentId}`);
+    } catch (error) {
+      throw error;
+    }
+  },
+  
+  // Obtener la lista de documentos de un paciente
+  getDocuments: async (patientId) => {
+    try {
+      return await api.get(`/patients/${patientId}/documents`);
+    } catch (error) {
+      throw error;
+    }
   }
 };
 

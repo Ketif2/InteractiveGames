@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import path from 'path';
 import cors from 'cors';
 import pool from './config/db.js';
 import cookieParser from 'cookie-parser';
@@ -19,6 +20,7 @@ import forestRoutes from './routes/games/forestRoutes.js';
 dotenv.config();
 
 const app = express();
+const __dirname = path.resolve();
 
 app.use(cors({
     origin: 'http://localhost:5173',
@@ -39,6 +41,10 @@ app.use('/api/games/sequence', sequenceRoutes);
 app.use('/api/games/memory', memoryRoutes);
 app.use('/api/games/puzzle', puzzleRoutes);
 app.use('/api/games/forest', forestRoutes);
+
+// Servir archivos estáticos desde la carpeta 'uploads'
+app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.get('*', (req, res) => {
     if (!req.url.startsWith('/api')) {

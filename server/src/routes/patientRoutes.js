@@ -5,7 +5,11 @@ import {
     createPaciente,
     updatePaciente,
     deletePaciente,
-    assignTherapist
+    assignTherapist,
+    uploadDocument,
+    getDocument,
+    deleteDocument,
+    getDocuments
 } from '../controllers/patientController.js';
 import authenticate from '../middlewares/authMiddleware.js';
 
@@ -18,5 +22,13 @@ router.get('/:id', authenticate, getPacienteById);
 router.put('/:id', authenticate, updatePaciente);
 router.delete('/:id', authenticate, deletePaciente);
 router.put('/:id_paciente/assign-therapist', authenticate, assignTherapist);
+
+
+// Rutas para documentos
+router.post('/:id/documents', authenticate, uploadDocument);
+router.get('/:id/documents', authenticate, getDocuments);
+router.get('/:id/documents/:documentId', authenticate, getDocument);
+router.delete('/:id/documents/:documentId', authenticate, deleteDocument);
+
 
 export default router;

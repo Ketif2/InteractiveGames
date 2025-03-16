@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import patientService from '@/services/patientService';
 import therapistService from '@/services/therapistService';
+import ViewDocumentModal from './ViewDocumentModal'; // Ajusta la ruta según corresponda
 
 const PatientDetails = () => {
   const { id } = useParams();
@@ -16,6 +17,9 @@ const PatientDetails = () => {
   const [currentId, setCurrentId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -29,6 +33,14 @@ const PatientDetails = () => {
     try {
       const data = await patientService.getPatientById(id);
       setPatient(data);
+      
+      // Procesar documentos si existen
+      if (data.documentos) {
+        const docs = typeof data.documentos === 'string' 
+          ? JSON.parse(data.documentos) 
+          : data.documentos;
+        setDocuments(Array.isArray(docs) ? docs : []);
+      }
       
       if (data.id_terapeuta) {
         const therapistData = await therapistService.getTherapistById(data.id_terapeuta);
@@ -84,14 +96,62 @@ const PatientDetails = () => {
     if (file) {
       setSelectedFile(file);
       try {
+        setLoading(true);
         const formData = new FormData();
         formData.append('document', file);
         await patientService.uploadDocument(patient.id_paciente, formData);
         fetchPatientDetails();
+        setError(null);
       } catch (error) {
         console.error('Error uploading document:', error);
         setError('Error al subir el documento');
+      } finally {
+        setLoading(false);
       }
+    }
+  };
+
+  const handleViewDocument = (doc) => {
+    setSelectedDocument(doc);
+    setShowDocumentModal(true);
+  };
+
+  const handleDownloadDocument = async (document) => {
+    try {
+      setLoading(true);
+      const response = await patientService.getDocument(
+        patient.id_paciente, 
+        document.id
+      );
+      
+      // Crear URL para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', document.nombre); 
+      window.document.body.appendChild(link);
+      link.click();
+      window.document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      setError('Error al descargar el documento');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (documentId) => {
+    try {
+      setLoading(true);
+      await patientService.deleteDocument(patient.id_paciente, documentId);
+      fetchPatientDetails();
+      setError(null);
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      setError('Error al eliminar el documento');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -171,10 +231,36 @@ const PatientDetails = () => {
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            {patient.documentos && patient.documentos.length > 0 ? (
-              patient.documentos.map((doc, index) => (
-                <div key={index} className="p-3 bg-gray-50 rounded text-sm">
-                  <p className="truncate">{doc.nombre}</p>
+            {documents && documents.length > 0 ? (
+              documents.map((doc, index) => (
+                <div key={index} className="p-3 bg-gray-50 rounded text-sm relative group">
+                  <p className="truncate mb-1">{doc.nombre}</p>
+                  <p className="text-xs text-gray-500">
+                    {new Date(doc.fecha_subida).toLocaleDateString()}
+                  </p>
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                    <button 
+                      onClick={() => handleViewDocument(doc)}
+                      className="mx-1 bg-blue-500 text-white p-1 rounded"
+                      title="Ver"
+                    >
+                      👁️
+                    </button>
+                    <button 
+                      onClick={() => handleDownloadDocument(doc)}
+                      className="mx-1 bg-green-500 text-white p-1 rounded"
+                      title="Descargar"
+                    >
+                      ⬇️
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteDocument(doc.id)}
+                      className="mx-1 bg-red-500 text-white p-1 rounded"
+                      title="Eliminar"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
               ))
             ) : (
@@ -194,146 +280,152 @@ const PatientDetails = () => {
         </div>
       </div>
 
+      {/* Modal de Edición */}
       {isModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl">Editar Paciente</h2>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 text-xl"
-                >
-                  ×
-                </button>
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl">Editar Paciente</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block mb-1">Nombre:</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded"
+                  value={formData.nombre}
+                  onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                  required
+                />
               </div>
               
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block mb-1">Nombre:</label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block mb-1">Apellido:</label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded"
-                    value={formData.apellido}
-                    onChange={(e) => setFormData({...formData, apellido: e.target.value})}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block mb-1">Fecha Nacimiento:</label>
-                  <input
-                    type="date"
-                    className="w-full p-2 border rounded"
-                    value={formData.fecha_nacimiento}
-                    onChange={(e) => setFormData({...formData, fecha_nacimiento: e.target.value})}
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block mb-1">Apellido:</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded"
+                  value={formData.apellido}
+                  onChange={(e) => setFormData({...formData, apellido: e.target.value})}
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block mb-1">Fecha Nacimiento:</label>
+                <input
+                  type="date"
+                  className="w-full p-2 border rounded"
+                  value={formData.fecha_nacimiento}
+                  onChange={(e) => setFormData({...formData, fecha_nacimiento: e.target.value})}
+                  required
+                />
+              </div>
 
-                <div>
-                  <label className="block mb-1">Sexo:</label>
-                  <select
-                    className="w-full p-2 border rounded"
-                    value={formData.sexo}
-                    onChange={(e) => setFormData({...formData, sexo: e.target.value})}
-                    required
-                  >
-                    <option value="">Seleccione el sexo</option>
-                    <option value="Masculino">Masculino</option>
-                    <option value="Femenino">Femenino</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block mb-1">Diagnóstico:</label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border rounded"
-                    value={formData.diagnostico}
-                    onChange={(e) => setFormData({...formData, diagnostico: e.target.value})}
-                    required
-                  />
-                </div>
+              <div>
+                <label className="block mb-1">Sexo:</label>
+                <select
+                  className="w-full p-2 border rounded"
+                  value={formData.sexo}
+                  onChange={(e) => setFormData({...formData, sexo: e.target.value})}
+                  required
+                >
+                  <option value="">Seleccione el sexo</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block mb-1">Diagnóstico:</label>
+                <input
+                  type="text"
+                  className="w-full p-2 border rounded"
+                  value={formData.diagnostico}
+                  onChange={(e) => setFormData({...formData, diagnostico: e.target.value})}
+                  required
+                />
+              </div>
 
-                <div>
-                  <label className="block mb-1">Terapeuta:</label>
-                  <select
-                    className="w-full p-2 border rounded"
-                    value={formData.id_terapeuta}
-                    onChange={(e) => setFormData({...formData, id_terapeuta: e.target.value})}
-                    required
-                  >
-                    <option value="">Seleccione un terapeuta</option>
-                    {therapists.map((therapist) => (
-                      <option 
-                        key={therapist.id_terapeuta} 
-                        value={therapist.id_terapeuta}
-                      >
-                        {`${therapist.nombre} ${therapist.apellido}`}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="flex justify-end space-x-2 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 border rounded hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-[#00A8E3] text-white rounded hover:bg-[#7EC3E2]"
-                  >
-                    Actualizar
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Modal de Eliminación */}
-        {showDeleteModal && (
-          <div className="fixed inset-0 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
-              <h3 className="text-xl mb-4">Confirmar Eliminación</h3>
-              <p className="text-gray-600 mb-6">
-                ¿Está seguro que desea eliminar este paciente? Esta acción no se puede deshacer.
-              </p>
-              <div className="flex justify-end space-x-2">
+              <div>
+                <label className="block mb-1">Terapeuta:</label>
+                <select
+                  className="w-full p-2 border rounded"
+                  value={formData.id_terapeuta}
+                  onChange={(e) => setFormData({...formData, id_terapeuta: e.target.value})}
+                  required
+                >
+                  <option value="">Seleccione un terapeuta</option>
+                  {/* Aquí necesitarás cargar la lista de terapeutas */}
+                </select>
+              </div>
+              
+              <div className="flex justify-end space-x-2 mt-6">
                 <button
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setPatientToDelete(null);
-                  }}
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 border rounded hover:bg-gray-50"
                 >
                   Cancelar
                 </button>
                 <button
-                  onClick={handleDelete}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  type="submit"
+                  className="px-4 py-2 bg-[#00A8E3] text-white rounded hover:bg-[#7EC3E2]"
                 >
-                  Eliminar
+                  Actualizar
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Eliminación */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+            <h3 className="text-xl mb-4">Confirmar Eliminación</h3>
+            <p className="text-gray-600 mb-6">
+              ¿Está seguro que desea eliminar este paciente? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setPatientToDelete(null);
+                }}
+                className="px-4 py-2 border rounded hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Eliminar
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* Modal de Visualización de Documento */}
+      {showDocumentModal && selectedDocument && (
+        <ViewDocumentModal 
+          document={selectedDocument}
+          patientId={patient.id_paciente}
+          onClose={() => {
+            setShowDocumentModal(false);
+            setSelectedDocument(null);
+          }}
+        />
+      )}
     </div>
   );
 };

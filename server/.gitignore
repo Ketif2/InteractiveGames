@@ -33,3 +33,5 @@ jest/
 # Archivos de compilación y builds
 dist/
 build/
+
+uploads/
