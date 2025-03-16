@@ -33,7 +33,7 @@ const PatientStats = () => {
         } else {
           setTherapist(null);
         }
-        
+
         // 2. Obtener sesiones directamente
         const sessionsData = await statsService.getSessionsByPatient(id);
         setSessions(Array.isArray(sessionsData) ? sessionsData : []);
@@ -65,7 +65,7 @@ const PatientStats = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-2 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Navegación y encabezado */}
         <div className="mb-6">
