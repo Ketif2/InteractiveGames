@@ -440,7 +440,7 @@ const PatientDetails = () => {
                 {/* Terapeuta asignado */}
                 <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
                   <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                    <h3 className="text-lg font-medium leading-6 text-gray-900">Terapeuta Asignado</h3>
+                    <h3 className="text-lg font-medium leading-6 text-gray-900">Psicorehabilitador Asignado</h3>
                   </div>
                   <div className="px-4 py-5 sm:p-6">
                     {therapist ? (
@@ -451,7 +451,7 @@ const PatientDetails = () => {
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{therapist.nombre} {therapist.apellido}</div>
                           <button onClick={handleEditClick} className="mt-1 text-xs text-[#00A8E3] hover:text-[#0085b3]">
-                            Cambiar terapeuta
+                            Cambiar psicorehabilitador
                           </button>
                         </div>
                       </div>
@@ -460,12 +460,12 @@ const PatientDetails = () => {
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        <p className="text-gray-500 text-sm">No hay terapeuta asignado</p>
+                        <p className="text-gray-500 text-sm">No hay psicorehabilitador asignado</p>
                         <button 
                           className="mt-2 text-sm text-[#00A8E3] hover:text-[#0085b3] font-medium"
                           onClick={handleEditClick}
                         >
-                          Asignar terapeuta
+                          Asignar psicorehabilitador
                         </button>
                       </div>
                     )}
@@ -650,7 +650,7 @@ const PatientDetails = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                Cambiar Terapeuta
+                Cambiar Psicorehabilitador
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -664,7 +664,7 @@ const PatientDetails = () => {
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Terapeuta asignado:</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Psicorehabilitador asignado:</label>
                 <div className="relative">
                   <select
                     className="w-full p-2.5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#00A8E3] focus:border-[#00A8E3] transition-colors pl-10"
@@ -689,7 +689,7 @@ const PatientDetails = () => {
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  El terapeuta asignado será responsable de las sesiones con este paciente
+                  El psicorehabilitador asignado será responsable de las sesiones con este paciente
                 </p>
               </div>
               

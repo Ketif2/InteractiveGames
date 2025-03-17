@@ -556,14 +556,14 @@ const Patients = () => {
                 
                 {/* Fila 2 */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Terapeuta:</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Psicorehabilitador:</label>
                   <select
                     className="w-full p-2.5 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-[#00A8E3] focus:border-[#00A8E3] transition-colors"
                     value={formData.id_terapeuta}
                     onChange={(e) => setFormData({...formData, id_terapeuta: e.target.value})}
                     required
                   >
-                    <option value="">Seleccione un terapeuta</option>
+                    <option value="">Seleccione un psicorehabilitador</option>
                     {therapists.map((therapist) => (
                       <option 
                         key={therapist.id_terapeuta} 

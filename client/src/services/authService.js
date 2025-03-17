@@ -21,7 +21,7 @@ export const authService = {
       if (error.response) {
         // Handle specific HTTP error codes
         switch (error.response.status) {
-          case 409:
+          case 400:
             // Conflict - Email already exists
             throw new Error('El correo electrónico ya está registrado');
             

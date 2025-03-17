@@ -187,7 +187,7 @@ const PatientStats = () => {
                 <p className="font-medium text-gray-900">{patient?.id_paciente}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Terapeuta asignado</p>
+                <p className="text-sm text-gray-500 mb-1">Psicorehabilitador asignado</p>
                 <p className="font-medium text-gray-900">{therapist?.nombre+' '+therapist?.apellido || 'No asignado'}</p>
               </div>
               <div>
