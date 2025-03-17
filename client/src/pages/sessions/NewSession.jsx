@@ -283,7 +283,7 @@ const NewSession = () => {
                   filteredPatients.map((patient) => {
                     const patientId = patient.id_paciente;
                     const weeklySession = weeklyPatientSessions[patientId] || 0;
-                    const hasToday = todaySessions[patientId] || false;
+                    const hasToday = false;
                     const progress = patient.num_sesiones > 0 
                       ? Math.min(Math.round((weeklySession / patient.num_sesiones) * 100), 100) 
                       : 0;
