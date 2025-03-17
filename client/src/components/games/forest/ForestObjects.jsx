@@ -44,64 +44,43 @@ const ForestObject = ({ object, onClick }) => {
         }
     }, [isTarget, found]);
     
-    // Obtener el ícono adecuado según el tipo de objeto
-    const getObjectIcon = () => {
+    // Obtener la imagen adecuada según el tipo de objeto
+    const getObjectImage = () => {
         switch(type) {
             case 'flower':
-                if (color === 'blue') return '🌸';
-                if (color === 'red') return '🌹';
-                if (color === 'yellow') return '🌻';
-                if (color === 'purple') return '🌷';
-                return '🌼';
+                if (color === 'blue') return '/src/assets/images/forest/blue-flower.svg';
+                if (color === 'red') return '/src/assets/images/forest/red-flower.png';
+                if (color === 'yellow') return '/src/assets/images/forest/yellow-flower.png';
+                if (color === 'purple') return '/src/assets/images/forest/purple-flower.png';
+                return '/src/assets/images/forest/pink-flower.png';
             case 'mushroom':
-                if (color === 'red') return '🍄';
-                if (color === 'brown') return '🍄';
-                if (color === 'white') return '🍄';
-                return '🍄';
+                if (color === 'red') return '/src/assets/images/forest/red-mushroom.png';
+                if (color === 'brown') return '/src/assets/images/forest/brown-mushroom.png';
+                if (color === 'yellow') return '/src/assets/images/forest/yellow-mushroom.png';
+                return '/src/assets/images/forest/bee.png';
             case 'tree':
-                return '🌲';
+                return '/src/assets/images/forest/tree-icon.png';
             case 'animal':
-                if (species === 'rabbit') return '🐰';
-                if (species === 'fox') return '🦊';
-                if (species === 'bird') return '🐦';
-                return '🐾';
+                if (species === 'rabbit') return '/src/assets/images/forest/rabbit.png';
+                if (species === 'fox') return '/src/assets/images/forest/fox.png';
+                if (species === 'bird') return '/src/assets/images/forest/bird.png';
+                return '/src/assets/images/forest/animal-track.png';
             default:
-                return '❓';
+                return '/src/assets/images/forest/question.png';
         }
     };
     
     // Obtener la clase de estilo según el tipo y color
     const getStyleClass = () => {
-        let baseClasses = 'w-full h-full rounded-full shadow-md flex items-center justify-center transform transition-transform';
+        let baseClasses = 'w-full h-full rounded-full flex items-center justify-center transform transition-transform overflow-hidden';
         
-        // Fondo blanco para todos los objetos
-        baseClasses += ' bg-white';
+        // Fondo transparente para todos los objetos (quitamos bg-white)
         
-        // Borde colorido según el tipo de objeto
         if (found) {
             baseClasses += ' opacity-60 grayscale';
         }
         
-        // Añadir solo un borde colorido según el tipo
-        switch(type) {
-            case 'flower':
-                if (color === 'blue') return `${baseClasses} border-4 border-blue-400`;
-                if (color === 'red') return `${baseClasses} border-4 border-red-400`;
-                if (color === 'yellow') return `${baseClasses} border-4 border-yellow-400`;
-                if (color === 'purple') return `${baseClasses} border-4 border-purple-400`;
-                return `${baseClasses} border-4 border-pink-300`;
-            case 'mushroom':
-                if (color === 'red') return `${baseClasses} border-4 border-red-600`;
-                if (color === 'brown') return `${baseClasses} border-4 border-amber-700`;
-                if (color === 'white') return `${baseClasses} border-4 border-gray-300`;
-                return `${baseClasses} border-4 border-red-400`;
-            case 'tree':
-                return `${baseClasses} border-4 border-green-700`;
-            case 'animal':
-                return `${baseClasses} border-4 border-amber-400`;
-            default:
-                return `${baseClasses} border-4 border-gray-400`;
-        }
+        return baseClasses;
     };
     
     // Calcular animación basada en tipo de objeto
@@ -118,16 +97,6 @@ const ForestObject = ({ object, onClick }) => {
         }
         
         return '';
-    };
-    
-    // Calcular tamaño de texto responsive
-    const getTextSize = () => {
-        const relativeSize = objectSize / 58; // Normalizado al tamaño base de 58px
-        
-        if (relativeSize >= 1.1) return 'text-3xl';
-        if (relativeSize >= 0.9) return 'text-2xl';
-        if (relativeSize >= 0.7) return 'text-xl';
-        return 'text-lg';
     };
     
     return (
@@ -149,17 +118,14 @@ const ForestObject = ({ object, onClick }) => {
             }}
             onClick={() => !found && onClick(uniqueId)}
         >
-            {/* Objeto del bosque con estilo mejorado y fondo blanco */}
+            {/* Objeto del bosque con fondo transparente */}
             <div className={getStyleClass()}>
-                <span className={`text-center font-bold ${getTextSize()} select-none`}>
-                    {getObjectIcon()}
-                </span>
+                <img 
+                    src={getObjectImage()} 
+                    alt={`${color} ${type}`}
+                    className="w-full h-full object-contain"
+                />
             </div>
-            
-            {/* Decoración visual para objetos target no encontrados */}
-            {isTarget && !found && (
-                <div className="absolute -inset-2 rounded-full animate-glow opacity-40"></div>
-            )}
             
             {/* Efecto de sombra y click */}
             <div className="absolute inset-0 rounded-full bg-black opacity-0 transition-opacity duration-150 hover:opacity-10"></div>

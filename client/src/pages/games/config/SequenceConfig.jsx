@@ -99,7 +99,7 @@ const SequenceConfig = () => {
     }
 
     return (
-        <div className="container mx-auto px-4 py-2">
+        <div className="container mx-auto px-4 py-1">
                         <nav className="flex items-center py-2 px-4" aria-label="Breadcrumb">
                 <ol className="inline-flex items-center space-x-1 md:space-x-3">
                     <li className="inline-flex items-center">

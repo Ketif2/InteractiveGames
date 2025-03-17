@@ -7,14 +7,26 @@ const ForestBackground = () => {
       {/* Gradiente en la parte inferior */}
       <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-green-200 to-transparent opacity-40"></div>
       
-      {/* Elementos decorativos para el bosque */}
-      <div className="absolute top-10 left-10 text-6xl opacity-10 transform rotate-3">🌲</div>
-      <div className="absolute top-40 right-20 text-5xl opacity-10 transform -rotate-2">🌳</div>
-      <div className="absolute bottom-20 left-40 text-6xl opacity-10 transform rotate-5">🌿</div>
-      <div className="absolute top-80 left-80 text-5xl opacity-10 transform -rotate-3">🌲</div>
-      <div className="absolute top-30 right-60 text-5xl opacity-10 transform rotate-2">🌿</div>
-      <div className="absolute bottom-40 right-70 text-5xl opacity-10 transform rotate-6">🌳</div>
-      
+      {/* Elementos decorativos para el bosque - Reemplazados por imágenes */}
+      <div className="absolute top-10 left-10 opacity-10">
+        <img src="/src/assets/images/forest/tree.png" alt="" className="w-20 h-20 transform rotate-3" />
+      </div>
+      <div className="absolute top-40 right-20 opacity-10">
+        <img src=" client\src\assets\images\forest\autumn-tree.png" alt="" className="w-20 h-20 transform -rotate-2" />
+      </div>
+      <div className="absolute bottom-20 left-40 opacity-10">
+        <img src="/src/assets/images/forest/leaves.png" alt="" className="w-16 h-16 transform rotate-5" />
+      </div>
+      <div className="absolute top-80 left-80 opacity-10">
+        <img src="/src/assets/images/forest/tree.png" alt="" className="w-16 h-16 transform -rotate-3" />
+      </div>
+      <div className="absolute top-30 right-60 opacity-10">
+        <img src="/src/assets/images/forest/leaves.png" alt="" className="w-16 h-16 transform rotate-2" />
+      </div>
+      <div className="absolute bottom-40 right-70 opacity-10">
+        <img src="/src/assets/images/forest/autumn-tree.png" alt="" className="w-16 h-16 transform rotate-6" />
+      </div>
+
       {/* Nubes sutiles */}
       <div className="absolute top-5 left-1/4 w-24 h-8 bg-white rounded-full opacity-20"></div>
       <div className="absolute top-8 left-1/4 -ml-4 w-16 h-8 bg-white rounded-full opacity-20"></div>
@@ -24,9 +36,15 @@ const ForestBackground = () => {
       <div className="absolute top-24 right-1/4 -mr-5 w-20 h-8 bg-white rounded-full opacity-15"></div>
       
       {/* Detalles ambientales sutiles */}
-      <div className="absolute top-1/3 left-1/5 text-xl opacity-5">🦋</div>
-      <div className="absolute top-2/3 right-1/4 text-xl opacity-5">🦋</div>
-      <div className="absolute bottom-1/4 left-1/3 text-xl opacity-5">🐝</div>
+      <div className="absolute top-1/3 left-1/5 opacity-5">
+        <img src="/src/assets/images/forest/butterfly.png" alt="" className="w-8 h-8" />
+      </div>
+      <div className="absolute top-2/3 right-1/4 opacity-5">
+        <img src="/src/assets/images/forest/butterfly.png" alt="" className="w-8 h-8" />
+      </div>
+      <div className="absolute bottom-1/4 left-1/3 opacity-5">
+        <img src="/src/assets/images/forest/bee.png" alt="" className="w-6 h-6" />
+      </div>
       
       {/* Filtro de textura sutil */}
       <div className="absolute inset-0 bg-repeat opacity-5" 
