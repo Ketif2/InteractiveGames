@@ -1,5 +1,5 @@
 // src/pages/games/forest/ForestGame.jsx
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 // Componentes modulares
@@ -50,10 +50,18 @@ const ForestGame = () => {
   const navigate = useNavigate();
   const { config, patientId } = location.state || {};
   
+  // Referencia para rastrear si el componente está montado
+  const isMounted = useRef(true);
+  
   // Aplicar estilos de animación al montar el componente
   useEffect(() => {
     const cleanupStyles = applyAnimationStyles();
-    return cleanupStyles;
+    
+    // Limpiar al desmontar
+    return () => {
+      isMounted.current = false;
+      cleanupStyles();
+    };
   }, []);
   
   // Usar el hook principal que maneja toda la lógica del juego
@@ -74,10 +82,45 @@ const ForestGame = () => {
     handleExitClick,
     handleExitCancel,
     handleFinishGame,
-    startNextRound,
     toggleAudio,
     pathRef
   } = useForestGame(config, forestPatterns, forestObjects, null, navigate, patientId);
+
+  // Efecto para verificar automáticamente la finalización del juego
+  // cuando se completan todas las rondas
+  useEffect(() => {
+    if (gameState.currentRound > gameState.totalRounds && isMounted.current) {
+      console.log("Efecto de verificación detecta que se completaron todas las rondas");
+      // Programar la transición al final del juego
+      const timer = setTimeout(() => {
+        if (isMounted.current) {
+          handleFinishGame(true);
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.currentRound, gameState.totalRounds, handleFinishGame]);
+  
+  // Efecto para finalizar el juego cuando se acaba el tiempo
+  useEffect(() => {
+    if (gameState.timerActive && gameState.remainingTime <= 0 && isMounted.current) {
+      console.log("Efecto de verificación detecta que se agotó el tiempo");
+      // Programar la finalización después de un breve retardo
+      const timer = setTimeout(() => {
+        if (isMounted.current) {
+          // Si ya estamos en la última ronda, finalizar el juego
+          if (gameState.currentRound >= gameState.totalRounds) {
+            handleFinishGame(true);
+          }
+          // No hacemos nada si no es la última ronda, porque handleTimeOut 
+          // en useForestGame se encargará de ello
+        }
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [gameState.timerActive, gameState.remainingTime, gameState.currentRound, gameState.totalRounds, handleFinishGame]);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -169,7 +212,7 @@ const ForestGame = () => {
         onExitConfirm={() => handleFinishGame(false)}
         onExitCancel={handleExitCancel}
         onGameComplete={() => handleFinishGame(true)}
-        />
+      />
     </div>
   );
 };

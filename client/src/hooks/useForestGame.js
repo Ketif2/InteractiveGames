@@ -13,6 +13,11 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
   
   const pathRef = useRef(null);
   
+  // Referencias para prevenir llamadas duplicadas
+  const isAdvancingRef = useRef(false);
+  const timeoutHandlingRef = useRef(false);
+  const isFinishingRef = useRef(false);
+  
   // Estado del juego
   const [gameState, setGameState] = useState({
     currentLevel: config?.startingLevel || 1,
@@ -43,7 +48,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
 
   // Nuevos estados para el sistema de puntos (internos, no visibles)
   const [totalScore, setTotalScore] = useState(0);
-  const [rounds, setRounds] = useState(0); // Pantallas completadas en un nivel (iniciar en 0)
+  const [screenRefreshes, setScreenRefreshes] = useState(0); // Pantallas completadas (refrescos) - DIFERENTE de las rondas
   const [showCompletedMessage, setShowCompletedMessage] = useState(false);
 
   // Estado para feedback
@@ -83,6 +88,23 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
 
   // IMPORTANTE: Declaramos handleFinishGame antes de usarlo en otras funciones
   const handleFinishGame = useCallback((completed = false) => {
+    console.log("EJECUTANDO FINALIZACIÓN DEL JUEGO - Estado completado:", completed);
+    
+    // Verificar si ya se está finalizando el juego
+    if (isFinishingRef.current) {
+      console.log("Ya se está finalizando el juego, ignorando llamada duplicada");
+      return;
+    }
+    
+    // Marcar que estamos finalizando el juego
+    isFinishingRef.current = true;
+    
+    // Limpiamos cualquier temporizador activo
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
     const endTime = Date.now();
     const currentState = stateRef.current;
     
@@ -103,41 +125,83 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
       num_aciertos: currentState.num_aciertos,
       completado: completed,
       totalRounds: currentState.currentRound,
-      roundsCompleted: rounds,
+      roundsCompleted: currentState.currentRound, // Usar currentRound como el número real de rondas completadas
+      screenRefreshes: screenRefreshes, // Incluir el contador de refrescos de pantalla como dato adicional
       maxLevel: config?.startingLevel || 1,
       totalScore: totalScore + currentState.roundScore, // Incluir puntos de la ronda actual
       patternId: currentState.selectedPatternId
     };
 
-    // Navigate to results page
-    navigate('/games/forest/end', { 
-      state: { 
-        stats,
-        config,
-        patientId
-      } 
-    });
-  }, [config, navigate, patientId, totalScore, rounds]);
+    console.log("Navegando a resultados con estadísticas:", stats);
 
-  // Función para avanzar a la siguiente ronda
+    // Navigate to results page con un breve retraso para asegurar que todo se complete
+    setTimeout(() => {
+      navigate('/games/forest/end', { 
+        state: { 
+          stats,
+          config,
+          patientId
+        } 
+      });
+    }, 500);
+  }, [config, navigate, patientId, totalScore, screenRefreshes]);
+
+  // Función para avanzar a la siguiente ronda - SOLO SE LLAMA CUANDO ACABA EL TIEMPO
   const advanceToNextRound = useCallback(() => {
     console.log("Avanzando a la siguiente ronda...");
-    setGameState(prev => ({
-      ...prev,
-      currentRound: prev.currentRound + 1
-    }));
+    
+    // Usar una referencia para verificar si ya se está procesando el avance
+    if (isAdvancingRef.current) {
+      console.log("Ya se está procesando un avance de ronda, ignorando llamada duplicada");
+      return;
+    }
+    
+    isAdvancingRef.current = true;
+    
+    // Guardar la puntuación de la ronda actual antes de avanzar
+    setTotalScore(prev => prev + stateRef.current.roundScore);
+    
+    setGameState(prev => {
+      const nextRound = prev.currentRound + 1;
+      // Verificar si la siguiente ronda excede el total
+      if (nextRound > prev.totalRounds) {
+        console.log("Se alcanzó el máximo de rondas durante el avance - Preparando para finalizar");
+        
+        // Programar finalización del juego después de mostrar mensaje
+        setTimeout(() => {
+          handleFinishGame(true);
+        }, 2000);
+        
+        return {
+          ...prev,
+          currentRound: prev.totalRounds, // Mantener en la última ronda visualmente
+          roundScore: 0 // Resetear puntuación para la nueva ronda
+        };
+      }
+      
+      return {
+        ...prev,
+        currentRound: nextRound,
+        roundScore: 0 // Resetear puntuación para la nueva ronda
+      };
+    });
     
     // Mostrar mensaje de siguiente ronda
     setShowNextRoundMessage(true);
     setTimeout(() => {
       setShowNextRoundMessage(false);
+      
+
+      
+      // Resetear la bandera de procesamiento
+      isAdvancingRef.current = false;
     }, 2000);
-    
-  }, []);
+  }, [handleFinishGame]);
 
   // Inicialización del nivel (genera nuevo camino y objetos)
-  const initializeLevel = useCallback((preserveStats = false, sameLevel = true) => {
-    console.log("Inicializando nivel, preserveStats:", preserveStats, "sameLevel:", sameLevel);
+  // Este método se usa TANTO para iniciar una nueva ronda como para refrescar la pantalla
+  const initializeLevel = useCallback((preserveStats = false, sameRound = true) => {
+    console.log("Inicializando nivel, preserveStats:", preserveStats, "sameRound:", sameRound);
     
     // Generar nuevo camino
     const pathResult = generatePath();
@@ -171,16 +235,18 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
         patternSequence: patternSequence.length > 0 ? patternSequence : prev.patternSequence,
         currentPatternIndex: 0,
         showInstructions: !preserveStats, // Solo mostrar instrucciones al inicio
-        selectedPatternId,
-        // IMPORTANTE: NO MODIFICAR currentRound aquí
-        // Si es una nueva ronda, resetear la puntuación
-        roundScore: preserveStats && sameLevel ? prev.roundScore : 0
+        selectedPatternId
       };
       
-      // Actualizar el temporizador
-      if (!preserveStats) {
+      // Siempre reiniciar el temporizador cuando cambiamos de ronda
+      if (!sameRound || !preserveStats) {
         newState.remainingTime = config?.timeLimit || 0;
         newState.timerActive = config?.timeLimit > 0;
+      }
+      
+      // Si es una nueva ronda o si estamos comenzando de nuevo, resetear la puntuación
+      if (!sameRound || !preserveStats) {
+        newState.roundScore = 0;
       }
       
       if (!preserveStats) {
@@ -218,26 +284,40 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     }, 500);
   }, [config, forestPatterns, forestObjects, logObjectCounts]);
 
-  // Maneja el tiempo agotado - Inicia la siguiente ronda
+  // Maneja el tiempo agotado - ESTE ES EL PUNTO DONDE SE AVANZA DE RONDA
   const handleTimeOut = useCallback(() => {
+    // Verificar si ya se está manejando un timeout
+    if (timeoutHandlingRef.current) {
+      console.log("Ya se está manejando un timeout, ignorando llamada duplicada");
+      return;
+    }
+    
+    // Marcar que estamos procesando un timeout
+    timeoutHandlingRef.current = true;
+    
     setShowTimeoutFeedback(true);
-    // Añadir la puntuación de la ronda actual al total
-    setTotalScore(prev => prev + stateRef.current.roundScore);
     
     setTimeout(() => {
       setShowTimeoutFeedback(false);
       
-      // Verificar si hemos completado todas las rondas - usar stateRef para evitar dependencias circulares
-      if (stateRef.current.currentRound >= stateRef.current.totalRounds) {
+      // Verificar si hemos completado todas las rondas
+      if (stateRef.current.currentRound > stateRef.current.totalRounds) {
+        console.log("Tiempo agotado y todas las rondas completadas - Finalizando juego");
         // Si completamos todas las rondas, terminar el juego
         handleFinishGame(true);
       } else {
+        console.log("Tiempo agotado pero hay más rondas - Avanzando a siguiente ronda");
         // Si no, avanzar a la siguiente ronda manteniendo el mismo nivel
-        advanceToNextRound(); // Usar la función centralizada para avanzar rondas
+        advanceToNextRound(); // Esto incrementa currentRound y resetea roundScore
         
         // Inicializar el mismo nivel para la nueva ronda
-        initializeLevel(true, true);
+        initializeLevel(true, false); // preserveStats=true, sameRound=false
       }
+      
+      // Resetear la bandera de procesamiento de timeout después de un tiempo
+      setTimeout(() => {
+        timeoutHandlingRef.current = false;
+      }, 1000);
     }, 3000);
   }, [advanceToNextRound, handleFinishGame, initializeLevel]);
 
@@ -319,20 +399,17 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
       setShowCompletedMessage(true);
       playSound('level-complete');
       
-      // Añadir la puntuación de la ronda actual al total
-      setTotalScore(prev => prev + stateRef.current.roundScore);
-      
-      // Incrementar el contador de pantallas completadas
-      setRounds(prev => prev + 1);
+      // Incrementar el contador de refrescos de pantalla (que es diferente de las rondas)
+      setScreenRefreshes(prev => prev + 1);
       
       // Programar la recarga del nivel SIN AVANZAR DE RONDA
-      // CAMBIO IMPORTANTE: Sólo refrescamos el juego sin contar como nueva ronda
       setTimeout(() => {
-        console.log("Reiniciando nivel para continuar en la misma ronda...");
+        console.log("Objetivos completados pero quedan rondas - Avanzando a siguiente ronda");
         setShowCompletedMessage(false);
         
-        // Inicializar el mismo nivel manteniendo estadísticas
-        // No avanzamos de ronda, simplemente refrescamos la pantalla
+        // DIFERENTE de advanceToNextRound - Solo refresca la pantalla sin cambiar ronda
+        // IMPORTANTE: preserveStats=true para mantener las estadísticas y puntuación
+        // IMPORTANTE: sameRound=true para NO resetear la puntuación de la ronda
         initializeLevel(true, true);
       }, 2000);
       
@@ -340,7 +417,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     }
     
     return false;
-  }, [config?.startingLevel, initializeLevel, playSound]);
+  }, [config?.startingLevel, playSound, initializeLevel]);
 
   // Manejar clic en objeto
   const handleObjectClick = useCallback((objectId) => {
@@ -512,102 +589,114 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [forceVerification]);
   
-  // Temporizador
-// Temporizador
-useEffect(() => {
-  if (gameState.timerActive && !gameState.isPaused && gameState.remainingTime > 0 && !showCompletedMessage) {
-    timerRef.current = setInterval(() => {
-      setGameState(prev => {
-        const newTime = prev.remainingTime - 1;
-        if (newTime <= 0) {
-          clearInterval(timerRef.current);
-          handleTimeOut();
-          return { ...prev, remainingTime: 0 };
-        }
-        return { ...prev, remainingTime: newTime };
-      });
-    }, 1000);
-  } else if (!gameState.timerActive || gameState.isPaused || showCompletedMessage) {
-    clearInterval(timerRef.current);
-  }
-  
-  return () => clearInterval(timerRef.current);
-}, [gameState.timerActive, gameState.isPaused, gameState.remainingTime, showCompletedMessage, handleTimeOut]);
+  // Temporizador - PUNTO CRUCIAL PARA AVANZAR DE RONDA
+  useEffect(() => {
+    if (gameState.timerActive && !gameState.isPaused && gameState.remainingTime > 0 && !showCompletedMessage) {
+      timerRef.current = setInterval(() => {
+        setGameState(prev => {
+          const newTime = prev.remainingTime - 1;
+          if (newTime <= 0) {
+            console.log("Temporizador llegó a cero - Deteniendo y manejando tiempo agotado");
+            clearInterval(timerRef.current);
+            
+            // Programar handleTimeOut con un pequeño retraso para evitar condiciones de carrera
+            // Solo si no se está manejando un timeout ya
+            if (!timeoutHandlingRef.current) {
+              setTimeout(() => {
+                handleTimeOut();
+              }, 100);
+            }
+            
+            return { ...prev, remainingTime: 0 };
+          }
+          return { ...prev, remainingTime: newTime };
+        });
+      }, 1000);
+    } else if (!gameState.timerActive || gameState.isPaused || showCompletedMessage) {
+      clearInterval(timerRef.current);
+    }
+    
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [gameState.timerActive, gameState.isPaused, gameState.remainingTime, showCompletedMessage, handleTimeOut]);
 
-// Funciones para control del juego
-const handleHelp = useCallback(() => {
-  setGameState(prev => ({
-    ...prev,
-    helpCount: prev.helpCount + 1
-  }));
-  
-  // Reproducir sonido de ayuda
-  playSound('help');
-  
-  // Dar pista visual sobre los objetivos
-  const highlightedElements = document.querySelectorAll('.object-highlight');
-  highlightedElements.forEach(el => el.classList.remove('object-highlight'));
-  
-  // Añadir clase de animación a los objetivos
-  const targetElements = document.querySelectorAll('.target-object');
-  targetElements.forEach(el => {
-    el.classList.add('object-highlight');
-    setTimeout(() => el.classList.remove('object-highlight'), 3000);
-  });
-}, [playSound]);
+  // Funciones para control del juego
+  const handleHelp = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      helpCount: prev.helpCount + 1
+    }));
+    
+    // Reproducir sonido de ayuda
+    playSound('help');
+    
+    // Dar pista visual sobre los objetivos
+    const highlightedElements = document.querySelectorAll('.object-highlight');
+    highlightedElements.forEach(el => el.classList.remove('object-highlight'));
+    
+    // Añadir clase de animación a los objetivos
+    const targetElements = document.querySelectorAll('.target-object');
+    targetElements.forEach(el => {
+      el.classList.add('object-highlight');
+      setTimeout(() => el.classList.remove('object-highlight'), 3000);
+    });
+  }, [playSound]);
 
-const handleTogglePause = useCallback(() => {
-  setGameState(prev => {
-    const now = Date.now();
-    if (prev.isPaused) {
-      // Resuming game
+  const handleTogglePause = useCallback(() => {
+    setGameState(prev => {
+      const now = Date.now();
+      if (prev.isPaused) {
+        // Resuming game
+        return {
+          ...prev,
+          isPaused: false,
+          totalPauseTime: prev.totalPauseTime + (now - (prev.lastPauseTime || now)),
+          lastPauseTime: null
+        };
+      }
+      // Pausing game
       return {
         ...prev,
-        isPaused: false,
-        totalPauseTime: prev.totalPauseTime + (now - (prev.lastPauseTime || now)),
-        lastPauseTime: null
+        isPaused: true,
+        lastPauseTime: now,
+        totalPauses: prev.totalPauses + 1
       };
-    }
-    // Pausing game
-    return {
-      ...prev,
-      isPaused: true,
-      lastPauseTime: now,
-      totalPauses: prev.totalPauses + 1
-    };
-  });
-}, []);
+    });
+  }, []);
 
-// Modificar el handleExitClick para que guarde las estadísticas y vaya a ForestEnd
-const handleExitClick = useCallback(() => {
-  setShowExitConfirm(true);
-}, []);
+  // Modificar el handleExitClick para que guarde las estadísticas y vaya a ForestEnd
+  const handleExitClick = useCallback(() => {
+    setShowExitConfirm(true);
+  }, []);
 
-const handleExitCancel = useCallback(() => {
-  setShowExitConfirm(false);
-}, []);
+  const handleExitCancel = useCallback(() => {
+    setShowExitConfirm(false);
+  }, []);
 
-return {
-  gameState,
-  showCorrectFeedback,
-  showWrongFeedback,
-  showTimeoutFeedback,
-  showExitConfirm,
-  showNextRoundMessage,
-  gameCompleted,
-  showCompletedMessage,
-  audioEnabled,
-  handleObjectClick,
-  handleHelp,
-  handleTogglePause,
-  handleExitClick,
-  handleExitCancel,
-  handleFinishGame,
-  toggleAudio,
-  pathRef,
-  totalScore,
-  rounds
-};
+  return {
+    gameState,
+    showCorrectFeedback,
+    showWrongFeedback,
+    showTimeoutFeedback,
+    showExitConfirm,
+    showNextRoundMessage,
+    gameCompleted,
+    showCompletedMessage,
+    audioEnabled,
+    handleObjectClick,
+    handleHelp,
+    handleTogglePause,
+    handleExitClick,
+    handleExitCancel,
+    handleFinishGame,
+    toggleAudio,
+    pathRef,
+    totalScore,
+    rounds: screenRefreshes // Para mantener compatibilidad con el código anterior
+  };
 };
 
 export default useForestGame;
