@@ -10,6 +10,8 @@ import ForestPath from '../../../components/games/forest/ForestPath';
 import ForestInstructions from '../../../components/games/forest/ForestInstructions';
 import ForestAudio from '../../../components/games/forest/ForestAudio';
 import ForestBackground from '../../../components/games/forest/ForestBackground';
+// NUEVO: Importar el componente para mensajes de objetivos
+import ForestNextObjectives from '../../../components/games/forest/ForestNextObjectives';
 
 // Hooks y utilidades
 import useForestGame from '../../../hooks/useForestGame';
@@ -75,6 +77,8 @@ const ForestGame = () => {
     showNextRoundMessage,
     gameCompleted,
     showCompletedMessage,
+    showNextObjectivesMessage, // NUEVO: Estado para mensajes de objetivos
+    nextObjectivesMessage,     // NUEVO: Mensaje de objetivos
     audioEnabled,
     handleObjectClick,
     handleHelp,
@@ -145,12 +149,13 @@ const ForestGame = () => {
           pointerEvents: gameState.isPaused ? 'none' : 'auto'
         }}
       >
-        {/* Instrucciones */}
+        {/* MODIFICADO: Instrucciones - Ahora pasa las instrucciones dinámicas */}
         <ForestInstructions
           currentLevel={gameState.currentLevel}
           currentRound={gameState.currentRound}
           totalRounds={gameState.totalRounds}
           showInstructions={gameState.showInstructions}
+          instructionsText={gameState.instructionsText} // NUEVO: Pasar instrucciones dinámicas
         />
         
         {/* Área del juego con límites claros */}
@@ -213,6 +218,22 @@ const ForestGame = () => {
         onExitCancel={handleExitCancel}
         onGameComplete={() => handleFinishGame(true)}
       />
+      
+      {/* NUEVO: Mensajes para mostrar cambios de objetivos */}
+      <ForestNextObjectives 
+        show={showNextObjectivesMessage} 
+        message={nextObjectivesMessage}
+        isNextRound={false}
+      />
+      
+      {/* NUEVO: Mostrar mensaje cuando hay cambio de ronda */}
+      {showNextRoundMessage && (
+        <ForestNextObjectives 
+          show={true} 
+          message={gameState.instructionsText}
+          isNextRound={true}
+        />
+      )}
     </div>
   );
 };

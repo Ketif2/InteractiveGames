@@ -146,31 +146,12 @@ const ForestEnd = () => {
                         Estadísticas Acumuladas
                     </h2>
                     <div className="space-y-3 flex-1">
-                        {/* Destacar puntuación total */}
-                        <div className="mb-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <h3 className="text-lg font-semibold text-yellow-700 mb-2">Puntuación Final</h3>
-                            <div className="flex justify-center">
-                                <span className="text-3xl font-bold text-yellow-600">{stats?.totalScore || 0} pts</span>
-                            </div>
-                        </div>
-
-                        <StatItem 
-                            label="Pantallas completadas" 
-                            value={stats?.roundsCompleted || 0} 
-                            highlightPositive={true}
-                        />
-                        
                         <StatItem 
                             label="Tiempo total" 
                             value={`${timeInMinutes}m ${timeInSeconds}s`} 
                         />
                         <StatItem 
-                            label="Nivel máximo alcanzado" 
-                            value={stats?.maxLevel || 1} 
-                            highlightPositive={true}
-                        />
-                        <StatItem 
-                            label="Objetos encontrados correctamente" 
+                            label="Respuestas correctas" 
                             value={stats?.num_aciertos || 0} 
                             highlightPositive={true}
                         />
@@ -178,10 +159,6 @@ const ForestEnd = () => {
                             label="Errores cometidos" 
                             value={stats?.num_errores || 0} 
                             highlightNegative={true}
-                        />
-                        <StatItem 
-                            label="Total de interacciones" 
-                            value={(stats?.num_aciertos || 0) + (stats?.num_errores || 0)} 
                         />
                         <StatItem 
                             label="Ayudas utilizadas" 
@@ -214,11 +191,6 @@ const ForestEnd = () => {
                                 label="Errores por ronda" 
                                 value={(stats?.num_errores / (stats?.totalRounds || 1)).toFixed(1)} 
                                 highlightNegative={true}
-                            />
-                            <StatItem 
-                                label="Puntos por pantalla" 
-                                value={(stats?.totalScore / (stats?.roundsCompleted || 1)).toFixed(1)} 
-                                highlightPositive={true}
                             />
                         </div>
                     </div>

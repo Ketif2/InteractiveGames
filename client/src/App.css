@@ -30,3 +30,20 @@
   .animate-fadeOut {
     animation: fadeOut 1.5s forwards;
   }
+
+
+.animate-bounce-once {
+   animation: bounceIn 0.5s;
+ }
+ .animate-timer {
+   animation: timer 5s linear forwards;
+ }
+ @keyframes bounceIn {
+   0% { transform: scale(0.8); opacity: 0; }
+   50% { transform: scale(1.05); opacity: 1; }
+   100% { transform: scale(1); }
+ }
+ @keyframes timer {
+   from { width: 100%; }
+   to { width: 0%; }
+ }

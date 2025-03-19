@@ -47,18 +47,25 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
     let fixedTargets = 3; // Por defecto
 
     switch(level) {
-      case 1: // Para el nivel 1 (flores azules)
-        fixedTargets = 3; // REDUCIDO A SÓLO 3
+      case 1: // Para el nivel 1 (objetos simples)
+        fixedTargets = 3; 
         break;
-      case 2: // Para nivel 2 (flores azules y hongos rojos)
+      case 2: // Para nivel 2 (múltiples tipos de objetos)
         fixedTargets = 4; // Idealmente 2 de cada tipo
         break;
       case 3: // Para secuencias
         fixedTargets = 4; // 2 pares de secuencia
         break;
       case 4: // Para patrones
-        fixedTargets = 6; // Al menos 2 iteraciones completas del patrón
+        fixedTargets = 9; // 3 iteraciones completas del patrón
         break;
+    }
+    
+    // Para nivel 4, ajustar targets para que sea múltiplo del patrón
+    if (level === 4) {
+      const patternLength = 3; // Patrón de 3 elementos
+      fixedTargets = Math.ceil(fixedTargets / patternLength) * patternLength;
+      console.log(`Nivel 4: Ajustando targets a ${fixedTargets} (múltiplo de ${patternLength})`);
     }
     
     // Muchos más distractores en función del área disponible
@@ -156,33 +163,95 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
     };
   }
   
-  // Definir objetivos según nivel
+  // NUEVO: Función para seleccionar tipos de objetos objetivo aleatorios
+  const selectRandomObjectTypes = () => {
+    // Definir todos los posibles tipos de objetos y sus colores disponibles
+    const availableTypes = [
+      { type: 'flower', colors: ['blue', 'red', 'yellow', 'purple', 'pink'] },
+      { type: 'mushroom', colors: ['red', 'brown', 'yellow'] },
+      { type: 'tree', colors: ['green'] },
+      { type: 'animal', species: ['rabbit', 'fox', 'bird'] }
+    ];
+    
+    // Seleccionar 1 o 2 tipos aleatorios como objetivos
+    const typeCount = level === 1 ? 1 : 2; // Nivel 1: un tipo, resto: dos tipos
+    const shuffledTypes = [...availableTypes].sort(() => Math.random() - 0.5);
+    const selectedTypes = shuffledTypes.slice(0, typeCount);
+    
+    // Para cada tipo, seleccionar un color/especie aleatorio
+    return selectedTypes.map(typeInfo => {
+      if (typeInfo.type === 'animal') {
+        const randomSpecies = typeInfo.species[Math.floor(Math.random() * typeInfo.species.length)];
+        return { type: 'animal', species: randomSpecies, sequence: null };
+      } else {
+        const randomColor = typeInfo.colors[Math.floor(Math.random() * typeInfo.colors.length)];
+        return { type: typeInfo.type, color: randomColor, sequence: null };
+      }
+    });
+  };
+  
+  // NUEVO: Función para generar un patrón aleatorio para el nivel 4
+  const generateRandomPattern = (selectedObjectTypes) => {
+    if (selectedObjectTypes.length === 0) return [];
+    
+    // Si solo hay un tipo de objeto, lo usamos varias veces en el patrón
+    if (selectedObjectTypes.length === 1) {
+      const objType = selectedObjectTypes[0];
+      if (objType.type === 'animal') {
+        return ['animal-' + objType.species, 'animal-' + objType.species, 'animal-' + objType.species];
+      } else {
+        return [objType.type + '-' + objType.color, objType.type + '-' + objType.color, objType.type + '-' + objType.color];
+      }
+    }
+    
+    // Si hay dos tipos, creamos un patrón como "2 del tipo 1, 1 del tipo 2"
+    const type1 = selectedObjectTypes[0];
+    const type2 = selectedObjectTypes[1];
+    
+    const pattern = [];
+    
+    // Añadir primer tipo (2 veces)
+    for (let i = 0; i < 2; i++) {
+      if (type1.type === 'animal') {
+        pattern.push('animal-' + type1.species);
+      } else {
+        pattern.push(type1.type + '-' + type1.color);
+      }
+    }
+    
+    // Añadir segundo tipo (1 vez)
+    if (type2.type === 'animal') {
+      pattern.push('animal-' + type2.species);
+    } else {
+      pattern.push(type2.type + '-' + type2.color);
+    }
+    
+    return pattern;
+  };
+  
+  // Definir objetivos según nivel, ahora de forma dinámica
   let targetObjectTypes = [];
   let patternSequence = [];
   
-  switch(level) {
-    case 1: // Reconocimiento simple
-      targetObjectTypes = [{ type: 'flower', color: 'blue' }];
-      break;
-    case 2: // Reconocimiento múltiple
-      targetObjectTypes = [
-        { type: 'flower', color: 'blue' },
-        { type: 'mushroom', color: 'red' }
-      ];
-      break;
-    case 3: // Secuencias
-      targetObjectTypes = [
-        { type: 'flower', color: 'blue', sequence: 1 },
-        { type: 'mushroom', color: 'red', sequence: 2 }
-      ];
-      break;
-    case 4: // Patrones
-      targetObjectTypes = [
-        { type: 'flower', color: 'blue' },
-        { type: 'mushroom', color: 'red' }
-      ];
-      patternSequence = ['flower-blue', 'flower-blue', 'mushroom-red'];
-      break;
+  // Generar objetivos aleatorios
+  targetObjectTypes = selectRandomObjectTypes();
+  
+  // Para nivel 3, añadir información de secuencia
+  if (level === 3 && targetObjectTypes.length > 0) {
+    targetObjectTypes = targetObjectTypes.map((obj, index) => ({
+      ...obj,
+      sequence: index + 1
+    }));
+  }
+  
+  // Para nivel 4, generar el patrón aleatorio
+  if (level === 4) {
+    patternSequence = generateRandomPattern(targetObjectTypes);
+  }
+  
+  console.log("OBJETIVOS GENERADOS:", targetObjectTypes);
+  if (patternSequence.length > 0) {
+    console.log("PATRÓN GENERADO:", patternSequence);
   }
   
   // Crear los objetos objetivo y distractores
@@ -249,7 +318,7 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
     distractorPositions = [];
   }
   
-  // MEJORA PARA FLORES AZULES: Modificar posiciones de objetivos para mayor aleatoriedad
+  // MEJORA: Modificar posiciones de objetivos para mayor aleatoriedad
   // Y GARANTIZAR SEPARACIÓN POR CUADRANTES
   const modifyTargetPositions = (positions) => {
     // Distribuir objetivos por cuadrantes específicos para garantizar separación
@@ -406,26 +475,70 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
         offsetY: (Math.random() * 2 - 1) * 100
       };
       
-      const targetTypeIndex = i % targetObjectTypes.length;
-      const targetType = targetObjectTypes[targetTypeIndex] || { type: 'flower', color: 'blue' };
-      
-      // Seleccionar un objeto aleatorio del tipo objetivo con protección contra errores
+      // Manejo especial para nivel 4 (patrón específico)
+      let targetType;
       let objectsOfThisType = [];
       
-      try {
-        objectsOfThisType = (forestObjects[`${targetType.type}s`] || [])
-          .filter(obj => obj.color === targetType.color);
-      } catch (error) {
-        console.error("Error al acceder a objetos por tipo:", error);
+      if (level === 4 && patternSequence && patternSequence.length > 0) {
+        // Determinar qué parte del patrón corresponde a este objeto
+        const patternIndex = i % patternSequence.length;
+        const patternPart = patternSequence[patternIndex];
+        const [type, colorOrSpecies] = patternPart.split('-');
+        
+        if (type === 'animal') {
+          targetType = { type, species: colorOrSpecies };
+          console.log(`Nivel 4 - Objeto #${i}: Creando ${type} ${colorOrSpecies} (patrón índice ${patternIndex})`);
+          
+          try {
+            objectsOfThisType = (forestObjects[`${type}s`] || [])
+              .filter(obj => obj.species === colorOrSpecies);
+          } catch (error) {
+            console.error("Error al acceder a objetos por tipo para nivel 4:", error);
+          }
+        } else {
+          targetType = { type, color: colorOrSpecies };
+          console.log(`Nivel 4 - Objeto #${i}: Creando ${type} ${colorOrSpecies} (patrón índice ${patternIndex})`);
+          
+          try {
+            objectsOfThisType = (forestObjects[`${type}s`] || [])
+              .filter(obj => obj.color === colorOrSpecies);
+          } catch (error) {
+            console.error("Error al acceder a objetos por tipo para nivel 4:", error);
+          }
+        }
+      } else {
+        // Código original para otros niveles
+        const targetTypeIndex = i % targetObjectTypes.length;
+        targetType = targetObjectTypes[targetTypeIndex];
+        
+        if (!targetType) {
+          console.error("Error: No hay tipo objetivo definido");
+          continue;
+        }
+        
+        try {
+          if (targetType.type === 'animal') {
+            objectsOfThisType = (forestObjects[`${targetType.type}s`] || [])
+              .filter(obj => obj.species === targetType.species);
+          } else {
+            objectsOfThisType = (forestObjects[`${targetType.type}s`] || [])
+              .filter(obj => obj.color === targetType.color);
+          }
+        } catch (error) {
+          console.error("Error al acceder a objetos por tipo:", error);
+        }
       }
       
       // Si no hay objetos de este tipo, usar un objeto por defecto
       if (!objectsOfThisType || objectsOfThisType.length === 0) {
-        objectsOfThisType = [{ type: 'flower', color: 'blue' }];
+        if (targetType.type === 'animal') {
+          objectsOfThisType = [{ type: 'animal', species: targetType.species || 'rabbit' }];
+        } else {
+          objectsOfThisType = [{ type: targetType.type || 'flower', color: targetType.color || 'blue' }];
+        }
       }
       
-      const randomObject = objectsOfThisType[Math.floor(Math.random() * objectsOfThisType.length)] || 
-        { type: 'flower', color: 'blue' };
+      const randomObject = objectsOfThisType[Math.floor(Math.random() * objectsOfThisType.length)];
       
       // Calcular posición real en el camino (ya ajustada a los límites)
       const realPosition = mapPositionToPath(position.relX, position.offsetX, position.offsetY);
@@ -457,25 +570,38 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
     }
   }
   
-  // AJUSTE: Función para priorizar distractores que NO sean flores azules
+  // AJUSTE: Función para crear distractores variados
   // Implementar mayor variedad de tipos y colores para distractores
-  const getRandomDistractorType = (typeCount) => {
-    // Priorizar tipos distintos de flores azules para los distractores
+  const getRandomDistractorType = (typeCount, targetTypes) => {
+    // Todos los tipos y colores posibles
     const types = ['flower', 'mushroom', 'animal', 'tree'];
     const colors = {
-      flower: ['red', 'yellow', 'purple', 'pink'], // No incluimos 'blue' intencionalmente
+      flower: ['red', 'yellow', 'purple', 'pink', 'blue'],
       mushroom: ['brown', 'yellow', 'red'],
       animal: ['rabbit', 'fox', 'bird'],
       tree: ['green']
     };
     
-    // Asegurarnos de que los primeros distractores sean muy variados
+    // Asegurarnos de que los distractores sean variados
     const typeIndex = (typeCount + Math.floor(Math.random() * 2)) % types.length;
     const type = types[typeIndex];
     
-    // Seleccionar color, excluyendo azul para las flores
+    // Seleccionar color
     const colorOptions = colors[type] || ['red'];
     const color = colorOptions[Math.floor(Math.random() * colorOptions.length)];
+    
+    // Verificar que el tipo generado NO sea igual a alguno de los objetivos
+    const isTargetType = targetTypes.some(target => {
+      if (type === 'animal' && target.type === 'animal') {
+        return color === target.species;
+      }
+      return type === target.type && color === target.color;
+    });
+    
+    // Si coincide con un objetivo, intentar de nuevo con otro tipo
+    if (isTargetType) {
+      return getRandomDistractorType(typeCount + 5, targetTypes);
+    }
     
     // Para animales, usar la especie como color
     if (type === 'animal') {
@@ -495,47 +621,7 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
       };
       
       // AJUSTE: Utilizar la función modificada para mayor variedad
-      const randomTypeInfo = getRandomDistractorType(i);
-      
-      // Verificar si es un objeto objetivo (para evitar añadir distractores idénticos a los objetivos)
-      const isTargetType = targetObjectTypes.some(target => {
-        if (randomTypeInfo.type === 'animal') {
-          return target.type === randomTypeInfo.type && target.species === randomTypeInfo.species;
-        }
-        return target.type === randomTypeInfo.type && target.color === randomTypeInfo.color;
-      });
-      
-      // Si es un tipo objetivo, ajustar para que sea diferente
-      if (isTargetType) {
-        // Intentar hasta 3 veces obtener un tipo no objetivo
-        let attempts = 0;
-        let alternativeType;
-        
-        while (attempts < 3) {
-          alternativeType = getRandomDistractorType(i + 10 + attempts);
-          
-          const isStillTargetType = targetObjectTypes.some(target => {
-            if (alternativeType.type === 'animal') {
-              return target.type === alternativeType.type && target.species === alternativeType.species;
-            }
-            return target.type === alternativeType.type && target.color === alternativeType.color;
-          });
-          
-          if (!isStillTargetType) {
-            randomTypeInfo.type = alternativeType.type;
-            randomTypeInfo.color = alternativeType.color;
-            randomTypeInfo.species = alternativeType.species;
-            break;
-          }
-          
-          attempts++;
-        }
-        
-        // Si después de los intentos sigue siendo objetivo, continuamos con el siguiente
-        if (isTargetType && attempts >= 3) {
-          continue;
-        }
-      }
+      const randomTypeInfo = getRandomDistractorType(i, targetObjectTypes);
       
       // Calcular posición real en el camino
       const realPosition = mapPositionToPath(position.relX, position.offsetX, position.offsetY);
@@ -567,121 +653,119 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
     }
   }
   
-  // Función para asegurar que las flores azules estén separadas entre sí
-  const ensureTargetSeparation = (objects, minSeparation) => {
-    try {
-      // Obtener solo las flores azules
-      const blueFlowers = objects.filter(obj => 
-        obj.isTarget && obj.type === 'flower' && obj.color === 'blue'
-      );
-      
-      if (blueFlowers.length <= 1) return objects; // No hay suficientes para separar
-      
-      // Verificar distancias entre cada par de flores azules
-      for (let i = 0; i < blueFlowers.length; i++) {
-        for (let j = i + 1; j < blueFlowers.length; j++) {
-          const flower1 = blueFlowers[i];
-          const flower2 = blueFlowers[j];
+// Función para asegurar que los objetivos estén separados entre sí
+const ensureTargetSeparation = (objects, minSeparation) => {
+  try {
+    // Obtener solo los objetos objetivo
+    const targetObjs = objects.filter(obj => obj.isTarget);
+    
+    if (targetObjs.length <= 1) return objects; // No hay suficientes para separar
+    
+    // Verificar distancias entre cada par de objetivos
+    for (let i = 0; i < targetObjs.length; i++) {
+      for (let j = i + 1; j < targetObjs.length; j++) {
+        const target1 = targetObjs[i];
+        const target2 = targetObjs[j];
+        
+        // Calcular distancia euclidiana
+        const dx = target1.x - target2.x;
+        const dy = target1.y - target2.y;
+        const distance = Math.sqrt(dx*dx + dy*dy);
+        
+        // Si están demasiado cerca, reposicionar una de ellas a un área lejana
+        if (distance < minSeparation) {
+          console.log("Separando objetivos que están demasiado cerca");
           
-          // Calcular distancia euclidiana
-          const dx = flower1.x - flower2.x;
-          const dy = flower1.y - flower2.y;
-          const distance = Math.sqrt(dx*dx + dy*dy);
+          // Posicionar el segundo objetivo en un cuadrante opuesto del área de juego
+          const oppositeX = target1.x > boundaries.maxX/2 ? 
+            boundaries.minX + Math.random() * (boundaries.maxX/2 - boundaries.minX) :
+            boundaries.maxX/2 + Math.random() * (boundaries.maxX - boundaries.maxX/2);
+            
+          const oppositeY = target1.y > boundaries.maxY/2 ? 
+            boundaries.minY + Math.random() * (boundaries.maxY/2 - boundaries.minY) :
+            boundaries.maxY/2 + Math.random() * (boundaries.maxY - boundaries.maxY/2);
           
-          // Si están demasiado cerca, reposicionar una de ellas a un área lejana
-          if (distance < minSeparation) {
-            console.log("Separando flores azules que están demasiado cerca");
-            
-            // Posicionar la segunda flor en un cuadrante opuesto del área de juego
-            const oppositeX = flower1.x > boundaries.maxX/2 ? 
-              boundaries.minX + Math.random() * (boundaries.maxX/2 - boundaries.minX) :
-              boundaries.maxX/2 + Math.random() * (boundaries.maxX - boundaries.maxX/2);
-              
-            const oppositeY = flower1.y > boundaries.maxY/2 ? 
-              boundaries.minY + Math.random() * (boundaries.maxY/2 - boundaries.minY) :
-              boundaries.maxY/2 + Math.random() * (boundaries.maxY - boundaries.maxY/2);
-            
-            flower2.x = oppositeX;
-            flower2.y = oppositeY;
-          }
+          target2.x = oppositeX;
+          target2.y = oppositeY;
         }
       }
-      
-      return objects;
-    } catch (error) {
-      console.error("Error en ensureTargetSeparation:", error);
-      return objects;
     }
-  };
-  
-  // Aplicar separación adicional a las flores azules
-  allObjects = ensureTargetSeparation(allObjects, containerWidth * 0.4); // Separar al menos un 40% del ancho
-  
-  // Post-procesamiento final para garantizar que no haya superposiciones
-  // y que todos los objetos estén dentro de los límites
-  let finalPositionedObjects = [];
-  try {
-    finalPositionedObjects = ensureNoOverlap(allObjects, minDistanceBetweenObjects, boundaries);
     
-    // Aplicar una segunda vez la separación de flores azules después del noOverlap
-    finalPositionedObjects = ensureTargetSeparation(finalPositionedObjects, containerWidth * 0.3);
+    return objects;
   } catch (error) {
-    console.error("Error en ensureNoOverlap:", error);
-    finalPositionedObjects = allObjects; // Usar objetos sin procesar como fallback
+    console.error("Error en ensureTargetSeparation:", error);
+    return objects;
   }
+};
+
+// Aplicar separación adicional a los objetivos
+allObjects = ensureTargetSeparation(allObjects, containerWidth * 0.4); // Separar al menos un 40% del ancho
+
+// Post-procesamiento final para garantizar que no haya superposiciones
+// y que todos los objetos estén dentro de los límites
+let finalPositionedObjects = [];
+try {
+  finalPositionedObjects = ensureNoOverlap(allObjects, minDistanceBetweenObjects, boundaries);
   
-  // Mezclar las posiciones de los objetos para evitar patrones obvios
-  // pero mantener la distinción entre objetivos y distractores
-  const shuffleObjectsPositions = (objects) => {
-    try {
-      // Separar objetivos y distractores
-      const targets = objects.filter(obj => obj.isTarget);
-      const distractors = objects.filter(obj => !obj.isTarget);
-      
-      // Mezclar cada grupo
-      for (let i = targets.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        // Intercambiar posiciones entre objetos
-        [targets[i].x, targets[j].x] = [targets[j].x, targets[i].x];
-        [targets[i].y, targets[j].y] = [targets[j].y, targets[i].y];
-      }
-      
-      for (let i = distractors.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        // Intercambiar posiciones entre objetos
-        [distractors[i].x, distractors[j].x] = [distractors[j].x, distractors[i].x];
-        [distractors[i].y, distractors[j].y] = [distractors[j].y, distractors[i].y];
-      }
-      
+  // Aplicar una segunda vez la separación de objetivos después del noOverlap
+  finalPositionedObjects = ensureTargetSeparation(finalPositionedObjects, containerWidth * 0.3);
+} catch (error) {
+  console.error("Error en ensureNoOverlap:", error);
+  finalPositionedObjects = allObjects; // Usar objetos sin procesar como fallback
+}
+
+// Mezclar las posiciones de los objetos para evitar patrones obvios
+// pero mantener la distinción entre objetivos y distractores
+const shuffleObjectsPositions = (objects) => {
+  try {
+    // Separar objetivos y distractores
+    const targets = objects.filter(obj => obj.isTarget);
+    const distractors = objects.filter(obj => !obj.isTarget);
+    
+    // Mezclar cada grupo
+    for (let i = targets.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      // Intercambiar posiciones entre objetos
+      [targets[i].x, targets[j].x] = [targets[j].x, targets[i].x];
+      [targets[i].y, targets[j].y] = [targets[j].y, targets[i].y];
+    }
+    
+    for (let i = distractors.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      // Intercambiar posiciones entre objetos
+      [distractors[i].x, distractors[j].x] = [distractors[j].x, distractors[i].x];
+      [distractors[i].y, distractors[j].y] = [distractors[j].y, distractors[i].y];
+    }
+    
     // Volver a aplicar ensureNoOverlap para evitar solapamientos tras la mezcla
     const shuffledObjects = [...targets, ...distractors];
-        
-    // Volver a aplicar la separación de flores azules
+    
+    // Volver a aplicar la separación de objetivos
     const separatedObjects = ensureTargetSeparation(shuffledObjects, containerWidth * 0.35);
 
     return ensureNoOverlap(separatedObjects, minDistanceBetweenObjects, boundaries);
-    } catch (error) {
+  } catch (error) {
     console.error("Error en shuffleObjectsPositions:", error);
     return objects; // Devolver objetos originales como fallback
-    }
-    };
+  }
+};
 
-    // Aplicar la mezcla adicional
-    let randomizedObjects = [];
-    try {
-    randomizedObjects = shuffleObjectsPositions(finalPositionedObjects);
+// Aplicar la mezcla adicional
+let randomizedObjects = [];
+try {
+  randomizedObjects = shuffleObjectsPositions(finalPositionedObjects);
 
-    // Una última verificación de separación para las flores azules
-    randomizedObjects = ensureTargetSeparation(randomizedObjects, containerWidth * 0.3);
-    } catch (error) {
-    console.error("Error al mezclar posiciones:", error);
-    randomizedObjects = finalPositionedObjects;
-    }
+  // Una última verificación de separación para los objetivos
+  randomizedObjects = ensureTargetSeparation(randomizedObjects, containerWidth * 0.3);
+} catch (error) {
+  console.error("Error al mezclar posiciones:", error);
+  randomizedObjects = finalPositionedObjects;
+}
 
-    // Actualizar las referencias a los objetos objetivo
-    const updatedTargetObjects = [];
-    try {
-    for (const targetObj of targetObjects) {
+// Actualizar las referencias a los objetos objetivo
+const updatedTargetObjects = [];
+try {
+  for (const targetObj of targetObjects) {
     // Encontrar el objeto correspondiente en la lista actualizada
     const updatedObj = randomizedObjects.find(
       obj => obj.uniqueId === targetObj.uniqueId
@@ -689,17 +773,117 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
     if (updatedObj) {
       updatedTargetObjects.push(updatedObj);
     }
-    }
-    } catch (error) {
-    console.error("Error al actualizar objetos objetivo:", error);
-    }
+  }
+} catch (error) {
+  console.error("Error al actualizar objetos objetivo:", error);
+}
 
-    return { 
-    allObjects: randomizedObjects, 
-    targetObjects: updatedTargetObjects.length > 0 ? updatedTargetObjects : targetObjects, 
-    patternSequence,
-    selectedPatternId: selectedPattern?.id || 'default-pattern'
-    };
+// Para nivel 4, hacer una verificación adicional del patrón
+if (level === 4 && patternSequence && patternSequence.length > 0) {
+  // Verificamos que haya suficientes objetos de cada tipo del patrón
+  const neededTypes = {};
+  
+  // Contar cuántos objetos de cada tipo necesitamos según el patrón
+  for (const part of patternSequence) {
+    neededTypes[part] = (neededTypes[part] || 0) + Math.ceil(targets / patternSequence.length);
+  }
+  
+  // Contar cuántos objetos tenemos de cada tipo
+  const availableTypes = {};
+  for (const obj of randomizedObjects.filter(o => o.isTarget)) {
+    let typeKey;
+    if (obj.type === 'animal') {
+      typeKey = `${obj.type}-${obj.species}`;
+    } else {
+      typeKey = `${obj.type}-${obj.color}`;
+    }
+    availableTypes[typeKey] = (availableTypes[typeKey] || 0) + 1;
+  }
+  
+  console.log("Nivel 4 - Verificación final:");
+  console.log("Necesitamos:", neededTypes);
+  console.log("Disponibles:", availableTypes);
+  
+  // Si falta algún tipo de objeto necesario, añadirlo
+  for (const [typeKey, count] of Object.entries(neededTypes)) {
+    const [type, colorOrSpecies] = typeKey.split('-');
+    const available = availableTypes[typeKey] || 0;
+    
+    if (available < count) {
+      console.log(`Faltan ${count - available} objetos de tipo ${typeKey}. Añadiendo...`);
+      
+      // Añadir los objetos que faltan
+      for (let i = 0; i < (count - available); i++) {
+        try {
+          // Buscar objetos del tipo correcto en forestObjects
+          let objectsOfThisType = [];
+          try {
+            if (type === 'animal') {
+              objectsOfThisType = (forestObjects[`${type}s`] || [])
+                .filter(obj => obj.species === colorOrSpecies);
+            } else {
+              objectsOfThisType = (forestObjects[`${type}s`] || [])
+                .filter(obj => obj.color === colorOrSpecies);
+            }
+          } catch (err) {
+            console.error("Error al acceder a objetos adicionales para nivel 4:", err);
+          }
+          
+          // Si no hay objetos de este tipo, usar un objeto por defecto
+          if (!objectsOfThisType || objectsOfThisType.length === 0) {
+            if (type === 'animal') {
+              objectsOfThisType = [{ type, species: colorOrSpecies }];
+            } else {
+              objectsOfThisType = [{ type, color: colorOrSpecies }];
+            }
+          }
+          
+          const randomObject = objectsOfThisType[Math.floor(Math.random() * objectsOfThisType.length)];
+          
+          // Encontrar una posición que no se solape con objetos existentes
+          const baseX = boundaries.minX + Math.random() * (boundaries.maxX - boundaries.minX);
+          const baseY = boundaries.minY + Math.random() * (boundaries.maxY - boundaries.minY);
+          
+          const adjustedPosition = findNonOverlappingPosition(
+            baseX, 
+            baseY, 
+            randomizedObjects, 
+            minDistanceBetweenObjects,
+            boundaries
+          );
+          
+          // Crear un nuevo objeto objetivo
+          const newObject = {
+            ...randomObject,
+            uniqueId: `extra-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            x: adjustedPosition.x,
+            y: adjustedPosition.y,
+            isTarget: true,
+            found: false
+          };
+          
+          // Añadir a las listas de objetos
+          randomizedObjects.push(newObject);
+          updatedTargetObjects.push(newObject);
+          
+          // Actualizar contador de disponibles
+          availableTypes[typeKey] = (availableTypes[typeKey] || 0) + 1;
+        } catch (err) {
+          console.error("Error al añadir objeto adicional para nivel 4:", err);
+        }
+      }
+    }
+  }
+}
+
+return { 
+  allObjects: randomizedObjects, 
+  targetObjects: updatedTargetObjects.length > 0 ? updatedTargetObjects : targetObjects, 
+  patternSequence,
+  selectedPatternId: selectedPattern?.id || 'default-pattern',
+  // Devolver también los tipos de objetos objetivo para que el hook pueda validar correctamente
+  targetObjectTypes
+};
 }
 
 // Exportar como función predeterminada para mayor flexibilidad

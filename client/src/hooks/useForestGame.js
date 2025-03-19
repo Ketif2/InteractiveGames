@@ -31,6 +31,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     currentPatternIndex: 0, // índice actual en el patrón
     selectedPatternId: null, // patrón seleccionado
     showInstructions: true, // mostrar instrucciones
+    instructionsText: "Busca los objetos objetivo", // texto de instrucciones
     isPaused: false,
     startTime: Date.now(),
     totalPauseTime: 0,
@@ -45,6 +46,13 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     completado: false,
     roundScore: 0          // Puntuación de la ronda actual (interna, no visible)
   });
+
+  // NUEVO: Estado para almacenar los tipos de objetivos actuales
+  const [currentTargetTypes, setCurrentTargetTypes] = useState([]);
+  
+  // NUEVO: Estados para mensajes de cambio de objetivos
+  const [showNextObjectivesMessage, setShowNextObjectivesMessage] = useState(false);
+  const [nextObjectivesMessage, setNextObjectivesMessage] = useState("");
 
   // Nuevos estados para el sistema de puntos (internos, no visibles)
   const [totalScore, setTotalScore] = useState(0);
@@ -76,15 +84,119 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     if (!objects || objects.length === 0) return;
     
     // Contar por tipo y color
-    const flowerBlue = objects.filter(obj => obj.type === 'flower' && obj.color === 'blue').length;
-    const flowerBlueFound = objects.filter(obj => obj.type === 'flower' && obj.color === 'blue' && obj.found).length;
+    const targetObjects = objects.filter(obj => obj.isTarget).length;
+    const targetObjectsFound = objects.filter(obj => obj.isTarget && obj.found).length;
     
     console.log(`--- OBJETOS EN EL JUEGO ---`);
-    console.log(`Flores azules: ${flowerBlueFound} encontradas de ${flowerBlue} totales`);
+    console.log(`Objetivos: ${targetObjectsFound} encontrados de ${targetObjects} totales`);
     console.log(`Todos los objetos: ${objects.length}`);
     console.log(`Objetos encontrados: ${objects.filter(obj => obj.found).length}`);
     console.log(`------------------------`);
   }, []);
+
+  // NUEVO: Funciones para formateo de texto en instrucciones
+  const formatColor = useCallback((color) => {
+    switch (color) {
+      case 'blue': return 'azules';
+      case 'red': return 'rojos';
+      case 'yellow': return 'amarillos';
+      case 'purple': return 'púrpuras';
+      case 'pink': return 'rosas';
+      case 'brown': return 'marrones';
+      case 'green': return 'verdes';
+      default: return color;
+    }
+  }, []);
+
+  const formatAnimalType = useCallback((species) => {
+    switch (species) {
+      case 'rabbit': return 'conejos';
+      case 'fox': return 'zorros';
+      case 'bird': return 'pájaros';
+      default: return 'animales';
+    }
+  }, []);
+
+  // NUEVO: Función para generar instrucciones dinámicas
+  const generateDynamicInstructions = useCallback((level, targetTypes, patternSequence) => {
+    if (!targetTypes || targetTypes.length === 0) {
+      return "Busca los objetos objetivo en el bosque.";
+    }
+
+    let instructions = "";
+    
+    switch (level) {
+      case 1: // Un solo tipo de objeto
+        const targetType = targetTypes[0];
+        if (targetType.type === 'animal') {
+          instructions = `Busca todos los ${formatAnimalType(targetType.species)} en el bosque.`;
+        } else {
+          instructions = `Busca todos los ${targetType.type === 'flower' ? 'flores' : 
+                         targetType.type === 'mushroom' ? 'hongos' : 
+                         targetType.type === 'tree' ? 'árboles' : 'objetos'} 
+                         ${formatColor(targetType.color)} en el bosque.`;
+        }
+        break;
+      
+      case 2: // Múltiples tipos de objetos
+        instructions = "Busca ";
+        targetTypes.forEach((type, index) => {
+          if (type.type === 'animal') {
+            instructions += `${index > 0 ? ' y ' : ''}${formatAnimalType(type.species)}`;
+          } else {
+            instructions += `${index > 0 ? ' y ' : ''}${type.type === 'flower' ? 'flores' : 
+                            type.type === 'mushroom' ? 'hongos' : 
+                            type.type === 'tree' ? 'árboles' : 'objetos'} 
+                            ${formatColor(type.color)}`;
+          }
+        });
+        instructions += " en el bosque.";
+        break;
+      
+      case 3: // Secuencias
+        instructions = "Sigue la secuencia: ";
+        targetTypes.forEach((type, index) => {
+          if (type.type === 'animal') {
+            instructions += `${index + 1}. ${formatAnimalType(type.species)} `;
+          } else {
+            instructions += `${index + 1}. ${type.type === 'flower' ? 'flor' : 
+                            type.type === 'mushroom' ? 'hongo' : 
+                            type.type === 'tree' ? 'árbol' : 'objeto'} 
+                            ${formatColor(type.color)} `;
+          }
+        });
+        break;
+      
+      case 4: // Patrones
+        if (patternSequence && patternSequence.length > 0) {
+          instructions = "Sigue el patrón: ";
+          patternSequence.forEach((patternPart, index) => {
+            const [type, colorOrSpecies] = patternPart.split('-');
+            
+            if (type === 'animal') {
+              instructions += `${formatAnimalType(colorOrSpecies)}`;
+            } else {
+              instructions += `${type === 'flower' ? 'flor' : 
+                              type === 'mushroom' ? 'hongo' : 
+                              type === 'tree' ? 'árbol' : 'objeto'} 
+                              ${formatColor(colorOrSpecies)}`;
+            }
+            
+            if (index < patternSequence.length - 1) {
+              instructions += " → ";
+            }
+          });
+        } else {
+          instructions = "Busca los objetos siguiendo el patrón.";
+        }
+        break;
+      
+      default:
+        instructions = "Busca los objetos objetivo en el bosque.";
+    }
+    
+    return instructions;
+  }, [formatAnimalType, formatColor]);
 
   // IMPORTANTE: Declaramos handleFinishGame antes de usarlo en otras funciones
   const handleFinishGame = useCallback((completed = false) => {
@@ -191,14 +303,15 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     setTimeout(() => {
       setShowNextRoundMessage(false);
       
-
+      // Inicializar el nivel para la nueva ronda
+      initializeLevel(true, false); // preserveStats=true, sameRound=false
       
       // Resetear la bandera de procesamiento
       isAdvancingRef.current = false;
     }, 2000);
   }, [handleFinishGame]);
 
-  // Inicialización del nivel (genera nuevo camino y objetos)
+  // MODIFICADO: Inicialización del nivel (genera nuevo camino y objetos)
   // Este método se usa TANTO para iniciar una nueva ronda como para refrescar la pantalla
   const initializeLevel = useCallback((preserveStats = false, sameRound = true) => {
     console.log("Inicializando nivel, preserveStats:", preserveStats, "sameRound:", sameRound);
@@ -223,6 +336,27 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     const patternSequence = objectsResult.patternSequence;
     const selectedPatternId = objectsResult.selectedPatternId;
     
+    // NUEVO: Capturar los tipos de objetivos generados
+    setCurrentTargetTypes(objectsResult.targetObjectTypes || []);
+    
+    // NUEVO: Generar instrucciones dinámicas basadas en los objetivos
+    const dynamicInstructions = generateDynamicInstructions(
+      config?.startingLevel || 1,
+      objectsResult.targetObjectTypes,
+      patternSequence
+    );
+    
+    // NUEVO: Si estamos refrescando la pantalla o avanzando de ronda, mostrar mensaje
+    if (preserveStats) {
+      setNextObjectivesMessage(dynamicInstructions);
+      setShowNextObjectivesMessage(true);
+      
+      // Ocultar después de 2 segundos
+      setTimeout(() => {
+        setShowNextObjectivesMessage(false);
+      }, 4000);
+    }
+    
     // Actualizar estado del juego
     setGameState(prev => {
       // Si preserveStats es true, mantener estadísticas acumuladas
@@ -235,7 +369,8 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
         patternSequence: patternSequence.length > 0 ? patternSequence : prev.patternSequence,
         currentPatternIndex: 0,
         showInstructions: !preserveStats, // Solo mostrar instrucciones al inicio
-        selectedPatternId
+        selectedPatternId,
+        instructionsText: dynamicInstructions // NUEVO: Instrucciones dinámicas
       };
       
       // Siempre reiniciar el temporizador cuando cambiamos de ronda
@@ -282,7 +417,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     setTimeout(() => {
       logObjectCounts(allObjects);
     }, 500);
-  }, [config, forestPatterns, forestObjects, logObjectCounts]);
+  }, [config, forestPatterns, forestObjects, logObjectCounts, generateDynamicInstructions]);
 
   // Maneja el tiempo agotado - ESTE ES EL PUNTO DONDE SE AVANZA DE RONDA
   const handleTimeOut = useCallback(() => {
@@ -301,7 +436,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
       setShowTimeoutFeedback(false);
       
       // Verificar si hemos completado todas las rondas
-      if (stateRef.current.currentRound > stateRef.current.totalRounds) {
+      if (stateRef.current.currentRound >= stateRef.current.totalRounds) {
         console.log("Tiempo agotado y todas las rondas completadas - Finalizando juego");
         // Si completamos todas las rondas, terminar el juego
         handleFinishGame(true);
@@ -309,9 +444,6 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
         console.log("Tiempo agotado pero hay más rondas - Avanzando a siguiente ronda");
         // Si no, avanzar a la siguiente ronda manteniendo el mismo nivel
         advanceToNextRound(); // Esto incrementa currentRound y resetea roundScore
-        
-        // Inicializar el mismo nivel para la nueva ronda
-        initializeLevel(true, false); // preserveStats=true, sameRound=false
       }
       
       // Resetear la bandera de procesamiento de timeout después de un tiempo
@@ -319,9 +451,9 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
         timeoutHandlingRef.current = false;
       }, 1000);
     }, 3000);
-  }, [advanceToNextRound, handleFinishGame, initializeLevel]);
+  }, [advanceToNextRound, handleFinishGame]);
 
-  // Verificar si se han completado todos los objetivos
+  // MODIFICADO: Verificar si se han completado todos los objetivos
   const checkCompletionAndProceed = useCallback((objectId) => {
     const currentLevel = config?.startingLevel || 1;
     // Usar objectsRef para obtener el estado más actualizado
@@ -333,52 +465,82 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
       currentObjects[indexClicked] = {...currentObjects[indexClicked], found: true};
     }
     
-    // NIVEL 1: Contar flores azules con precisión
     let allObjectivesComplete = false;
     
     if (currentLevel === 1) {
-      // Buscar todas las flores azules
-      const blueFlowers = currentObjects.filter(obj => 
-        obj.type === 'flower' && obj.color === 'blue'
-      );
+      // Nivel 1: Buscar todos los objetos del tipo objetivo actual
+      // Por ejemplo, si el objetivo es "árboles verdes", buscar todos los árboles verdes
+      const targetType = currentTargetTypes[0]; // En nivel 1 solo hay un tipo de objetivo
       
-      // Contar flores encontradas (incluida la actual)
-      const foundBlueFlowers = blueFlowers.filter(obj => 
+      if (!targetType) {
+        console.error("Error: No hay tipo objetivo definido para nivel 1");
+        return false;
+      }
+      
+      let targetObjects;
+      if (targetType.type === 'animal') {
+        // Para animales, buscar por especie
+        targetObjects = currentObjects.filter(obj => 
+          obj.type === targetType.type && obj.species === targetType.species
+        );
+      } else {
+        // Para otros objetos, buscar por color
+        targetObjects = currentObjects.filter(obj => 
+          obj.type === targetType.type && obj.color === targetType.color
+        );
+      }
+      
+      // Contar objetos encontrados (incluido el actual)
+      const foundObjects = targetObjects.filter(obj => 
         obj.found || obj.uniqueId === objectId
       );
       
       // Log detallado para depuración
-      console.log("=== VERIFICACIÓN DE FLORES AZULES ===");
-      console.log(`Total flores azules: ${blueFlowers.length}`);
-      console.log(`Flores encontradas: ${foundBlueFlowers.length}`);
+      console.log(`=== VERIFICACIÓN DE OBJETIVOS (${targetType.type}-${targetType.color || targetType.species}) ===`);
+      console.log(`Total objetivos: ${targetObjects.length}`);
+      console.log(`Objetivos encontrados: ${foundObjects.length}`);
       
-      // Enumerar cada flor y su estado
-      blueFlowers.forEach((flower, idx) => {
-        console.log(`Flor #${idx + 1} (${flower.uniqueId}): ${(flower.found || flower.uniqueId === objectId) ? 'Encontrada' : 'No encontrada'}`);
-      });
-      
-      // Verificar si se encontraron todas
-      allObjectivesComplete = (foundBlueFlowers.length === blueFlowers.length && blueFlowers.length > 0);
+      // Verificar si se encontraron todos
+      allObjectivesComplete = (foundObjects.length === targetObjects.length && targetObjects.length > 0);
     } 
     else if (currentLevel === 2) {
-      // NIVEL 2: Flores azules Y hongos rojos
-      const blueFlowers = currentObjects.filter(obj => 
-        obj.type === 'flower' && obj.color === 'blue'
-      );
-      const redMushrooms = currentObjects.filter(obj => 
-        obj.type === 'mushroom' && obj.color === 'red'
-      );
+      // Nivel 2: Múltiples tipos de objetivos
+      const targetTypes = currentTargetTypes; // En nivel 2 hay dos tipos
       
-      const foundBlueFlowers = blueFlowers.filter(obj => obj.found || obj.uniqueId === objectId);
-      const foundRedMushrooms = redMushrooms.filter(obj => obj.found || obj.uniqueId === objectId);
+      if (!targetTypes || targetTypes.length === 0) {
+        console.error("Error: No hay tipos objetivo definidos para nivel 2");
+        return false;
+      }
       
-      console.log(`Flores azules encontradas: ${foundBlueFlowers.length} de ${blueFlowers.length}`);
-      console.log(`Hongos rojos encontrados: ${foundRedMushrooms.length} de ${redMushrooms.length}`);
+      let completedObjectives = 0;
+      let totalObjectives = 0;
+      
+      // Verificar cada tipo de objetivo
+      for (const targetType of targetTypes) {
+        let typeObjects;
+        
+        if (targetType.type === 'animal') {
+          typeObjects = currentObjects.filter(obj => 
+            obj.type === targetType.type && obj.species === targetType.species
+          );
+        } else {
+          typeObjects = currentObjects.filter(obj => 
+            obj.type === targetType.type && obj.color === targetType.color
+          );
+        }
+        
+        const foundTypeObjects = typeObjects.filter(obj => obj.found || obj.uniqueId === objectId);
+        
+        console.log(`Objetivos ${targetType.type}-${targetType.color || targetType.species} encontrados: 
+          ${foundTypeObjects.length} de ${typeObjects.length}`);
+        
+        // Contar objetivos completados y total
+        completedObjectives += foundTypeObjects.length;
+        totalObjectives += typeObjects.length;
+      }
       
       // Verificar si se encontraron todos los objetivos
-      allObjectivesComplete = (blueFlowers.length === foundBlueFlowers.length && 
-          redMushrooms.length === foundRedMushrooms.length &&
-          (blueFlowers.length > 0 || redMushrooms.length > 0));
+      allObjectivesComplete = (completedObjectives === totalObjectives && totalObjectives > 0);
     } 
     else if (currentLevel === 3 || currentLevel === 4) {
       // Nivel 3 y 4: Objetos marcados como objetivo
@@ -404,22 +566,22 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
       
       // Programar la recarga del nivel SIN AVANZAR DE RONDA
       setTimeout(() => {
-        console.log("Objetivos completados pero quedan rondas - Avanzando a siguiente ronda");
+        console.log("Objetivos completados - Refrescando pantalla");
         setShowCompletedMessage(false);
         
         // DIFERENTE de advanceToNextRound - Solo refresca la pantalla sin cambiar ronda
         // IMPORTANTE: preserveStats=true para mantener las estadísticas y puntuación
         // IMPORTANTE: sameRound=true para NO resetear la puntuación de la ronda
         initializeLevel(true, true);
-      }, 2000);
+      }, 4000);
       
       return true;
     }
     
     return false;
-  }, [config?.startingLevel, playSound, initializeLevel]);
+  }, [config?.startingLevel, playSound, initializeLevel, currentTargetTypes]);
 
-  // Manejar clic en objeto
+  // MODIFICADO: Manejar clic en objeto
   const handleObjectClick = useCallback((objectId) => {
     // Si hay pausas o instrucciones activas, ignorar clics
     if (stateRef.current.isPaused || stateRef.current.showInstructions || showCompletedMessage) return;
@@ -427,6 +589,12 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     // Encontrar el objeto clickeado
     const clickedObject = objectsRef.current.find(obj => obj.uniqueId === objectId);
     if (!clickedObject || clickedObject.found) return;
+    
+    // Incrementar contador de intentos
+    setGameState(prev => ({
+      ...prev,
+      attempts: prev.attempts + 1
+    }));
     
     // Capturar el nivel actual para validación
     const currentLevel = config?.startingLevel || 1;
@@ -443,17 +611,38 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     
     // Verificar si el clic es correcto según el nivel
     switch (currentLevel) {
-      case 1: // Reconocimiento simple - SOLO flores azules
-        isCorrect = clickedObject.type === 'flower' && clickedObject.color === 'blue';
+      case 1: // Reconocimiento simple - un tipo de objeto
+        const targetType = currentTargetTypes[0];
+        
+        if (!targetType) {
+          console.error("Error: No hay tipo objetivo definido para nivel 1");
+          break;
+        }
+        
+        if (targetType.type === 'animal') {
+          isCorrect = clickedObject.type === targetType.type && 
+                      clickedObject.species === targetType.species;
+        } else {
+          isCorrect = clickedObject.type === targetType.type && 
+                      clickedObject.color === targetType.color;
+        }
+        
         console.log('Objeto clickeado:', 
-          clickedObject.type, clickedObject.color, 
+          clickedObject.type, clickedObject.color || clickedObject.species, 
           isCorrect ? '(correcto)' : '(incorrecto)',
           `ID: ${clickedObject.uniqueId}`
         );
         break;
-      case 2: // Reconocimiento múltiple - flores azules Y hongos rojos
-        isCorrect = (clickedObject.type === 'flower' && clickedObject.color === 'blue') || 
-                    (clickedObject.type === 'mushroom' && clickedObject.color === 'red');
+      case 2: // Reconocimiento múltiple - múltiples tipos de objetos
+        isCorrect = currentTargetTypes.some(targetType => {
+          if (targetType.type === 'animal') {
+            return clickedObject.type === targetType.type && 
+                   clickedObject.species === targetType.species;
+          } else {
+            return clickedObject.type === targetType.type && 
+                   clickedObject.color === targetType.color;
+          }
+        });
         break;
       case 3: // Secuencias
         const pendingSequence = stateRef.current.targetObjects
@@ -463,15 +652,20 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
         if (pendingSequence.length > 0) {
           const nextInSequence = pendingSequence[0];
           isCorrect = clickedObject.type === nextInSequence.type && 
-                      clickedObject.color === nextInSequence.color;
+                     (clickedObject.color === nextInSequence.color || 
+                      clickedObject.species === nextInSequence.species);
         }
         break;
       case 4: // Patrones
         if (stateRef.current.patternSequence && stateRef.current.patternSequence.length > 0) {
           const patternPart = stateRef.current.patternSequence[stateRef.current.currentPatternIndex];
-          const [type, color] = patternPart.split('-');
+          const [type, colorOrSpecies] = patternPart.split('-');
           
-          isCorrect = clickedObject.type === type && clickedObject.color === color;
+          if (type === 'animal') {
+            isCorrect = clickedObject.type === type && clickedObject.species === colorOrSpecies;
+          } else {
+            isCorrect = clickedObject.type === type && clickedObject.color === colorOrSpecies;
+          }
         }
         break;
     }
@@ -519,184 +713,184 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
         checkCompletionAndProceed(objectId);
       }, 100);
     } else {
-      // Feedback negativo y contar error
-      setShowWrongFeedback(true);
-      playSound('error');
-      
-      setGameState(prev => ({
-        ...prev,
-        num_errores: prev.num_errores + 1,
-        roundScore: Math.max(0, prev.roundScore - 1) // Restar 1 punto por error, mínimo 0
-      }));
-      
-      setTimeout(() => setShowWrongFeedback(false), 500);
-    }
-  }, [config?.startingLevel, showCompletedMessage, playSound, checkCompletionAndProceed]);
+// Feedback negativo y contar error
+setShowWrongFeedback(true);
+playSound('error');
 
-  // Función para verificación manual (depuración)
-  const forceVerification = useCallback(() => {
-    console.log("=== FORZANDO VERIFICACIÓN MANUAL ===");
-    const currentObjects = objectsRef.current;
-    
-    const blueFlowers = currentObjects.filter(obj => 
-      obj.type === 'flower' && obj.color === 'blue'
-    );
-    
-    const foundBlueFlowers = blueFlowers.filter(obj => obj.found);
-    
-    console.log(`Total flores azules: ${blueFlowers.length}`);
-    console.log(`Flores encontradas: ${foundBlueFlowers.length}`);
-    
-    // Enumerar cada flor
-    blueFlowers.forEach((flower, idx) => {
-      console.log(`Flor #${idx + 1} (${flower.uniqueId}): ${flower.found ? 'Encontrada' : 'No encontrada'}`);
-    });
-    
-    // Forzar completado si necesario
-    if (foundBlueFlowers.length === blueFlowers.length - 1) {
-      console.log("FORZANDO COMPLETADO - Marcando última flor");
-      
-      // Encontrar la flor no encontrada
-      const missingFlower = blueFlowers.find(flower => !flower.found);
-      
-      // Marcarla como encontrada
-      if (missingFlower) {
-        handleObjectClick(missingFlower.uniqueId);
-      }
-    }
-  }, [handleObjectClick]);
-  
-  // Inicialización del juego
-  useEffect(() => {
-    // Inicializar juego
-    initializeLevel();
-    
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [initializeLevel]);
-  
-  // Añadir atajo de teclado para verificación manual
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Presionar F3 para verificar
-      if (e.key === 'F3') {
-        forceVerification();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [forceVerification]);
-  
-  // Temporizador - PUNTO CRUCIAL PARA AVANZAR DE RONDA
-  useEffect(() => {
-    if (gameState.timerActive && !gameState.isPaused && gameState.remainingTime > 0 && !showCompletedMessage) {
-      timerRef.current = setInterval(() => {
-        setGameState(prev => {
-          const newTime = prev.remainingTime - 1;
-          if (newTime <= 0) {
-            console.log("Temporizador llegó a cero - Deteniendo y manejando tiempo agotado");
-            clearInterval(timerRef.current);
-            
-            // Programar handleTimeOut con un pequeño retraso para evitar condiciones de carrera
-            // Solo si no se está manejando un timeout ya
-            if (!timeoutHandlingRef.current) {
-              setTimeout(() => {
-                handleTimeOut();
-              }, 100);
-            }
-            
-            return { ...prev, remainingTime: 0 };
-          }
-          return { ...prev, remainingTime: newTime };
-        });
-      }, 1000);
-    } else if (!gameState.timerActive || gameState.isPaused || showCompletedMessage) {
+setGameState(prev => ({
+  ...prev,
+  num_errores: prev.num_errores + 1,
+  roundScore: Math.max(0, prev.roundScore - 1) // Restar 1 punto por error, mínimo 0
+}));
+
+setTimeout(() => setShowWrongFeedback(false), 500);
+}
+}, [config?.startingLevel, showCompletedMessage, playSound, checkCompletionAndProceed, currentTargetTypes]);
+
+// Función para verificación manual (depuración)
+const forceVerification = useCallback(() => {
+console.log("=== FORZANDO VERIFICACIÓN MANUAL ===");
+const currentObjects = objectsRef.current;
+
+// Buscar cualquier objeto objetivo no encontrado
+const targets = currentObjects.filter(obj => obj.isTarget);
+const foundTargets = targets.filter(obj => obj.found);
+
+console.log(`Total objetivos: ${targets.length}`);
+console.log(`Objetivos encontrados: ${foundTargets.length}`);
+
+// Enumerar cada objetivo
+targets.forEach((target, idx) => {
+console.log(`Objetivo #${idx + 1} (${target.uniqueId}): ${target.found ? 'Encontrado' : 'No encontrado'}`);
+});
+
+// Forzar completado si necesario
+if (foundTargets.length === targets.length - 1) {
+console.log("FORZANDO COMPLETADO - Marcando último objetivo");
+
+// Encontrar el objetivo no encontrado
+const missingTarget = targets.find(target => !target.found);
+
+// Marcarlo como encontrado
+if (missingTarget) {
+  handleObjectClick(missingTarget.uniqueId);
+}
+}
+}, [handleObjectClick]);
+
+// Inicialización del juego
+useEffect(() => {
+// Inicializar juego
+initializeLevel();
+
+return () => {
+if (timerRef.current) clearInterval(timerRef.current);
+};
+}, [initializeLevel]);
+
+// Añadir atajo de teclado para verificación manual
+useEffect(() => {
+const handleKeyDown = (e) => {
+// Presionar F3 para verificar
+if (e.key === 'F3') {
+  forceVerification();
+}
+};
+
+window.addEventListener('keydown', handleKeyDown);
+return () => window.removeEventListener('keydown', handleKeyDown);
+}, [forceVerification]);
+
+// Temporizador - PUNTO CRUCIAL PARA AVANZAR DE RONDA
+useEffect(() => {
+if (gameState.timerActive && !gameState.isPaused && gameState.remainingTime > 0 && !showCompletedMessage) {
+timerRef.current = setInterval(() => {
+  setGameState(prev => {
+    const newTime = prev.remainingTime - 1;
+    if (newTime <= 0) {
+      console.log("Temporizador llegó a cero - Deteniendo y manejando tiempo agotado");
       clearInterval(timerRef.current);
+      
+      // Programar handleTimeOut con un pequeño retraso para evitar condiciones de carrera
+      // Solo si no se está manejando un timeout ya
+      if (!timeoutHandlingRef.current) {
+        setTimeout(() => {
+          handleTimeOut();
+        }, 100);
+      }
+      
+      return { ...prev, remainingTime: 0 };
     }
-    
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [gameState.timerActive, gameState.isPaused, gameState.remainingTime, showCompletedMessage, handleTimeOut]);
+    return { ...prev, remainingTime: newTime };
+  });
+}, 1000);
+} else if (!gameState.timerActive || gameState.isPaused || showCompletedMessage) {
+clearInterval(timerRef.current);
+}
 
-  // Funciones para control del juego
-  const handleHelp = useCallback(() => {
-    setGameState(prev => ({
-      ...prev,
-      helpCount: prev.helpCount + 1
-    }));
-    
-    // Reproducir sonido de ayuda
-    playSound('help');
-    
-    // Dar pista visual sobre los objetivos
-    const highlightedElements = document.querySelectorAll('.object-highlight');
-    highlightedElements.forEach(el => el.classList.remove('object-highlight'));
-    
-    // Añadir clase de animación a los objetivos
-    const targetElements = document.querySelectorAll('.target-object');
-    targetElements.forEach(el => {
-      el.classList.add('object-highlight');
-      setTimeout(() => el.classList.remove('object-highlight'), 3000);
-    });
-  }, [playSound]);
+return () => {
+if (timerRef.current) {
+  clearInterval(timerRef.current);
+}
+};
+}, [gameState.timerActive, gameState.isPaused, gameState.remainingTime, showCompletedMessage, handleTimeOut]);
 
-  const handleTogglePause = useCallback(() => {
-    setGameState(prev => {
-      const now = Date.now();
-      if (prev.isPaused) {
-        // Resuming game
-        return {
-          ...prev,
-          isPaused: false,
-          totalPauseTime: prev.totalPauseTime + (now - (prev.lastPauseTime || now)),
-          lastPauseTime: null
-        };
-      }
-      // Pausing game
-      return {
-        ...prev,
-        isPaused: true,
-        lastPauseTime: now,
-        totalPauses: prev.totalPauses + 1
-      };
-    });
-  }, []);
+// Funciones para control del juego
+const handleHelp = useCallback(() => {
+setGameState(prev => ({
+...prev,
+helpCount: prev.helpCount + 1
+}));
 
-  // Modificar el handleExitClick para que guarde las estadísticas y vaya a ForestEnd
-  const handleExitClick = useCallback(() => {
-    setShowExitConfirm(true);
-  }, []);
+// Reproducir sonido de ayuda
+playSound('help');
 
-  const handleExitCancel = useCallback(() => {
-    setShowExitConfirm(false);
-  }, []);
+// Dar pista visual sobre los objetivos
+const highlightedElements = document.querySelectorAll('.object-highlight');
+highlightedElements.forEach(el => el.classList.remove('object-highlight'));
 
+// Añadir clase de animación a los objetivos
+const targetElements = document.querySelectorAll('.target-object');
+targetElements.forEach(el => {
+el.classList.add('object-highlight');
+setTimeout(() => el.classList.remove('object-highlight'), 3000);
+});
+}, [playSound]);
+
+const handleTogglePause = useCallback(() => {
+setGameState(prev => {
+const now = Date.now();
+if (prev.isPaused) {
+  // Resuming game
   return {
-    gameState,
-    showCorrectFeedback,
-    showWrongFeedback,
-    showTimeoutFeedback,
-    showExitConfirm,
-    showNextRoundMessage,
-    gameCompleted,
-    showCompletedMessage,
-    audioEnabled,
-    handleObjectClick,
-    handleHelp,
-    handleTogglePause,
-    handleExitClick,
-    handleExitCancel,
-    handleFinishGame,
-    toggleAudio,
-    pathRef,
-    totalScore,
-    rounds: screenRefreshes // Para mantener compatibilidad con el código anterior
+    ...prev,
+    isPaused: false,
+    totalPauseTime: prev.totalPauseTime + (now - (prev.lastPauseTime || now)),
+    lastPauseTime: null
   };
+}
+// Pausing game
+return {
+  ...prev,
+  isPaused: true,
+  lastPauseTime: now,
+  totalPauses: prev.totalPauses + 1
+};
+});
+}, []);
+
+// Modificar el handleExitClick para que guarde las estadísticas y vaya a ForestEnd
+const handleExitClick = useCallback(() => {
+setShowExitConfirm(true);
+}, []);
+
+const handleExitCancel = useCallback(() => {
+setShowExitConfirm(false);
+}, []);
+
+return {
+gameState,
+showCorrectFeedback,
+showWrongFeedback,
+showTimeoutFeedback,
+showExitConfirm,
+showNextRoundMessage,
+gameCompleted,
+showCompletedMessage,
+showNextObjectivesMessage, // NUEVO
+nextObjectivesMessage,     // NUEVO
+audioEnabled,
+handleObjectClick,
+handleHelp,
+handleTogglePause,
+handleExitClick,
+handleExitCancel,
+handleFinishGame,
+toggleAudio,
+pathRef,
+totalScore,
+rounds: screenRefreshes // Para mantener compatibilidad con el código anterior
+};
 };
 
 export default useForestGame;

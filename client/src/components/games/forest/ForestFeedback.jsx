@@ -95,8 +95,8 @@ const ForestFeedback = ({
                         <div className="w-16 h-16 mx-auto bg-yellow-100 rounded-full flex items-center justify-center mb-4">
                             <span className="text-yellow-500 text-3xl">⏱️</span>
                         </div>
-                        <h3 className="text-xl font-bold text-yellow-700 mb-2">¡Tiempo agotado!</h3>
-                        <p className="mb-4">Vamos a intentarlo nuevamente.</p>
+                        <h3 className="text-xl font-bold text-yellow-700 mb-2">Ronda finalizada</h3>
+                        <p className="mb-4">Muy bien, vamos a seguir jugando</p>
                     </div>
                 </div>
             )}
