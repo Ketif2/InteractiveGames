@@ -83,7 +83,7 @@ export const login = async (req, res) => {
                 role: 'terapeuta'
             },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '16h' }
         );
 
         // Set HTTP Only cookie
@@ -92,7 +92,7 @@ export const login = async (req, res) => {
             secure: process.env.NODE_ENV === 'production', // HTTPS en producción
             sameSite: 'lax', // Protección contra CSRF
             path: '/', // Asegura que la cookie esté disponible en toda la app
-            maxAge: 3600000*16 // 1 hora
+            maxAge: 3600000*16 // 16 hora
         });
 
         res.json({

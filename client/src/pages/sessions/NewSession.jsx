@@ -193,7 +193,7 @@ const NewSession = () => {
             <p className="text-2xl font-bold">{filteredPatients.length}</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
-            <p className="text-gray-500 text-sm mb-1">Sesiones Completadas Hoy</p>
+            <p className="text-gray-500 text-sm mb-1">Pacientes Completados</p>
             <p className="text-2xl font-bold">
               {Object.values(todaySessions).filter(hasSession => hasSession).length}
             </p>
@@ -283,7 +283,7 @@ const NewSession = () => {
                   filteredPatients.map((patient) => {
                     const patientId = patient.id_paciente;
                     const weeklySession = weeklyPatientSessions[patientId] || 0;
-                    const hasToday = false;
+                    const hasToday = todaySessions[patientId] || false;
                     const progress = patient.num_sesiones > 0 
                       ? Math.min(Math.round((weeklySession / patient.num_sesiones) * 100), 100) 
                       : 0;
@@ -351,7 +351,6 @@ const NewSession = () => {
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {!hasToday ? (
                             <Link
                               to={`/games/${patientId}`}
                               state={{ patientId }}
@@ -363,17 +362,6 @@ const NewSession = () => {
                               </svg>
                               Iniciar Juego
                             </Link>
-                          ) : (
-                            <Link
-                              to={`/sessions/${patientId}/stats`}
-                              className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-[#00398A] hover:bg-[#002a63] transition-colors shadow-sm"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                              </svg>
-                              Ver Estadísticas
-                            </Link>
-                          )}
                         </td>
                       </tr>
                     );

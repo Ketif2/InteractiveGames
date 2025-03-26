@@ -1,12 +1,27 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
+
+// Función para obtener la carpeta Documentos de Windows
+const getDocumentsFolder = () => {
+  return path.join(os.homedir(), 'Documents/Pacientes');
+};
 
 // Configurar multer para almacenamiento de archivos
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const patientId = req.params.id;
-    const dir = `./uploads/patients/${patientId}`;
+    // Verificar si los parámetros existen, de lo contrario usar valores predeterminados
+    const patientNombre = req.params.nombre || 'PACIENTE';
+    const patientApellido = req.params.apellido || 'SIN_APELLIDO';
+    
+    console.log("Parámetros de destino:", { patientNombre, patientApellido, params: req.params });
+    
+    // Crear directorio con nombre y apellido en la carpeta Documentos
+    const documentsFolder = getDocumentsFolder();
+    const dir = path.join(documentsFolder, `${patientNombre.toUpperCase()}_${patientApellido.toUpperCase()}`);
+    
+    console.log("Directorio de destino:", dir);
     
     // Crear directorio si no existe
     if (!fs.existsSync(dir)) {
@@ -15,9 +30,21 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (req, file, cb) => {
-    // Crear nombre único con marca de tiempo
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    // Obtener la fecha actual formateada (YYYYMMDD)
+    const date = new Date();
+    const formattedDate = date.getFullYear() +
+      ('0' + (date.getMonth() + 1)).slice(-2) +
+      ('0' + date.getDate()).slice(-2);
+    
+    // Limpiar el nombre original (quitar espacios y caracteres especiales)
+    let originalName = file.originalname.replace(/\.[^/.]+$/, ""); // Quitar extensión
+    originalName = originalName.replace(/[^a-zA-Z0-9]/g, "_"); // Reemplazar caracteres especiales
+    originalName = originalName.substring(0, 30); // Limitar longitud
+    
+    // Crear nombre final: fecha + nombre original limpio + extensión
+    const fileName = `${formattedDate}_${originalName}${path.extname(file.originalname)}`;
+    
+    cb(null, fileName);
   }
 });
 
@@ -73,9 +100,17 @@ export const fileExists = (filePath) => {
   return fs.existsSync(filePath);
 };
 
+// Obtener ruta del directorio para un paciente específico
+export const getPatientDirectory = (nombre, apellido) => {
+  const nombreFormatted = nombre || 'PACIENTE';
+  const apellidoFormatted = apellido || 'SIN_APELLIDO';
+  return path.join(getDocumentsFolder(), `${nombreFormatted.toUpperCase()}_${apellidoFormatted.toUpperCase()}`);
+};
+
 export default {
   upload,
   deleteFile,
   getMimeType,
-  fileExists
+  fileExists,
+  getPatientDirectory
 };

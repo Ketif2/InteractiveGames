@@ -1,7 +1,8 @@
 import pool from '../config/db.js';
-import { upload } from '../utils/fileManager.js'; // Importa el middleware de carga de archivos
+import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import os from 'os'; 
 
 // Obtener todos los pacientes
 export const getPacientes = async (req, res) => {
@@ -160,63 +161,117 @@ export const assignTherapist = async (req, res) => {
     }
 };
 
-
 // Subir documento para un paciente
 export const uploadDocument = async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      // Verificar si el paciente existe
-      const [patient] = await pool.query(
-        'SELECT * FROM paciente WHERE id_paciente = ?', [id]
-      );
-      
-      if (patient.length === 0) {
-        return res.status(404).json({ message: 'Paciente no encontrado' });
+  try {
+    const { id } = req.params;
+    
+    // Verificar si el paciente existe
+    const [patient] = await pool.query(
+      'SELECT nombre, apellido, documentos FROM paciente WHERE id_paciente = ?', [id]
+    );
+    
+    if (patient.length === 0) {
+      return res.status(404).json({ message: 'Paciente no encontrado' });
+    }
+    
+    // Creamos un middleware personalizado para esta petición específica
+    const customUpload = multer({
+      storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+          // Usar directamente los datos del paciente
+          const nombre = patient[0].nombre;
+          const apellido = patient[0].apellido;
+                  
+          // Crear directorio con nombre y apellido en la carpeta Documentos
+          const documentsFolder = path.join(os.homedir(), 'Documents', 'Pacientes');
+          const dir = path.join(documentsFolder, `${nombre.toUpperCase()}_${apellido.toUpperCase()}`);
+                    
+          // Crear directorio si no existe
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
+          cb(null, dir);
+        },
+        filename: (req, file, cb) => {
+          // Obtener la fecha actual formateada (YYYYMMDD)
+          const date = new Date();
+          const formattedDate = date.getFullYear() +
+            ('0' + (date.getMonth() + 1)).slice(-2) +
+            ('0' + date.getDate()).slice(-2);
+          
+          // Limpiar el nombre original (quitar espacios y caracteres especiales)
+          let originalName = file.originalname.replace(/\.[^/.]+$/, ""); // Quitar extensión
+          originalName = originalName.replace(/[^a-zA-Z0-9]/g, "_"); // Reemplazar caracteres especiales
+          originalName = originalName.substring(0, 30); // Limitar longitud
+          
+          // Crear nombre final: fecha + nombre original limpio + extensión
+          const fileName = `${formattedDate}_${originalName}${path.extname(file.originalname)}`;
+          
+          cb(null, fileName);
+        }
+      }),
+      limits: { fileSize: 10 * 1024 * 1024 }, // Límite de 10MB
+      fileFilter: (req, file, cb) => {
+        // Aceptar tipos comunes de documentos
+        const filetypes = /pdf|doc|docx|jpg|jpeg|png/;
+        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = filetypes.test(file.mimetype);
+        
+        if (extname && mimetype) {
+          return cb(null, true);
+        } else {
+          cb(new Error('Solo se permiten archivos PDF, DOC, DOCX, JPG, JPEG o PNG'));
+        }
+      }
+    }).single('document');
+    
+    // Usar el middleware personalizado
+    customUpload(req, res, async (err) => {
+      if (err) {
+        console.error("Error en middleware de carga:", err);
+        return res.status(400).json({ message: err.message });
       }
       
-      // Carga de archivo único usando middleware multer
-      upload.single('document')(req, res, async (err) => {
-        if (err) {
-          return res.status(400).json({ message: err.message });
-        }
-        
-        if (!req.file) {
-          return res.status(400).json({ message: 'No se ha subido ningún archivo' });
-        }
-        
-        // Obtener documentos actuales o inicializar array vacío
-        const currentDocuments = typeof patient[0].documentos === 'string' 
-        ? JSON.parse(patient[0].documentos) 
-        : (patient[0].documentos || []);
-        
-        // Añadir nuevo documento al array
-        const newDocument = {
-          id: Date.now().toString(),
-          nombre: req.file.originalname,
-          tipo: path.extname(req.file.originalname).substring(1),
-          ruta: req.file.path,
-          fecha_subida: new Date().toISOString()
-        };
-        
-        currentDocuments.push(newDocument);
-        
-        // Actualizar registro del paciente con nuevo array de documentos
-        await pool.query(
-          'UPDATE paciente SET documentos = ? WHERE id_paciente = ?',
-          [JSON.stringify(currentDocuments), id]
-        );
-        
-        res.status(201).json({
-          message: 'Documento subido exitosamente',
-          document: newDocument
-        });
+      if (!req.file) {
+        return res.status(400).json({ message: 'No se ha subido ningún archivo' });
+      }
+      
+            
+      // Obtener documentos actuales o inicializar array vacío
+      const currentDocuments = patient[0].documentos 
+      ? (typeof patient[0].documentos === 'string'
+          ? JSON.parse(patient[0].documentos)
+          : patient[0].documentos)
+      : [];
+      
+      // Añadir nuevo documento al array
+      const newDocument = {
+        id: Date.now().toString(),
+        nombre: req.file.originalname,
+        tipo: path.extname(req.file.originalname).substring(1),
+        ruta: req.file.path,
+        fecha_subida: new Date().toISOString()
+      };
+      
+      currentDocuments.push(newDocument);
+      
+      // Actualizar registro del paciente con nuevo array de documentos
+      await pool.query(
+        'UPDATE paciente SET documentos = ? WHERE id_paciente = ?',
+        [JSON.stringify(currentDocuments), id]
+      );
+      
+      res.status(201).json({
+        message: 'Documento subido exitosamente',
+        document: newDocument
       });
-    } catch (error) {
-      console.error('Error al subir documento:', error);
-      res.status(500).json({ message: 'Error interno del servidor' });
-    }
-  };
+    });
+  } catch (error) {
+    console.error('Error al subir documento:', error);
+    res.status(500).json({ message: 'Error interno del servidor' });
+  }
+};
   
   // Obtener todos los documentos de un paciente
   export const getDocuments = async (req, res) => {
