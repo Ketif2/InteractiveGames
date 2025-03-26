@@ -48,7 +48,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 app.get('*', (req, res) => {
     if (!req.url.startsWith('/api')) {
-      res.redirect('/'); // Redirige al index.html de tu app React
+       // En lugar de redirigir, envía una respuesta que indique que este es el backend
+      res.status(200).send('Backend API de InteractiveGames está funcionando');
     } else {
       res.status(404).json({ message: 'API endpoint not found' });
     }

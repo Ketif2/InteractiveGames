@@ -12,7 +12,6 @@ export const register = async (req, res) => {
             throw new Error('JWT_SECRET no configurado');
         }
 
-        // Check if the therapist already exists
         const [existingUser] = await pool.query(
             'SELECT * FROM terapeuta WHERE email = ?', 
             [email]
@@ -22,16 +21,13 @@ export const register = async (req, res) => {
             return res.status(400).json({ message: 'El email ya está registrado' });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Insert new therapist
         const [result] = await pool.query(
             'INSERT INTO terapeuta (nombre, apellido, email, contraseña_hash) VALUES (?, ?, ?, ?)',
             [nombre, apellido, email, hashedPassword]
         );
 
-        // Generate JWT token for immediate login
         const token = jwt.sign(
             { 
                 userId: result.insertId,
@@ -52,12 +48,10 @@ export const register = async (req, res) => {
     }
 };
 
-// User login
 export const login = async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Get therapist from database
         const [users] = await pool.query(
             'SELECT * FROM terapeuta WHERE email = ?',
             [email]
@@ -69,14 +63,12 @@ export const login = async (req, res) => {
 
         const user = users[0];
 
-        // Verify password
         const validPassword = await bcrypt.compare(password, user.contraseña_hash);
         
         if (!validPassword) {
             return res.status(401).json({ message: 'Credenciales inválidas' });
         }
 
-        // Generate JWT token
         const accessToken = jwt.sign(
             { 
                 userId: user.id_terapeuta,
@@ -86,11 +78,10 @@ export const login = async (req, res) => {
             { expiresIn: '1h' }
         );
 
-        // Set HTTP Only cookie
         res.cookie('token', accessToken, { 
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // HTTPS en producción
-            sameSite: 'lax', // Protección contra CSRF
+            secure: true, 
+            sameSite: 'none', // Protección contra CSRF
             path: '/', // Asegura que la cookie esté disponible en toda la app
             maxAge: 3600000*16 // 1 hora
         });
