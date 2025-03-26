@@ -37,10 +37,25 @@ export const register = async (req, res) => {
             { expiresIn: '16h' }
         );
 
+        // Establecer cookie de token
+        res.cookie('token', token, { 
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/',
+            maxAge: 3600000*16
+        });
+
         res.status(201).json({ 
             message: 'Terapeuta registrado exitosamente',
             userId: result.insertId,
-            token
+            token, // Enviar token en la respuesta para almacenamiento local
+            terapeuta: {
+                id: result.insertId,
+                nombre,
+                apellido,
+                email
+            }
         });
     } catch (error) {
         console.error('Error en registro:', error);
@@ -48,6 +63,7 @@ export const register = async (req, res) => {
     }
 };
 
+// User login
 export const login = async (req, res) => {
     const { email, password } = req.body;
 
@@ -75,15 +91,16 @@ export const login = async (req, res) => {
                 role: 'terapeuta'
             },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '16h' }
         );
 
+        // Establecer cookie de token
         res.cookie('token', accessToken, { 
             httpOnly: true,
-            secure: true, 
-            sameSite: 'none', // Protección contra CSRF
-            path: '/', // Asegura que la cookie esté disponible en toda la app
-            maxAge: 3600000*16 // 1 hora
+            secure: true,
+            sameSite: 'none',
+            path: '/',
+            maxAge: 3600000*16
         });
 
         res.json({
@@ -92,7 +109,8 @@ export const login = async (req, res) => {
                 nombre: user.nombre,
                 apellido: user.apellido,
                 email: user.email
-            }
+            },
+            token: accessToken // Incluir token en la respuesta
         });
     } catch (error) {
         console.error('Error en login:', error);
@@ -100,6 +118,7 @@ export const login = async (req, res) => {
     }
 };
 
+// Verificar token y obtener información del usuario
 export const verifyToken = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -110,12 +129,14 @@ export const verifyToken = async (req, res) => {
         );
 
         if (users.length === 0) {
-            res.clearCookie('token', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax',
-                path: '/'
-            });
+            if (req.cookies.token) {
+                res.clearCookie('token', {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'none',
+                    path: '/'
+                });
+            }
             return res.status(404).json({ message: 'Usuario no encontrado' });
         }
 
@@ -131,21 +152,24 @@ export const verifyToken = async (req, res) => {
         });
     } catch (error) {
         console.error('Error en verificación:', error);
-        res.clearCookie('token', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            path: '/'
-        });
+        if (req.cookies.token) {
+            res.clearCookie('token', {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none',
+                path: '/'
+            });
+        }
         res.status(500).json({ message: 'Error en el servidor' });
     }
 };
 
+// Cerrar sesión
 export const logout = (req, res) => {
     res.clearCookie('token', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: true,
+        sameSite: 'none',
         path: '/'
     });
     res.json({ message: 'Sesión cerrada exitosamente' });

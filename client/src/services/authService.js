@@ -1,22 +1,17 @@
 // services/authService.js
-import api from './api'
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-const axiosInstance = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  withCredentials: true // Importante para las cookies
-});
+import api from './api';
 
 export const authService = {
   async register(userData) {
     try {
-      const response = await axiosInstance.post('/auth/register', userData);
-      return response.data;
+      const response = await api.post('/auth/register', userData);
+      
+      // Guardar el token en localStorage si el servidor lo devuelve
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+      }
+      
+      return response;
     } catch (error) {
       if (error.response) {
         // Handle specific HTTP error codes
@@ -52,49 +47,70 @@ export const authService = {
 
   async login(credentials) {
     try {
-      const response = await axiosInstance.post('/auth/login', credentials);
-      return response.data;
+      const response = await api.post('/auth/login', credentials);
+      
+      // Guardar el token si existe
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+      }
+      
+      return response;
     } catch (error) {
+      // Mejor manejo de errores con mensajes específicos
       if (error.response) {
-        // Handle specific HTTP error codes
         switch (error.response.status) {
           case 401:
             throw new Error('El usuario o la contraseña no son correctos');
           case 404:
             throw new Error('El usuario no existe');
-          case 429:
-            throw new Error('Demasiados intentos. Por favor, espere unos minutos');
+          case 500:
+            throw new Error('Error en el servidor. Por favor, intente más tarde');
           default:
-            throw new Error('Error al iniciar sesión. Por favor, inténtelo de nuevo');
+            throw new Error(`Error (${error.response.status}): ${error.message || 'Error al iniciar sesión'}`);
         }
       }
-      // Handle network errors or other issues
-      throw new Error('Error de conexión. Por favor, verifique su conexión a internet');
+      throw new Error('No se pudo conectar al servidor. Verifique su conexión');
     }
   },
 
   async verifyToken() {
     try {
-      const response = await axiosInstance.get('/auth/verify');
-      console.log('Respuesta verify:', response); // Para debugging
-      return response.data;
+      const response = await api.get('/auth/verify');
+      return response;
     } catch (error) {
-      console.error('Error en verifyToken:', error); // Para debugging
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            throw new Error('Sesión expirada');
-          default:
-            throw new Error(`Error al verificar la sesión: ${error.response.status}`);
-        }
+      console.error('Error en verifyToken:', error);
+      
+      // Si hay un error 401, redirigir al login
+      if (error.response && error.response.status === 401) {
+        // Limpiar localStorage
+        localStorage.removeItem('token');
+        throw new Error('Sesión expirada o inválida');
       }
-      // Si no hay response, es un error de conexión
-      console.error('Error detallado:', error); // Para debugging
-      throw new Error(`Error de conexión: ${error.message}`);
+      
+      throw error;
     }
-},
+  },
 
   async logout() {
-    await axiosInstance.post('/auth/logout');
+    try {
+      await api.post('/auth/logout');
+      // Siempre limpiar el token del localStorage al cerrar sesión
+      localStorage.removeItem('token');
+    } catch (error) {
+      console.error('Error en logout:', error);
+      // Limpiar localStorage incluso si hay error en el servidor
+      localStorage.removeItem('token');
+      throw error;
+    }
+  },
+  
+  // Método para comprobar si hay una sesión activa
+  isAuthenticated() {
+    return !!localStorage.getItem('token');
+  },
+  
+  // Método para obtener el token actual
+  getToken() {
+    return localStorage.getItem('token');
   }
 };
