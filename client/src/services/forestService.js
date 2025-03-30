@@ -5,7 +5,7 @@ const API_URL = 'http://localhost:5000/api';
 export const forestService = {
     getForestConfig: async (id_sesion) => {
         try {
-            const response = await api.get(`${API_URL}/games/forest/config/${id_sesion}`);
+            const response = await api.get(`${VITE_API_URL}/games/forest/config/${id_sesion}`);
             return response.data;
         } catch (error) {
             throw new Error(error.response?.data?.message || 'Error al obtener configuracion');

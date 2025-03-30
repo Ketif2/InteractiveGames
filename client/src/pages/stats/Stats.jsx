@@ -10,7 +10,7 @@ const Stats = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState({ key: 'apellido', direction: 'ascending' });
+  const [sortConfig, setSortConfig] = useState({ key: 'nombre', direction: 'ascending' });
   const { user } = useAuth();
 
   useEffect(() => {
@@ -57,7 +57,13 @@ const Stats = () => {
             ...patient,
             sesiones_completadas: weeklySession.total_sesiones || 0,
             ultima_sesion: lastSession ? lastSession.fecha_sesion : null,
-            status: weeklySession.total_sesiones > 0 ? 'Completado' : 'Pendiente'
+            status: (() => {
+              if (!patient.num_sesiones) return 'Sin sesiones';
+              const percentage = (weeklySession.total_sesiones / patient.num_sesiones) * 100;
+              if (percentage === 100) return 'Completado';
+              if (percentage > 0) return 'En progreso';
+              return 'Pendiente';
+            })()
           };
         } catch (err) {
           console.error(`Error obteniendo datos para paciente ${patient.id_paciente}:`, err);
@@ -253,12 +259,12 @@ const Stats = () => {
                   <th 
                     scope="col" 
                     className="w-1/3 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer group hover:bg-gray-100"
-                    onClick={() => requestSort('apellido')}
+                    onClick={() => requestSort('nombre')}
                   >
                     <div className="flex items-center">
                       <span>Paciente</span>
                       <div className="ml-1 opacity-70 group-hover:opacity-100">
-                        {sortConfig.key === 'apellido' && (
+                        {sortConfig.key === 'nombre' && (
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d={sortConfig.direction === 'ascending' 
                               ? "M5.293 7.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 5.414V17a1 1 0 11-2 0V5.414L6.707 7.707a1 1 0 01-1.414 0z" 
@@ -413,7 +419,9 @@ const Stats = () => {
                           {patient.ultima_sesion ? (
                             <div className="flex flex-col">
                               <span className="text-sm">{new Date(patient.ultima_sesion).toLocaleDateString()}</span>
-                              <span className="text-xs text-gray-500">{new Date(patient.ultima_sesion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                              <span className="text-xs text-gray-500">
+                                Hora: {new Date(patient.ultima_sesion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', hour12: false})}
+                              </span>
                             </div>
                           ) : (
                             <span className="text-sm text-gray-500">Sin sesiones</span>

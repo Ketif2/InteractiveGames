@@ -59,6 +59,11 @@ const PatientStats = () => {
     
     return age;
   };
+
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
   
   if (loading) {
     return <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00398A] mx-auto mt-12"></div>;
@@ -183,21 +188,23 @@ const PatientStats = () => {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <p className="text-sm text-gray-500 mb-1">ID del paciente</p>
-                <p className="font-medium text-gray-900">{patient?.id_paciente}</p>
+                <p className="text-m text-gray-500 mb-1">Evaluación Inicial (MMSE)</p>
+                <p className="font-medium text-gray-900">{patient?.evaluacion_inicial}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500 mb-1">Psicorehabilitador asignado</p>
+                <p className="text-m text-gray-500 mb-1">Fecha de nacimiento</p>
+                <p className="font-medium text-gray-900">
+                  {patient?.fecha_nacimiento ? formatDate(patient.fecha_nacimiento) : 'No disponible'}
+                </p>
+              </div>
+              <div>
+                <p className="text-m text-gray-500 mb-1">Psicorehabilitador asignado</p>
                 <p className="font-medium text-gray-900">{therapist?.nombre+' '+therapist?.apellido || 'No asignado'}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Fecha de nacimiento</p>
-                <p className="font-medium text-gray-900">{patient?.fecha_nacimiento ? new Date(patient.fecha_nacimiento).toLocaleDateString() : 'No disponible'}</p>
               </div>
             </div>
             
             <div className="mt-6">
-              <p className="text-sm text-gray-500 mb-1">Diagnóstico</p>
+              <p className="text-m text-gray-500 mb-1">Diagnóstico</p>
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                 <p className="text-gray-900">{patient?.diagnostico || 'No se ha registrado un diagnóstico para este paciente.'}</p>
               </div>
