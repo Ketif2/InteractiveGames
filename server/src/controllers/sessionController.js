@@ -127,17 +127,20 @@ export const getLastSession = async (req, res) => {
   try {
     const { id_paciente } = req.params;
     const [rows] = await pool.query(
-        `SELECT * 
+        `SELECT TOP 1 * 
          FROM sesion 
          WHERE id_paciente = ? 
-         ORDER BY fecha_sesion DESC 
-         LIMIT 1`,
+         ORDER BY fecha_sesion DESC`,
         [id_paciente]
     );
+    
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ message: 'No se encontraron sesiones para este paciente' });
+    }
+    
     res.json(rows[0]);
   } catch (error) {
+    console.error('Error al obtener la última sesión:', error);
     res.status(500).json({ message: error.message });
   }
 };
-
-
