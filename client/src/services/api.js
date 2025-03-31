@@ -1,28 +1,30 @@
+// Actualización para el interceptor en api.js
+
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// Control para evitar redirecciones múltiples
+let isRedirecting = false;
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
   },
-  withCredentials: true, // Habilita el envío de cookies
-  timeout: 30000 // Aumentado para manejar archivos grandes
+  withCredentials: true,
+  timeout: 30000
 });
 
 // Interceptor para peticiones
 api.interceptors.request.use(
   (config) => {
-    // Si estamos solicitando un blob, asegurarse de que no se envía Content-Type: application/json
-    if (config.responseType === 'blob') {
-      // Para peticiones de blob, no establecemos Content-Type: application/json por defecto
-      if (config.headers['Content-Type'] === 'application/json') {
-        delete config.headers['Content-Type'];
-      }
+    // Si estamos solicitando un blob, quitar Content-Type: application/json
+    if (config.responseType === 'blob' && config.headers['Content-Type'] === 'application/json') {
+      delete config.headers['Content-Type'];
     }
     
-    // Si hay token de autenticación (opcional, solo si lo usas)
+    // Obtener token de localStorage e incluirlo en el header
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -30,31 +32,25 @@ api.interceptors.request.use(
     
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Interceptor para respuestas
 api.interceptors.response.use(
   (response) => {
-    // Si la respuesta es de tipo blob, no procesarla como JSON y devolverla completa
+    // Manejo de respuestas tipo blob
     if (response.config.responseType === 'blob') {
-      // Verificar si hay errores en la respuesta (blob vacío)
       if (response.data && response.data.size === 0) {
         console.warn('Se recibió un blob vacío desde el servidor');
       }
-      // Devolver la respuesta completa para peticiones de tipo blob
       return response;
     }
     
-    // Para respuestas normales, mantener el comportamiento existente (devolver solo data)
     return response.data;
   },
   (error) => {
-    // Si es un error en una petición de tipo blob, podría ser un error de servidor formateado como JSON
+    // Manejo especial para errores en peticiones blob
     if (error.response && error.config && error.config.responseType === 'blob' && error.response.data instanceof Blob) {
-      // Intentar leer el error como texto para verificar si es un mensaje JSON
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -63,7 +59,6 @@ api.interceptors.response.use(
             error.response.data = errorData;
             reject(error.response?.data || error);
           } catch (e) {
-            // Si no es JSON, mantener el error original
             reject(error.response?.data || error);
           }
         };
@@ -74,10 +69,30 @@ api.interceptors.response.use(
       });
     }
     
-    // Para otros errores, mantener el comportamiento existente
+    // Control para evitar redirecciones cíclicas
     if (error.response?.status === 401) {
-      window.location.href = '/login';
+      // Verificar que no estamos ya en la página de login y que no estamos en proceso de redirección
+      if (!isRedirecting && !window.location.pathname.includes('/login')) {
+        isRedirecting = true;
+        console.log('Sesión expirada. Redirigiendo a login...');
+        
+        // Limpiar token si existe
+        localStorage.removeItem('token');
+        
+        // Redirigir a login después de un pequeño retraso
+        setTimeout(() => {
+          window.location.href = '/login';
+          
+          // Resetear la bandera después de un tiempo
+          setTimeout(() => {
+            isRedirecting = false;
+          }, 2000);
+        }, 100);
+      } else {
+        console.warn('Evitando redirección cíclica a login');
+      }
     }
+    
     return Promise.reject(error.response?.data || error);
   }
 );
