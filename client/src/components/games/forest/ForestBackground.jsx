@@ -5,7 +5,7 @@ const ForestBackground = () => {
   return (
     <div className="absolute inset-0 bg-gradient-to-b from-green-50 to-green-100 overflow-hidden">
       {/* Gradiente en la parte inferior */}
-      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-green-200 to-transparent opacity-40"></div>
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-green-300 to-transparent opacity-100"></div>
       
       {/* Elementos decorativos para el bosque - Reemplazados por imágenes */}
       <div className="absolute top-10 left-10 opacity-10">

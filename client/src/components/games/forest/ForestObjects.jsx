@@ -106,7 +106,7 @@ const ForestObject = ({ object, onClick }) => {
             className={`absolute cursor-pointer transition-all duration-300 
                 ${isTarget ? 'target-object' : ''} 
                 ${found ? 'opacity-50' : 'hover:scale-110 hover:brightness-110'}
-                ${getAnimation()}`}
+                `}
             style={{
                 left: `${validX}px`,
                 top: `${validY}px`,
