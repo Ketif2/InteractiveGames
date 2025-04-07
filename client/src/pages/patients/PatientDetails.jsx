@@ -561,12 +561,6 @@ const PatientDetails = () => {
                         Ver
                       </button>
                       <button 
-                        onClick={() => handleDownloadDocument(doc)}
-                        className="text-xs font-medium text-green-600 hover:text-green-800 transition-colors"
-                      >
-                        Descargar
-                      </button>
-                      <button 
                         onClick={() => handleDeleteDocument(doc.id)}
                         className="text-xs font-medium text-red-600 hover:text-red-800 transition-colors"
                       >

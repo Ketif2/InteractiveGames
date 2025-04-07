@@ -189,15 +189,6 @@ const ViewDocumentModal = ({ document, patientId, onClose }) => {
             </div>
           )}
         </div>
-        
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={handleDownload}
-            className="px-4 py-2 bg-[#00A8E3] text-white rounded hover:bg-[#7EC3E2]"
-          >
-            Descargar
-          </button>
-        </div>
       </div>
     </div>
   );
