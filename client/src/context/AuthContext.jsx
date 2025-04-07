@@ -33,18 +33,25 @@ export const AuthProvider = ({ children }) => {
 }, []);
 
 
-  const login = async (credentials) => {
-    try {
-      const response = await authService.login(credentials);
+const login = async (credentials) => {
+  try {
+    const response = await authService.login(credentials);
+    
+    // Verifica que response.terapeuta existe
+    if (response && response.terapeuta) {
       setUser(response.terapeuta);
       setIsAuthenticated(true);
       return response;
-    } catch (error) {
-      setUser(null);
-      setIsAuthenticated(false);
-      throw error;
+    } else {
+      console.error('Formato de respuesta inválido:', response);
+      throw new Error('Formato de respuesta inválido del servidor');
     }
-  };
+  } catch (error) {
+    setUser(null);
+    setIsAuthenticated(false);
+    throw error;
+  }
+};
 
   const logout = async () => {
     try {

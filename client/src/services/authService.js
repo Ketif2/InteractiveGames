@@ -1,21 +1,12 @@
 // services/authService.js
 import api from './api'
-import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-const axiosInstance = axios.create({
-  baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  withCredentials: true // Importante para las cookies
-});
 
 export const authService = {
   async register(userData) {
     try {
-      const response = await axiosInstance.post('/auth/register', userData);
+      const response = await api.post(`${API_URL}/auth/register`, userData);
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -52,7 +43,7 @@ export const authService = {
 
   async login(credentials) {
     try {
-      const response = await axiosInstance.post('/auth/login', credentials);
+      const response = await api.post(`${API_URL}/auth/login`, credentials);
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -75,7 +66,7 @@ export const authService = {
 
   async verifyToken() {
     try {
-      const response = await axiosInstance.get('/auth/verify');
+      const response = await api.get(`${API_URL}/auth/verify`);
       console.log('Respuesta verify:', response); // Para debugging
       return response.data;
     } catch (error) {
@@ -95,6 +86,6 @@ export const authService = {
 },
 
   async logout() {
-    await axiosInstance.post('/auth/logout');
+    await api.post(`${API_URL}/auth/logout`);
   }
 };

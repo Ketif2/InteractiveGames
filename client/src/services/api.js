@@ -47,7 +47,11 @@ api.interceptors.response.use(
       // Devolver la respuesta completa para peticiones de tipo blob
       return response;
     }
-    
+    // Caso especial para rutas de autenticación
+    if (response.config.url.includes('/auth/')) {
+      // Para rutas de autenticación, devuelve la respuesta completa
+      return response;
+    }
     // Para respuestas normales, mantener el comportamiento existente (devolver solo data)
     return response.data;
   },
