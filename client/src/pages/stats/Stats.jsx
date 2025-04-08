@@ -356,13 +356,13 @@ const Stats = () => {
                         <div className="h-10 w-10 flex-shrink-0 mr-3 overflow-hidden rounded-full">
                           {patient.sexo === 'Masculino' ? (
                             <img 
-                              src="/src/assets/icons/old-man.png" 
+                              src="/icons/old-man.png" 
                               alt="Avatar masculino" 
                               className="h-full w-full object-cover"
                             />
                           ) : (
                             <img 
-                              src="/src/assets/icons/old-woman.png" 
+                              src="/icons/old-woman.png" 
                               alt="Avatar femenino" 
                               className="h-full w-full object-cover"
                             />

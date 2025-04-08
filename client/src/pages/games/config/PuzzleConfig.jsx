@@ -182,7 +182,7 @@ const PuzzleConfig = () => {
             {images.map(image => {
                 const isSelected = config.selectedImages.some(selected => selected.id === image.id);
                 const selectionIndex = config.selectedImages.findIndex(selected => selected.id === image.id);
-                const imageUrl = `/src/assets/images/puzzle/${difficulty}/${image.path}`;
+                const imageUrl = `/images/puzzle/${difficulty}/${image.path}`;
                 const isPlayed = playedImageIds.includes(image.id);
 
                 return (

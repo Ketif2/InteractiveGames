@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import puzzleImage from '../../assets/images/puzzleImage.png';
-import sequenceImage from '../../assets/images/sequenceImage.png';
-import forestImage from '../../assets/images/forestImage.png';
-import orderImage from '../../assets/images/orderImage.png';
+import puzzleImage from '/images/puzzleImage.png';
+import sequenceImage from '/images/sequenceImage.png';
+import forestImage from '/images/forestImage.png';
+import orderImage from '/images/orderImage.png';
 
 const GAMES = [
   {

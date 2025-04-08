@@ -59,7 +59,7 @@ export const useForestAudio = () => {
       try {
         if (newState && audioRef.current) {
           // Asignar fuente solo al activar
-          audioRef.current.src = '/assets/audio/forest-ambience.mp3';
+          audioRef.current.src = '/audio/forest-ambience.mp3';
           audioRef.current.play().catch(e => {
             console.log('Error al reproducir audio de fondo:', e);
           });
@@ -83,16 +83,16 @@ export const useForestAudio = () => {
       
       switch(type) {
         case 'correct':
-          sound.src = '/assets/audio/correct.mp3';
+          sound.src = '/audio/correct.mp3';
           break;
         case 'error':
-          sound.src = '/assets/audio/error.mp3';
+          sound.src = '/audio/error.mp3';
           break;
         case 'level-complete':
-          sound.src = '/assets/audio/level-complete.mp3';
+          sound.src = '/audio/level-complete.mp3';
           break;
         case 'help':
-          sound.src = '/assets/audio/help.mp3';
+          sound.src = '/audio/help.mp3';
           break;
         default:
           return;
