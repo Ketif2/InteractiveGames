@@ -278,13 +278,13 @@ const PatientDetails = () => {
               <div className="h-16 w-16 rounded-full bg-[#00398A] flex items-center justify-center text-[#00398A] text-2xl font-bold shadow-md">
                 {patient.sexo === 'Masculino' ? (
                   <img 
-                    src="/src/assets/icons/old-man.png" 
+                    src="/icons/old-man.png" 
                     alt="Avatar masculino" 
                     className="h-full w-full object-cover"
                   />
                 ) : (
                   <img 
-                    src="/src/assets/icons/old-woman.png" 
+                    src="/icons/old-woman.png" 
                     alt="Avatar femenino" 
                     className="h-full w-full object-cover"
                   />

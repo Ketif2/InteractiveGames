@@ -298,13 +298,13 @@ const NewSession = () => {
                             <div className="h-10 w-10 flex-shrink-0 mr-3 overflow-hidden rounded-full">
                               {patient.sexo === 'Masculino' ? (
                                 <img 
-                                  src="/src/assets/icons/old-man.png" 
+                                  src="/icons/old-man.png" 
                                   alt="Avatar masculino" 
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
                                 <img 
-                                  src="/src/assets/icons/old-woman.png" 
+                                  src="/icons/old-woman.png" 
                                   alt="Avatar femenino" 
                                   className="h-full w-full object-cover"
                                 />
@@ -384,49 +384,7 @@ const NewSession = () => {
             </table>
           </div>
         </div>
-  
-        {/* Sección de pruebas */}
-        <div className="bg-white shadow-md rounded-lg border border-yellow-200 overflow-hidden mb-8">
-          <div className="bg-yellow-50 px-6 py-4 border-b border-yellow-200">
-            <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <h3 className="text-lg font-semibold text-yellow-800">Modo Pruebas</h3>
-            </div>
-            <p className="text-sm text-yellow-700 mt-2">
-              Acceso directo a los juegos para pruebas y desarrollo. Estas opciones no estarán disponibles en producción.
-            </p>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <button
-                onClick={() => navigate('/games/puzzle/play', {
-                  state: {
-                    config: {
-                      difficulty: 'medium',
-                      gridSize: '4',
-                      selectedPuzzles: [{
-                        id: '1M',
-                        name: 'Alpacas',
-                        url: '/src/assets/images/puzzle/medium/Alpacas.jpg',
-                        difficulty: 'medium'
-                      }]
-                    },
-                    patientId: 1
-                  }
-                })}
-                className="bg-white border border-yellow-300 rounded-lg p-4 flex flex-col items-center justify-center hover:bg-yellow-50 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-                </svg>
-                <span className="text-sm font-medium text-yellow-800">Rompecabezas</span>
-              </button>
-              {/* Puedes añadir más botones para otros juegos aquí */}
-            </div>
-          </div>
-        </div>
+
     </div>
   );
   

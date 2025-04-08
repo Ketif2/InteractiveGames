@@ -9,7 +9,7 @@ const Login = () => {
         <div className="bg-[#00398A] py-6 px-8 text-center">
           <img
             className="mx-auto h-16 w-auto"
-            src="/src/assets/icons/logoApp.svg"
+            src="/icons/logoApp.svg"
             alt="Recuerda+"
           />
           <h2 className="mt-3 text-3xl font-bold text-white">
