@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-import MainLogo from '../../assets/icons/logoApp.svg';
-import UserIcon from '../../assets/icons/doctor icon.png';
+import MainLogo from '/icons/logoApp.svg';
+import UserIcon from '/icons/doctor icon.png';
 
 const Header = () => {
   const { user, logout } = useAuth();
@@ -58,7 +58,6 @@ const Header = () => {
               </div>
             </button>
 
-            {/* Menú desplegable */}
             {showMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50 border border-gray-100 overflow-hidden">
                 <div className="px-4 py-3 text-sm text-gray-700 border-b border-gray-100 bg-gray-50">

@@ -21,28 +21,28 @@ import { forestPatterns } from '../../../data/forestPatterns';
 // Tipos de objetos disponibles en el bosque
 const forestObjects = {
   flowers: [
-    { id: 'flower-blue-1', type: 'flower', color: 'blue', src: '/assets/forest/flower-blue-1.svg' },
-    { id: 'flower-blue-2', type: 'flower', color: 'blue', src: '/assets/forest/flower-blue-2.svg' },
-    { id: 'flower-red-1', type: 'flower', color: 'red', src: '/assets/forest/flower-red-1.svg' },
-    { id: 'flower-red-2', type: 'flower', color: 'red', src: '/assets/forest/flower-red-2.svg' },
-    { id: 'flower-yellow-1', type: 'flower', color: 'yellow', src: '/assets/forest/flower-yellow-1.svg' },
-    { id: 'flower-purple-1', type: 'flower', color: 'purple', src: '/assets/forest/flower-purple-1.svg' },
+    { id: 'flower-blue-1', type: 'flower', color: 'blue', src: 'forest/flower-blue-1.svg' },
+    { id: 'flower-blue-2', type: 'flower', color: 'blue', src: 'forest/flower-blue-2.svg' },
+    { id: 'flower-red-1', type: 'flower', color: 'red', src: 'forest/flower-red-1.svg' },
+    { id: 'flower-red-2', type: 'flower', color: 'red', src: 'forest/flower-red-2.svg' },
+    { id: 'flower-yellow-1', type: 'flower', color: 'yellow', src: 'forest/flower-yellow-1.svg' },
+    { id: 'flower-purple-1', type: 'flower', color: 'purple', src: 'forest/flower-purple-1.svg' },
   ],
   mushrooms: [
-    { id: 'mushroom-red-1', type: 'mushroom', color: 'red', src: '/assets/forest/mushroom-red-1.svg' },
-    { id: 'mushroom-red-2', type: 'mushroom', color: 'red', src: '/assets/forest/mushroom-red-2.svg' },
-    { id: 'mushroom-brown-1', type: 'mushroom', color: 'brown', src: '/assets/forest/mushroom-brown-1.svg' },
-    { id: 'mushroom-white-1', type: 'mushroom', color: 'white', src: '/assets/forest/mushroom-white-1.svg' },
+    { id: 'mushroom-red-1', type: 'mushroom', color: 'red', src: 'forest/mushroom-red-1.svg' },
+    { id: 'mushroom-red-2', type: 'mushroom', color: 'red', src: 'forest/mushroom-red-2.svg' },
+    { id: 'mushroom-brown-1', type: 'mushroom', color: 'brown', src: 'forest/mushroom-brown-1.svg' },
+    { id: 'mushroom-white-1', type: 'mushroom', color: 'white', src: 'forest/mushroom-white-1.svg' },
   ],
   trees: [
-    { id: 'tree-green-1', type: 'tree', color: 'green', src: '/assets/forest/tree-green-1.svg' },
-    { id: 'tree-green-2', type: 'tree', color: 'green', src: '/assets/forest/tree-green-2.svg' },
-    { id: 'tree-autumn-1', type: 'tree', color: 'autumn', src: '/assets/forest/tree-autumn-1.svg' },
+    { id: 'tree-green-1', type: 'tree', color: 'green', src: 'forest/tree-green-1.svg' },
+    { id: 'tree-green-2', type: 'tree', color: 'green', src: 'forest/tree-green-2.svg' },
+    { id: 'tree-autumn-1', type: 'tree', color: 'autumn', src: 'forest/tree-autumn-1.svg' },
   ],
   animals: [
-    { id: 'animal-rabbit-1', type: 'animal', species: 'rabbit', src: '/assets/forest/animal-rabbit-1.svg' },
-    { id: 'animal-fox-1', type: 'animal', species: 'fox', src: '/assets/forest/animal-fox-1.svg' },
-    { id: 'animal-bird-1', type: 'animal', species: 'bird', src: '/assets/forest/animal-bird-1.svg' },
+    { id: 'animal-rabbit-1', type: 'animal', species: 'rabbit', src: 'forest/animal-rabbit-1.svg' },
+    { id: 'animal-fox-1', type: 'animal', species: 'fox', src: 'forest/animal-fox-1.svg' },
+    { id: 'animal-bird-1', type: 'animal', species: 'bird', src: 'forest/animal-bird-1.svg' },
   ]
 };
 

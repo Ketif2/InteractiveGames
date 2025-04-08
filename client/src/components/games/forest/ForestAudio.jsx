@@ -1,4 +1,3 @@
-// src/components/games/forest/ForestAudio.jsx
 import React from 'react';
 
 const ForestAudio = ({ audioEnabled, onToggleAudio }) => {

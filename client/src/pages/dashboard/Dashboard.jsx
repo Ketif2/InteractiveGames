@@ -2,9 +2,9 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useState, useEffect } from 'react';
-import Patients from '../../assets/icons/patient-icon.png';
-import NewSession from '../../assets/icons/new-session.png';
-import Stats from '../../assets/icons/stats-icon.png';
+import Patients from '/icons/patient-icon.png';
+import NewSession from '/icons/new-session.png';
+import Stats from '/icons/stats-icon.png';
 
 const Dashboard = () => {
   const { user, isAuthenticated, isLoading } = useAuth();

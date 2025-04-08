@@ -1,7 +1,7 @@
 // components/loading/MenuSlide.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import brainLogo from '../../assets/brain-logo.svg';
+import brainLogo from '/brain-logo.svg';
 
 const MenuSlide = () => {
   const navigate = useNavigate();

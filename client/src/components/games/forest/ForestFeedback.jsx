@@ -1,4 +1,3 @@
-// src/components/games/forest/ForestFeedback.jsx
 import React from 'react';
 
 const ForestFeedback = ({

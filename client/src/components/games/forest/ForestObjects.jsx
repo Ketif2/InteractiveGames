@@ -48,25 +48,25 @@ const ForestObject = ({ object, onClick }) => {
     const getObjectImage = () => {
         switch(type) {
             case 'flower':
-                if (color === 'blue') return '/src/assets/images/forest/blue-flower.svg';
-                if (color === 'red') return '/src/assets/images/forest/red-flower.png';
-                if (color === 'yellow') return '/src/assets/images/forest/yellow-flower.png';
-                if (color === 'purple') return '/src/assets/images/forest/purple-flower.png';
-                return '/src/assets/images/forest/pink-flower.png';
+                if (color === 'blue') return 'images/forest/blue-flower.svg';
+                if (color === 'red') return 'images/forest/red-flower.png';
+                if (color === 'yellow') return 'images/forest/yellow-flower.png';
+                if (color === 'purple') return 'images/forest/purple-flower.png';
+                return 'images/forest/pink-flower.png';
             case 'mushroom':
-                if (color === 'red') return '/src/assets/images/forest/red-mushroom.png';
-                if (color === 'brown') return '/src/assets/images/forest/brown-mushroom.png';
-                if (color === 'yellow') return '/src/assets/images/forest/yellow-mushroom.png';
-                return '/src/assets/images/forest/bee.png';
+                if (color === 'red') return 'images/forest/red-mushroom.png';
+                if (color === 'brown') return 'images/forest/brown-mushroom.png';
+                if (color === 'yellow') return 'images/forest/yellow-mushroom.png';
+                return 'images/forest/bee.png';
             case 'tree':
-                return '/src/assets/images/forest/tree-icon.png';
+                return 'images/forest/tree-icon.png';
             case 'animal':
-                if (species === 'rabbit') return '/src/assets/images/forest/rabbit.png';
-                if (species === 'fox') return '/src/assets/images/forest/fox.png';
-                if (species === 'bird') return '/src/assets/images/forest/bird.png';
-                return '/src/assets/images/forest/animal-track.png';
+                if (species === 'rabbit') return 'images/forest/rabbit.png';
+                if (species === 'fox') return 'images/forest/fox.png';
+                if (species === 'bird') return 'images/forest/bird.png';
+                return 'images/forest/animal-track.png';
             default:
-                return '/src/assets/images/forest/question.png';
+                return 'images/forest/question.png';
         }
     };
     
