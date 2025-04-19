@@ -12,13 +12,11 @@ const Dashboard = () => {
   const [greeting, setGreeting] = useState('');
   
   useEffect(() => {
-    // Actualizar el saludo según la hora del día
     const hour = currentTime.getHours();
     if (hour < 12) setGreeting('Buenos días');
     else if (hour < 18) setGreeting('Buenas tardes');
     else setGreeting('Buenas noches');
     
-    // Actualizar la hora cada minuto
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
@@ -40,7 +38,6 @@ const Dashboard = () => {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header con saludo personalizado - Más sutil y elegante */}
       <div className="bg-gradient-to-r from-[#003380] to-[#0055b3] text-white py-8 px-6 shadow-md">
         <div className="container mx-auto max-w-5xl">
           <h1 className="text-3xl font-light">
@@ -58,12 +55,8 @@ const Dashboard = () => {
       </div>
       
       <div className="container mx-auto max-w-5xl px-4 py-10">
-        {/* Título minimizado */}
-        <h2 className="text-xl font-light text-gray-700 mb-8 border-b border-gray-200 pb-2">Dashboard</h2>
-        
-        {/* Cards con diseño minimalista */}
+        <h2 className="text-xl font-light text-gray-700 mb-8 border-b border-gray-200 pb-2">Menu Principal</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Pacientes */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
             <div className="h-2 bg-blue-500"></div>
             <div className="p-6">
@@ -89,7 +82,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Nueva Sesión */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
             <div className="h-2 bg-green-500"></div>
             <div className="p-6">
@@ -115,7 +107,6 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Estadísticas */}
           <div className="bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md transform hover:-translate-y-1">
             <div className="h-2 bg-purple-500"></div>
             <div className="p-6">

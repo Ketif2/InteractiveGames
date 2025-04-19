@@ -1,4 +1,3 @@
-// src/components/games/forest/ForestInstructions.jsx
 import React from 'react';
 
 const ForestInstructions = ({ 
@@ -6,11 +5,10 @@ const ForestInstructions = ({
   currentRound, 
   totalRounds, 
   showInstructions,
-  instructionsText // NUEVO: Recibir el texto de instrucciones dinámicas
+  instructionsText
 }) => {
   return (
     <>
-      {/* Instrucciones siempre visibles */}
       <div className="mb-4 text-center">
         <h2 className="text-xl font-semibold text-gray-800 mb-1">
           Sendero del Bosque
@@ -20,7 +18,6 @@ const ForestInstructions = ({
         </p>
       </div>
 
-      {/* Instrucciones iniciales (overlay) */}
       {showInstructions && (
         <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center z-10">
           <div className="bg-white p-6 rounded-lg max-w-md text-center animate-fadeIn">

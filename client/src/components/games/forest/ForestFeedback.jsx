@@ -19,7 +19,6 @@ const ForestFeedback = ({
 }) => {
     return (
         <>
-            {/* Correcto - Feedback pequeño */}
             {showCorrect && (
                 <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white py-2 px-6 rounded-full shadow-lg z-50 animate-fadeIn flex items-center">
                     <span className="text-xl mr-2">✓</span>
@@ -27,7 +26,6 @@ const ForestFeedback = ({
                 </div>
             )}
             
-            {/* Incorrecto - Feedback pequeño */}
             {showWrong && (
                 <div className="fixed top-1/4 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white py-2 px-6 rounded-full shadow-lg z-50 animate-fadeIn flex items-center">
                     <span className="text-xl mr-2">✗</span>
@@ -35,7 +33,6 @@ const ForestFeedback = ({
                 </div>
             )}
             
-            {/* Bien Hecho - Feedback al completar todos los objetos */}
             {showCompleted && (
                 <div className="fixed top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-green-500 text-white py-3 px-8 rounded-full shadow-lg z-50 animate-fadeIn flex items-center">
                     <span className="text-2xl mr-3">🎯</span>
@@ -44,7 +41,6 @@ const ForestFeedback = ({
                 </div>
             )}
             
-            {/* Pausa - Overlay completo */}
             {showPause && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
                     <div className="bg-white p-8 rounded-lg max-w-md text-center animate-fadeIn">
@@ -63,7 +59,6 @@ const ForestFeedback = ({
                 </div>
             )}
             
-            {/* Salir - Confirmación */}
             {showExit && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
                     <div className="bg-white p-6 rounded-lg max-w-md animate-fadeIn">
@@ -87,7 +82,6 @@ const ForestFeedback = ({
                 </div>
             )}
             
-            {/* Tiempo agotado */}
             {showTimeout && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70">
                     <div className="bg-white p-6 rounded-lg max-w-md text-center animate-fadeIn">
@@ -100,7 +94,6 @@ const ForestFeedback = ({
                 </div>
             )}
             
-            {/* Nivel completado */}
             {showLevelComplete && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70">
                     <div className="bg-white p-6 rounded-lg max-w-md text-center animate-fadeIn">
@@ -113,7 +106,6 @@ const ForestFeedback = ({
                 </div>
             )}
             
-            {/* Siguiente ronda */}
             {showNextRound && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70">
                     <div className="bg-white p-6 rounded-lg max-w-md text-center animate-fadeIn">
@@ -132,7 +124,6 @@ const ForestFeedback = ({
                 </div>
             )}
             
-            {/* Juego completado */}
             {showGameCompleted && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70">
                     <div className="bg-white p-8 rounded-lg max-w-md text-center animate-fadeIn">

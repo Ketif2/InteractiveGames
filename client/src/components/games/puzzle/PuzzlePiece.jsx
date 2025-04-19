@@ -1,4 +1,3 @@
-// src/components/games/puzzle/PuzzlePiece.jsx
 import React from 'react';
 import { Draggable } from '@hello-pangea/dnd';
 

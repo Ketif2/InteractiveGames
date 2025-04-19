@@ -1,4 +1,3 @@
-// src/components/games/puzzle/GameFeedback.jsx
 import React, { useState, useEffect } from 'react';
 import Confetti from 'react-confetti';
 import { CheckCircle, XCircle, Trophy, Star, Award } from 'lucide-react';
@@ -22,7 +21,6 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
         window.addEventListener('resize', handleResize);
         
         if (gameCompleted) {
-            // Detener el confeti después de 8 segundos
             const timer = setTimeout(() => {
                 setShowConfetti(false);
             }, 8000);
@@ -42,9 +40,8 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
         }
     }, [isCorrect, isWrong]);
 
-    // Calcular estrellas basadas en estadísticas
     const calculateStars = () => {
-        if (!stats) return 3; // Por defecto 3 estrellas si no hay estadísticas
+        if (!stats) return 3;
         
         const { successMoves, failedMoves, totalTime } = stats;
         const totalMoves = successMoves + failedMoves;
@@ -57,7 +54,6 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
 
     const stars = calculateStars();
     
-    // Mensajes motivacionales para pacientes con Alzheimer
     const messages = [
         "¡Excelente trabajo! Tu mente está en forma.",
         "¡Increíble! Cada reto completado fortalece tu cerebro.",

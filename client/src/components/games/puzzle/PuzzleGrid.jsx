@@ -1,4 +1,3 @@
-// src/components/games/puzzle/PuzzleGrid.jsx
 import React from 'react';
 import { DndContext, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';

@@ -1,10 +1,9 @@
-// src/components/games/forest/ForestNextObjectives.jsx
 import React from 'react';
 
 const ForestNextObjectives = ({ 
   show, 
   message,
-  isNextRound = false // Para diferenciar entre pantalla completada y siguiente ronda
+  isNextRound = false
 }) => {
   if (!show) return null;
 

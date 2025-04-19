@@ -1,4 +1,3 @@
-// src/components/games/memory/DropZone.jsx
 import React from 'react';
 
 const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect, expectedItemId }) => {
@@ -10,7 +9,6 @@ const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect, expectedI
         e.preventDefault();
         try {
             const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-            // Pasar el ID del item que está siendo soltado para validación
             onDrop(data.index, index, data.id);
         } catch (err) {
             console.error("Error en drop:", err);

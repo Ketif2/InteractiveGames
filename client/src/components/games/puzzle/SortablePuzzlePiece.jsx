@@ -1,4 +1,3 @@
-// src/components/games/puzzle/SortablePuzzlePiece.jsx
 import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -18,7 +17,7 @@ const SortablePuzzlePiece = ({ piece, index, gridSize }) => {
 
     const style = {
         transform: CSS.Transform.toString(transform),
-        transition: transition || 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)', // Transición más lenta y suave
+        transition: transition || 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)', 
         aspectRatio: '1',
         backgroundImage: `url(${piece.imageUrl})`,
         backgroundSize: `${gridSize * 100}%`,
