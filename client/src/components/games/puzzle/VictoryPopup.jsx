@@ -1,4 +1,3 @@
-// src/components/games/puzzle/VictoryPopup.jsx
 import React, { useState, useEffect } from 'react';
 import Confetti from 'react-confetti';
 import { Star, Award, Trophy } from 'lucide-react';
@@ -20,7 +19,6 @@ const VictoryPopup = ({ onContinue, stats }) => {
 
         window.addEventListener('resize', handleResize);
         
-        // Detener el confeti después de 8 segundos
         const timer = setTimeout(() => {
             setShowConfetti(false);
         }, 8000);
@@ -31,9 +29,8 @@ const VictoryPopup = ({ onContinue, stats }) => {
         };
     }, []);
 
-    // Calcular estrellas basadas en estadísticas
     const calculateStars = () => {
-        if (!stats) return 3; // Por defecto 3 estrellas si no hay estadísticas
+        if (!stats) return 3;
         
         const { successMoves, failedMoves, totalTime } = stats;
         const totalMoves = successMoves + failedMoves;
@@ -46,7 +43,6 @@ const VictoryPopup = ({ onContinue, stats }) => {
 
     const stars = calculateStars();
     
-    // Mensajes motivacionales para pacientes con Alzheimer
     const messages = [
         "¡Excelente trabajo! Tu mente está en forma.",
         "¡Increíble! Cada reto completado fortalece tu cerebro.",

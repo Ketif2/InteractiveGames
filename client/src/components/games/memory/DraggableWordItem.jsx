@@ -1,4 +1,3 @@
-// src/components/games/memory/DraggableWordItem.jsx
 import React from 'react';
 
 const DraggableWordItem = ({ 

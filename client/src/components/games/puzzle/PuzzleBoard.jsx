@@ -1,4 +1,3 @@
-// src/components/games/puzzle/PuzzleBoard.jsx
 import React from 'react';
 import PuzzleHelp from './PuzzleHelp';
 import PuzzleGrid from './PuzzleGrid';

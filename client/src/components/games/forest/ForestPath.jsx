@@ -1,4 +1,3 @@
-// src/components/games/forest/ForestPath.jsx
 import React, { forwardRef } from 'react';
 
 const ForestPath = forwardRef(({ pathString, pathWidth = 40, className = "" }, ref) => {
@@ -19,7 +18,7 @@ const ForestPath = forwardRef(({ pathString, pathWidth = 40, className = "" }, r
         d={pathString} 
         fill="none" 
         stroke="url(#pathGradient)" 
-        strokeWidth={pathWidth || 40} // Camino más ancho para mejor visibilidad
+        strokeWidth={pathWidth || 40} 
         strokeLinecap="round"
         filter="drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))"
       />

@@ -1,4 +1,3 @@
-// src/components/games/memory/FeedbackOverlay.jsx
 import React, { useEffect, useState } from 'react';
 
 const FeedbackOverlay = ({
@@ -14,11 +13,9 @@ const FeedbackOverlay = ({
     currentRound,
     totalRounds
 }) => {
-    // Estado para animación de entrada/salida
     const [animation, setAnimation] = useState('');
     
     useEffect(() => {
-        // Agregar animación cuando se muestra algún feedback
         if (showCorrect || showWrong || showPause || showExit) {
             setAnimation('animate-fadeIn');
         } else {
@@ -40,7 +37,6 @@ const FeedbackOverlay = ({
                         Has finalizado correctamente todas las rondas.
                     </p>
                     <div className="flex justify-center space-x-2 mb-4">
-                        {/* Estrellas de gamificación */}
                         <span className="text-yellow-400 text-3xl">★</span>
                         <span className="text-yellow-400 text-3xl">★</span>
                         <span className="text-yellow-400 text-3xl">★</span>

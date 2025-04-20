@@ -1,4 +1,3 @@
-// src/components/games/forest/ForestHeader.jsx
 import React from 'react';
 
 const ForestHeader = ({
@@ -30,9 +29,6 @@ const ForestHeader = ({
           {isPaused ? 'Reanudar' : 'Pausar'}
         </button>
       </div>
-      
-      {/* Información de nivel, ronda y tiempo eliminada */}
-      
       <button 
         onClick={onExit}
         className="flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium transition-colors"

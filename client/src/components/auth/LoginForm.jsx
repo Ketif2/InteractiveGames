@@ -1,4 +1,3 @@
-// components/auth/LoginForm.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -112,14 +111,16 @@ const LoginForm = () => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <AlertCircle className="h-5 w-5 text-red-500" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
+        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded flex items-center" role="alert" aria-live="assertive">
+          <div className="flex-shrink-0">
+            <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-red-700 font-medium">
+            </p>
+            <p className="text-xs text-red-600 mt-1">
+              Verifique que su correo y contraseña sean correctos.
+            </p>
           </div>
         </div>
       )}

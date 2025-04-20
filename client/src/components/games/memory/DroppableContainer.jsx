@@ -1,20 +1,15 @@
-// src/components/games/memory/DroppableContainer.jsx
 import React, { useState } from 'react';
 
 const DroppableContainer = ({ items, showNames, onReorder, isPaused }) => {
     const [draggedItem, setDraggedItem] = useState(null);
     
-    // Handle drag start
     const handleDragStart = (e, index) => {
         if (isPaused) return;
         
         setDraggedItem(index);
-        // Required for Firefox
         e.dataTransfer.effectAllowed = 'move';
-        // For some browsers, setting data is required
         e.dataTransfer.setData('text/plain', index);
         
-        // Make the drag image semi-transparent
         if (e.target.style) {
             setTimeout(() => {
                 e.target.style.opacity = '0.5';
@@ -22,23 +17,18 @@ const DroppableContainer = ({ items, showNames, onReorder, isPaused }) => {
         }
     };
     
-    // Handle drag over
     const handleDragOver = (e, index) => {
         e.preventDefault();
         
-        // Return if the item is dragged over itself
         if (draggedItem === null || draggedItem === index) return;
         
-        // Actual reordering logic
         onReorder(draggedItem, index);
         setDraggedItem(index);
     };
     
-    // Handle drag end
     const handleDragEnd = (e) => {
         setDraggedItem(null);
         
-        // Reset opacity
         if (e.target.style) {
             e.target.style.opacity = '1';
         }

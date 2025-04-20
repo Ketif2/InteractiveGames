@@ -1,4 +1,3 @@
-// src/components/games/memory/GameControls.jsx
 import React from 'react';
 
 const GameControls = ({ onHelp, onPause, onExit, isPaused, gameMode }) => {

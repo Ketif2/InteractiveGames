@@ -1,4 +1,3 @@
-// src/components/games/sequence/FeedbackOverlay.jsx
 import React, { useState, useEffect } from 'react';
 import Confetti from 'react-confetti';
 import { CheckCircle, XCircle, Trophy, Star, Award, AlertTriangle } from 'lucide-react';
@@ -22,7 +21,6 @@ const FeedbackOverlay = ({
     const [showConfetti, setShowConfetti] = useState(true);
     const [showFeedback, setShowFeedback] = useState(false);
 
-    // Obtener dimensiones de la ventana para el confeti
     useEffect(() => {
         const handleResize = () => {
             setWindowDimensions({
@@ -34,7 +32,6 @@ const FeedbackOverlay = ({
         window.addEventListener('resize', handleResize);
         
         if (showCompleted) {
-            // Detener el confeti después de 8 segundos
             const timer = setTimeout(() => {
                 setShowConfetti(false);
             }, 8000);
@@ -46,7 +43,6 @@ const FeedbackOverlay = ({
         };
     }, [showCompleted]);
 
-    // Controlar la duración del feedback temporal
     useEffect(() => {
         if (showCorrect || showWrong) {
             setShowFeedback(true);
@@ -55,7 +51,6 @@ const FeedbackOverlay = ({
         }
     }, [showCorrect, showWrong]);
 
-    // Pantalla de victoria con confeti cuando completa el juego
     if (showCompleted) {
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -101,12 +96,7 @@ const FeedbackOverlay = ({
     if (showCompleted) {
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                {/* Confeti */}
-                
                 <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 transform animate-bounceIn text-center">
-                    {/* Trofeo y título */}
-                    
-                    {/* Estadísticas, solo si existen */}
                     {stats && (
                         <div className="grid grid-cols-2 gap-4 mb-6">
                             <div className="bg-blue-50 p-3 rounded-lg">
@@ -121,14 +111,11 @@ const FeedbackOverlay = ({
                             </div>
                         </div>
                     )}
-                    
-                    {/* Botón continuar */}
                 </div>
             </div>
         );
     }
 
-    // Overlay de pausa
     if (showPause) {
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -145,7 +132,6 @@ const FeedbackOverlay = ({
         );
     }
 
-    // Diálogo de confirmación para salir
     if (showExit) {
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -176,7 +162,6 @@ const FeedbackOverlay = ({
         );
     }
 
-    // Feedback temporal para correcto/incorrecto
     if (!showFeedback) return null;
 
     return (

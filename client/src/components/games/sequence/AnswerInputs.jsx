@@ -9,19 +9,14 @@ const AnswerInputs = ({
     correctAnswers,
     onCheck 
 }) => {
-    // Crear un array con el número de inputs necesarios
     const inputs = Array.from({ length: hiddenCount }, (_, i) => i);
-    
-    // Manejar cambios en los campos de entrada
     const handleInputChange = (index, value) => {
-        // Si el valor está vacío, permitimos borrarlo pasando un valor vacío
         if (value === '') {
             onChange(index, '');
             return;
         }
         
-        // Para valores numéricos, los procesamos normalmente
-        const numValue = value.replace(/\D/g, ''); // Elimina cualquier carácter no numérico
+        const numValue = value.replace(/\D/g, ''); 
         onChange(index, numValue);
     };
     
@@ -37,7 +32,6 @@ const AnswerInputs = ({
                         const isCorrect = correctAnswers && correctAnswers.includes(index);
                         const isIncorrect = incorrectAnswers && incorrectAnswers.includes(index);
                         
-                        // Si la respuesta es correcta, no mostramos el input
                         if (isCorrect) {
                             return null;
                         }
@@ -48,9 +42,9 @@ const AnswerInputs = ({
                                 className={`relative ${isIncorrect ? 'animate-pulse' : ''}`}
                             >
                                 <input
-                                    type="text" // Cambiado de 'number' a 'text' para mejor control
-                                    inputMode="numeric" // Sugerencia para mostrar teclado numérico en móviles
-                                    pattern="[0-9]*" // Restringe la entrada a sólo números
+                                    type="text" 
+                                    inputMode="numeric"
+                                    pattern="[0-9]*" 
                                     value={answers[index] || ''}
                                     onChange={(e) => handleInputChange(index, e.target.value)}
                                     disabled={isPaused}

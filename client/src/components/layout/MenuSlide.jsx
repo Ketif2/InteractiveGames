@@ -1,4 +1,3 @@
-// components/loading/MenuSlide.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import brainLogo from '/brain-logo.svg';
@@ -12,8 +11,8 @@ const MenuSlide = () => {
       setShowWelcome(false);
       setTimeout(() => {
         navigate('/menu');
-      }, 500); // Esperamos a que termine la animación de fade-out
-    }, 2500); // 2.5 segundos para el mensaje de bienvenida
+      }, 500); 
+    }, 2500); 
 
     return () => clearTimeout(timer);
   }, [navigate]);

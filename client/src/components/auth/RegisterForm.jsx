@@ -1,4 +1,3 @@
-// components/auth/RegisterForm.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '@/services/authService';
@@ -19,24 +18,19 @@ const RegisterForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // Estado para controlar los campos del formulario
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
 
-    // Validar contraseñas
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
       setIsLoading(false);
       return;
     }
 
-    // Continuar con el proceso de registro
-
     try {
-      // Omitir confirmPassword antes de enviar
       const { confirmPassword, ...registerData } = formData;
       await authService.register(registerData);
       navigate('/login', { 
@@ -84,6 +78,8 @@ const RegisterForm = () => {
               onChange={handleChange}
               className="pl-10 py-2 block w-full text-base border border-gray-300 rounded-md shadow-sm focus:ring-[#00A8E3] focus:border-[#00A8E3]"
               placeholder="Su nombre"
+              onInvalid={(e) => e.target.setCustomValidity('Por favor, ingrese su nombre')}
+              onInput={(e) => e.target.setCustomValidity('')}
             />
           </div>
         </div>
@@ -105,6 +101,8 @@ const RegisterForm = () => {
               onChange={handleChange}
               className="pl-10 py-2 block w-full text-base border border-gray-300 rounded-md shadow-sm focus:ring-[#00A8E3] focus:border-[#00A8E3]"
               placeholder="Su apellido"
+              onInvalid={(e) => e.target.setCustomValidity('Por favor, ingrese su apellido')}
+              onInput={(e) => e.target.setCustomValidity('')}
             />
           </div>
         </div>
@@ -127,6 +125,14 @@ const RegisterForm = () => {
             onChange={handleChange}
             className="pl-10 py-2 block w-full text-base border border-gray-300 rounded-md shadow-sm focus:ring-[#00A8E3] focus:border-[#00A8E3]"
             placeholder="correo@ejemplo.com"
+            onInvalid={(e) => {
+              if (e.target.validity.valueMissing) {
+                e.target.setCustomValidity('Por favor, ingrese su correo electrónico');
+              } else if (e.target.validity.typeMismatch) {
+                e.target.setCustomValidity('Por favor, ingrese un correo electrónico válido');
+              }
+            }}
+            onInput={(e) => e.target.setCustomValidity('')}
           />
         </div>
       </div>
@@ -147,6 +153,8 @@ const RegisterForm = () => {
             onChange={handleChange}
             className="pl-10 pr-10 py-2 block w-full text-base border border-gray-300 rounded-md shadow-sm focus:ring-[#00A8E3] focus:border-[#00A8E3]"
             placeholder="Mínimo 8 caracteres"
+            onInvalid={(e) => e.target.setCustomValidity('Por favor, ingrese una contraseña')}
+            onInput={(e) => e.target.setCustomValidity('')}
           />
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
             <button 
@@ -184,6 +192,8 @@ const RegisterForm = () => {
             onChange={handleChange}
             className="pl-10 pr-10 py-2 block w-full text-base border border-gray-300 rounded-md shadow-sm focus:ring-[#00A8E3] focus:border-[#00A8E3]"
             placeholder="Repita su contraseña"
+            onInvalid={(e) => e.target.setCustomValidity('Por favor, confirme su contraseña')}
+            onInput={(e) => e.target.setCustomValidity('')}
           />
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
             <button 
@@ -200,8 +210,6 @@ const RegisterForm = () => {
           </div>
         </div>
       </div>
-
-
 
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">

@@ -1,4 +1,3 @@
-// src/components/sessions/SessionCard.jsx
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
