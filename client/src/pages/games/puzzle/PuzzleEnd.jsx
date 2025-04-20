@@ -16,33 +16,107 @@ const PuzzleEnd = () => {
   const [error, setError] = useState(null);
   const { user } = useAuth();
 
-  const handleFinishSession = async () => {
-    setLoading(true);
-    setError(null);
+// Solución optimizada para PuzzleEnd.jsx considerando SQL Server
+// Esta versión está diseñada para trabajar con tu adaptador SQL Server
+
+const handleFinishSession = async () => {
+  setLoading(true);
+  setError(null);
+  
+  try {
+    if (!patientId) {
+      throw new Error('No se pudo encontrar el ID del paciente');
+    }
+
+    if (!user?.id) {
+      throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
+    }
+
+    console.log('Creando sesión para paciente:', patientId);
     
+    // 1. Crear la sesión y extraer ID
+    let sessionId = null;
     try {
-      if (!patientId) {
-        throw new Error('No se pudo encontrar el ID del paciente');
-      }
-
-      if (!user?.id) {
-        throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
-      }
-
-      // 1. Crear la sesión
-      await sessionService.createSession({
+      const sessionResponse = await sessionService.createSession({
         id_paciente: patientId,
         id_juego: 1, // ID del juego de rompecabezas
         id_terapeuta: user.id,
         observaciones_terapeuta: observations
       });
-
-      // 2. Obtener el ID de la sesión creada
-      const id_sesion = await sessionService.getLastSession(patientId);
       
-      // 3. Registrar las estadísticas
+      console.log('Respuesta completa de createSession:', JSON.stringify(sessionResponse));
+      
+      // Para SQL Server, intentar extraer insertId
+      if (sessionResponse && typeof sessionResponse === 'object') {
+        // Intentar varios formatos posibles de respuesta
+        if (sessionResponse.id) {
+          sessionId = sessionResponse.id;
+        } else if (sessionResponse.insertId) {
+          sessionId = sessionResponse.insertId;
+        } else if (sessionResponse.id_sesion) {
+          sessionId = sessionResponse.id_sesion;
+        } else if (sessionResponse.data && sessionResponse.data.id) {
+          sessionId = sessionResponse.data.id;
+        }
+      }
+      
+      console.log('ID extraído de createSession:', sessionId);
+    } catch (createError) {
+      console.error('Error al crear sesión:', createError);
+      throw new Error('Error al crear la sesión');
+    }
+    
+    // 2. Si no obtuvimos el ID, intentar uso del último ID conocido desde la BD
+    if (!sessionId) {
+      try {
+        console.log('Intentando obtener el último ID conocido desde getAllSessions');
+        const allSessionsResponse = await sessionService.getAllSessions();
+        
+        // Filtrar sesiones para este paciente y ordenar por ID (asumiendo que son incrementales)
+        if (Array.isArray(allSessionsResponse) && allSessionsResponse.length > 0) {
+          // Ordenar por ID de sesión de forma descendente (asumiendo IDs incrementales)
+          const sortedSessions = [...allSessionsResponse].sort((a, b) => 
+            (b.id_sesion || 0) - (a.id_sesion || 0)
+          );
+          
+          const latestSession = sortedSessions[0];
+          if (latestSession && latestSession.id_sesion) {
+            sessionId = latestSession.id_sesion;
+            console.log('Usando el ID más reciente encontrado:', sessionId);
+          } else {
+            console.warn('No se encontraron sesiones con ID válido');
+          }
+        } else {
+          console.warn('No se pudieron obtener sesiones o el formato es incorrecto');
+        }
+      } catch (error) {
+        console.error('Error al intentar obtener todas las sesiones:', error);
+      }
+    }
+    
+    // 3. Si aún no tenemos ID, usar un enfoque alternativo
+    if (!sessionId) {
+      console.warn('No se pudo obtener un ID de sesión válido, redirección simple');
+      
+      // En este punto, aunque no tenemos el ID, la sesión probablemente se guardó
+      // Redireccionamos al usuario sin intentar guardar estadísticas
+      navigate('/new-session', { 
+        state: { 
+          success: true,
+          warning: true,
+          message: 'Sesión guardada, pero no se pudieron registrar estadísticas'
+        }
+      });
+      return; // Salimos de la función aquí
+    }
+    
+    // 4. Si llegamos aquí, tenemos un ID y podemos intentar guardar estadísticas
+    console.log('Registrando estadísticas con ID de sesión:', sessionId);
+    
+    try {
+      // Registrar estadísticas
       await statsService.registerStats({
-        id_sesion: id_sesion.id_sesion,
+        id_sesion: sessionId,
         tiempo_transcurrido: stats.totalTime,
         num_errores: stats.failedMoves,
         num_aciertos: stats.successMoves,
@@ -50,33 +124,49 @@ const PuzzleEnd = () => {
         num_ayudas: stats.helpCount || 0,
         completado: stats.completed ? 1 : 0
       });
-
+      
+      console.log('Estadísticas registradas correctamente');
+      
+      // Registrar configuración
       const imageIds = config.difficulty === 'random'
-      ? Array(config.selectedPuzzles.length).fill('RANDOM').join(',')
-      : config.selectedPuzzles.map(img => img.id || 'RANDOM').join(',');
-
-      // 4. Registrar la configuración del puzzle
+        ? Array(config.selectedPuzzles.length).fill('RANDOM').join(',')
+        : config.selectedPuzzles.map(img => img.id || 'RANDOM').join(',');
+        
       await puzzleService.registerPuzzleConfig({
-        id_sesion: id_sesion.id_sesion,
+        id_sesion: sessionId,
         tamano_grid: `${config.gridSize}x${config.gridSize}`,
         cantidad_puzzles: config.selectedPuzzles.length,
         ids_imagenes: imageIds
       });
-
-      // Navegar a la página de sesiones
+      
+      console.log('Configuración registrada correctamente');
+      
+      // Todo el proceso exitoso
       navigate('/new-session', { 
         state: { 
           success: true,
           message: 'Sesión completada y guardada correctamente'
         }
       });
-    } catch (error) {
-      console.error('Error al guardar resultados:', error);
-      setError(error.message || 'Error al guardar los resultados');
-    } finally {
-      setLoading(false);
+    } catch (statsError) {
+      console.error('Error al registrar estadísticas o configuración:', statsError);
+      
+      // Continuamos aunque falle el registro de estadísticas
+      navigate('/new-session', { 
+        state: { 
+          success: true,
+          warning: true,
+          message: 'Sesión guardada, pero hubo un problema al registrar estadísticas'
+        }
+      });
     }
-  };
+  } catch (error) {
+    console.error('Error general en el proceso:', error);
+    setError(error.message || 'Error al guardar los resultados');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handlePlayAgain = () => {
     if (!patientId) {

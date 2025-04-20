@@ -37,37 +37,105 @@ const SequenceEnd = () => {
     const successesPerMinute = stats ? (stats.successCount / (stats.totalTime / 60)).toFixed(1) : 0;
     const errorsPerMinute = stats ? (stats.failedCount / (stats.totalTime / 60)).toFixed(1) : 0;
 
-    const handleFinishSession = async () => {
-        setLoading(true);
-        setError(null);
+// Reemplaza la función handleFinishSession en SequenceEnd.jsx
+
+const handleFinishSession = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+        // Verificar si tenemos patientId
+        if (!patientId) {
+            throw new Error('No se pudo encontrar el ID del paciente');
+        }
+
+        if (!user?.id) {
+            throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
+        }
+
+        console.log('Creando sesión para paciente:', patientId);
         
+        // 1. Crear la sesión y extraer ID
+        let sessionId = null;
         try {
-            // Verificar si tenemos patientId
-            if (!patientId) {
-                throw new Error('No se pudo encontrar el ID del paciente');
-            }
-
-            if (!user?.id) {
-                throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
-            }
-
-            // 1. Crear la sesión
-            await sessionService.createSession({
+            const sessionResponse = await sessionService.createSession({
                 id_paciente: patientId,
                 id_juego: 3, // ID del juego de secuencia
                 id_terapeuta: user.id,
                 observaciones_terapeuta: observations
             });
-
-            // 2. Obtener el ID de la sesión creada
-            const id_sesion = await sessionService.getLastSession(patientId);
             
-            // 3. Registrar las estadísticas
+            console.log('Respuesta completa de createSession:', JSON.stringify(sessionResponse));
+            
+            // Intentar extraer ID de varias formas posibles
+            if (sessionResponse && typeof sessionResponse === 'object') {
+                if (sessionResponse.id) {
+                    sessionId = sessionResponse.id;
+                } else if (sessionResponse.insertId) {
+                    sessionId = sessionResponse.insertId;
+                } else if (sessionResponse.id_sesion) {
+                    sessionId = sessionResponse.id_sesion;
+                } else if (sessionResponse.data && sessionResponse.data.id) {
+                    sessionId = sessionResponse.data.id;
+                }
+            }
+            
+            console.log('ID extraído de createSession:', sessionId);
+        } catch (createError) {
+            console.error('Error al crear sesión:', createError);
+            throw new Error('Error al crear la sesión');
+        }
+        
+        // 2. Si no obtuvimos el ID, intentar obtener el último ID conocido desde la BD
+        if (!sessionId) {
+            try {
+                console.log('Intentando obtener el último ID conocido desde getAllSessions');
+                const allSessionsResponse = await sessionService.getAllSessions();
+                
+                if (Array.isArray(allSessionsResponse) && allSessionsResponse.length > 0) {
+                    // Ordenar por ID de sesión de forma descendente
+                    const sortedSessions = [...allSessionsResponse].sort((a, b) => 
+                        (b.id_sesion || 0) - (a.id_sesion || 0)
+                    );
+                    
+                    const latestSession = sortedSessions[0];
+                    if (latestSession && latestSession.id_sesion) {
+                        sessionId = latestSession.id_sesion;
+                        console.log('Usando el ID más reciente encontrado:', sessionId);
+                    } else {
+                        console.warn('No se encontraron sesiones con ID válido');
+                    }
+                } else {
+                    console.warn('No se pudieron obtener sesiones o el formato es incorrecto');
+                }
+            } catch (error) {
+                console.error('Error al intentar obtener todas las sesiones:', error);
+            }
+        }
+        
+        // 3. Si aún no tenemos ID, redirigir sin guardar más detalles
+        if (!sessionId) {
+            console.warn('No se pudo obtener un ID de sesión válido, redirección simple');
+            navigate('/new-session', { 
+                state: { 
+                    success: true,
+                    warning: true,
+                    message: 'Sesión guardada, pero no se pudieron registrar estadísticas'
+                }
+            });
+            return;
+        }
+        
+        // 4. Si llegamos aquí, tenemos un ID y podemos intentar guardar estadísticas
+        console.log('Registrando estadísticas con ID de sesión:', sessionId);
+        
+        try {
             // Asegurarse de que los valores booleanos se conviertan correctamente a 0 o 1
             const isCompleted = stats.completed === true ? 1 : 0;
             
+            // Registrar estadísticas
             await statsService.registerStats({
-                id_sesion: id_sesion.id_sesion,
+                id_sesion: sessionId,
                 tiempo_transcurrido: stats.totalTime,
                 num_errores: stats.failedCount,
                 num_aciertos: stats.successCount,
@@ -75,8 +143,9 @@ const SequenceEnd = () => {
                 num_ayudas: stats.helpCount || 0,
                 completado: isCompleted
             });
-
-            // 4. Registrar la configuración de la secuencia
+            
+            console.log('Estadísticas registradas correctamente');
+            
             // Asegurarse de que modo_juego sea uno de los valores permitidos por el ENUM
             let modoJuego = config.gameMode.toLowerCase();
             
@@ -86,36 +155,43 @@ const SequenceEnd = () => {
                 modoJuego = 'normal';
             }
             
-            console.log('Guardando configuración de secuencia:', {
-                id_sesion: id_sesion.id_sesion,
+            // Registrar la configuración de la secuencia
+            await sequenceService.registerSequenceConfig({
+                id_sesion: sessionId,
                 rango_inicial: config.startRange,
                 rango_final: config.endRange,
                 numeros_ocultar: config.numbersToHide,
                 modo_juego: modoJuego
             });
             
-            await sequenceService.registerSequenceConfig({
-                id_sesion: id_sesion.id_sesion,
-                rango_inicial: config.startRange,
-                rango_final: config.endRange,
-                numeros_ocultar: config.numbersToHide,
-                modo_juego: modoJuego
-            });
-
-            // Navegar a la página de sesiones
+            console.log('Configuración registrada correctamente');
+            
+            // Navegar a la página de sesiones con mensaje de éxito
             navigate('/new-session', { 
                 state: { 
                     success: true,
                     message: 'Sesión completada y guardada correctamente'
                 }
             });
-        } catch (error) {
-            console.error('Error al guardar resultados:', error);
-            setError(error.message || 'Error al guardar los resultados');
-        } finally {
-            setLoading(false);
+        } catch (statsError) {
+            console.error('Error al registrar estadísticas o configuración:', statsError);
+            
+            // Continuamos aunque falle el registro de estadísticas
+            navigate('/new-session', { 
+                state: { 
+                    success: true,
+                    warning: true,
+                    message: 'Sesión guardada, pero hubo un problema al registrar estadísticas'
+                }
+            });
         }
-    };
+    } catch (error) {
+        console.error('Error general en el proceso:', error);
+        setError(error.message || 'Error al guardar los resultados');
+    } finally {
+        setLoading(false);
+    }
+};
 
     const handlePlayAgain = () => {
         if (!patientId) {

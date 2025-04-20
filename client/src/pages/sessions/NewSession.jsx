@@ -116,18 +116,28 @@ const NewSession = () => {
       // Obtener sesiones para cada paciente
       const sessionsPromises = patientsArray.map(async (patient) => {
         try {
-          const [weeklySession, todaySession] = await Promise.all([
+          const [weeklySessionResponse, todaySessionResponse] = await Promise.all([
             sessionService.getTotalSessions(patient.id_paciente),
             sessionService.getSessionToday(patient.id_paciente)
           ]);
 
+          // Manejar respuesta más defensivamente
+          const weeklyCount = weeklySessionResponse && typeof weeklySessionResponse === 'object' 
+            ? (weeklySessionResponse.total_sesiones || 0) 
+            : 0;
+            
+          const hasToday = todaySessionResponse && typeof todaySessionResponse === 'object'
+            ? (todaySessionResponse.has_session || false)
+            : false;
+
           return {
             patientId: patient.id_paciente,
-            weeklyCount: weeklySession.total_sesiones || 0,
-            hasToday: todaySession.has_session || false
+            weeklyCount: weeklyCount,
+            hasToday: hasToday
           };
         } catch (err) {
           console.error(`Error obteniendo sesiones para paciente ${patient.id_paciente}:`, err);
+          // Si hay error, devolver valores por defecto
           return {
             patientId: patient.id_paciente,
             weeklyCount: 0,
@@ -162,13 +172,13 @@ const NewSession = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#00398A]"></div>
-      </div>
-    );
-  }
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#00398A]"></div>
+        </div>
+      );
+    }
 
   if (error) {
     return (

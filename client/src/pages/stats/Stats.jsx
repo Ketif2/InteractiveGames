@@ -16,77 +16,91 @@ const Stats = () => {
     fetchPatientsAndSessions();
   }, [user]);
 
-  const fetchPatientsAndSessions = async () => {
-    try {
-      setLoading(true);
-      
-      // 1. Obtener los pacientes asignados al terapeuta actual
-      let patientsArray;
-      if (!user?.id) {
-        throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
-      }
-      
-      const patientsResponse = await patientService.getAllPatients();
-      if (Array.isArray(patientsResponse)) {
-        patientsArray = patientsResponse;
-      } else if (patientsResponse?.data && Array.isArray(patientsResponse.data)) {
-        patientsArray = patientsResponse.data;
-      } else {
-        throw new Error('No se recibieron datos de pacientes en el formato esperado');
-      }
-  
-      // 2. Obtener sesiones para cada paciente
-      const patientsWithStats = await Promise.all(patientsArray.map(async (patient) => {
-        try {
-          // Obtener datos de sesiones semanales y últimas sesiones
-          const weeklySession = await sessionService.getTotalSessions(patient.id_paciente);
-          
-          // Intenta obtener la última sesión del paciente
-          let lastSession = null;
-          try {
-            // Aquí asumimos que hay un endpoint específico para obtener la última sesión
-            const lastSessionResponse = await sessionService.getLastSession(patient.id_paciente);
-            lastSession = lastSessionResponse;
-            console.log('Última sesión para paciente', patient.id_paciente, ':', lastSession);
-          } catch (sessionError) {
-            console.error('Error obteniendo última sesión:', sessionError);
-          }
-  
-          return {
-            ...patient,
-            sesiones_completadas: weeklySession.total_sesiones || 0,
-            ultima_sesion: lastSession ? lastSession.fecha_sesion : null,
-            status: (() => {
-              if (!patient.num_sesiones) return 'Sin sesiones';
-              const percentage = (weeklySession.total_sesiones / patient.num_sesiones) * 100;
-              if (percentage === 100) return 'Completado';
-              if (percentage > 0) return 'En progreso';
-              return 'Pendiente';
-            })()
-          };
-        } catch (err) {
-          console.error(`Error obteniendo datos para paciente ${patient.id_paciente}:`, err);
-          return {
-            ...patient,
-            total_sesiones: 4,
-            sesiones_completadas: 0,
-            ultima_sesion: null,
-            status: 'Sin sesiones'
-          };
-        }
-      }));
-  
-      console.log('Pacientes con estadísticas completas:', patientsWithStats);
-      setPatientsStats(patientsWithStats);
-      setError(null);
-    } catch (err) {
-      console.error("Error al cargar pacientes y sesiones:", err);
-      setError(err.message || 'Error al cargar datos');
-      setPatientsStats([]);
-    } finally {
-      setLoading(false);
+const fetchPatientsAndSessions = async () => {
+  try {
+    setLoading(true);
+    
+    // 1. Obtener los pacientes asignados al terapeuta actual
+    let patientsArray;
+    if (!user?.id) {
+      throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
     }
-  };
+    
+    const patientsResponse = await patientService.getAllPatients();
+    if (Array.isArray(patientsResponse)) {
+      patientsArray = patientsResponse;
+    } else if (patientsResponse?.data && Array.isArray(patientsResponse.data)) {
+      patientsArray = patientsResponse.data;
+    } else {
+      throw new Error('No se recibieron datos de pacientes en el formato esperado');
+    }
+
+    // 2. Obtener sesiones para cada paciente
+    const patientsWithStats = await Promise.all(patientsArray.map(async (patient) => {
+      try {
+        // Obtener datos de sesiones semanales de manera defensiva
+        let totalSesiones = 0;
+        try {
+          const weeklySessionResponse = await sessionService.getTotalSessions(patient.id_paciente);
+          // Manejar respuesta más defensivamente
+          totalSesiones = weeklySessionResponse && typeof weeklySessionResponse === 'object' 
+            ? (weeklySessionResponse.total_sesiones || 0) 
+            : 0;
+        } catch (sessionError) {
+          console.error(`Error obteniendo total de sesiones para paciente ${patient.id_paciente}:`, sessionError);
+          // Dejar totalSesiones en 0 si hay error
+        }
+        
+        // Intentar obtener la última sesión del paciente de manera defensiva
+        let lastSession = null;
+        try {
+          // Aquí evitamos que un error en getLastSession detenga todo el proceso
+          const lastSessionResponse = await sessionService.getLastSession(patient.id_paciente);
+          // Solo asignar si la respuesta parece válida
+          if (lastSessionResponse && typeof lastSessionResponse === 'object') {
+            lastSession = lastSessionResponse;
+          }
+        } catch (lastSessionError) {
+          console.error(`Error obteniendo última sesión para paciente ${patient.id_paciente}:`, lastSessionError);
+          // Dejar lastSession como null si hay error
+        }
+
+        // Procesar y devolver datos del paciente con sus estadísticas
+        return {
+          ...patient,
+          sesiones_completadas: totalSesiones,
+          ultima_sesion: lastSession ? lastSession.fecha_sesion : null,
+          status: (() => {
+            if (!patient.num_sesiones) return 'Sin sesiones';
+            const percentage = (totalSesiones / patient.num_sesiones) * 100;
+            if (percentage === 100) return 'Completado';
+            if (percentage > 0) return 'En progreso';
+            return 'Pendiente';
+          })()
+        };
+      } catch (err) {
+        console.error(`Error general procesando datos para paciente ${patient.id_paciente}:`, err);
+        // En caso de cualquier error, devolver objeto con valores por defecto
+        return {
+          ...patient,
+          sesiones_completadas: 0,
+          ultima_sesion: null,
+          status: 'Sin sesiones'
+        };
+      }
+    }));
+
+    console.log('Pacientes con estadísticas completas:', patientsWithStats);
+    setPatientsStats(patientsWithStats);
+    setError(null);
+  } catch (err) {
+    console.error("Error al cargar pacientes y sesiones:", err);
+    setError(err.message || 'Error al cargar datos');
+    setPatientsStats([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const requestSort = (key) => {
     let direction = 'ascending';

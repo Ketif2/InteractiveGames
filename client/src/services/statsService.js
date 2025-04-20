@@ -1,12 +1,10 @@
 import api from './api';
 
-const API_URL = 'http://localhost:5000/api';
-
 export const statsService = {
 
     getStatsPerSession: async (id_sesion) => {
         try {
-            const response = await api.get(`${API_URL}/games/stats/${id_sesion}`);
+            const response = await api.get(`/games/stats/${id_sesion}`);
             return response.data;
         } catch (error) {
             throw new Error(error.response?.data?.message || 'Error al obtener estadísticas');
@@ -15,7 +13,7 @@ export const statsService = {
     
     registerStats: async (statsData) => {
         try {
-            const response = await api.post(`${API_URL}/games/stats/register`, statsData);
+            const response = await api.post(`/games/stats/register`, statsData);
             return response.data;
         } catch (error) {
             throw new Error(error.response?.data?.message || 'Error al registrar estadísticas');
@@ -25,7 +23,7 @@ export const statsService = {
     getSessionsByPatient: async (id_paciente) => {
         try {
             const numericId = parseInt(id_paciente, 10);
-            const url = `${API_URL}/stats/patient/${numericId}/sessions`;
+            const url = `/stats/patient/${numericId}/sessions`;
             const response = await api.get(url);
             
             // Verifica si la respuesta ya es un array (y no tiene una propiedad data)

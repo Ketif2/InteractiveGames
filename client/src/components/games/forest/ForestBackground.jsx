@@ -9,7 +9,7 @@ const ForestBackground = () => {
         <img src="images/forest/tree.png" alt="" className="w-20 h-20 transform rotate-3" />
       </div>
       <div className="absolute top-40 right-20 opacity-10">
-        <img src=" images\forest\autumn-tree.png" alt="" className="w-20 h-20 transform -rotate-2" />
+        <img src=" images/forest/autumn-tree.png" alt="" className="w-20 h-20 transform -rotate-2" />
       </div>
       <div className="absolute bottom-20 left-40 opacity-10">
         <img src="images/forest/leaves.png" alt="" className="w-16 h-16 transform rotate-5" />

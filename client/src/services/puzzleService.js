@@ -1,5 +1,4 @@
 import api from './api';
-const BASE_URL = 'http://localhost:5000/api';
 
 // Definición de imágenes como JSON
 const PUZZLE_IMAGES = {
@@ -42,7 +41,7 @@ export const puzzleService = {
 
     getPuzzleConfig: async (id_sesion) => {
         try {
-            const response = await api.get(`${BASE_URL}/games/puzzles/config/${id_sesion}`);
+            const response = await api.get(`/games/puzzles/config/${id_sesion}`);
             return response.data;
         } catch (error) {
             throw new Error(error.response?.data?.message || 'Error al obtener configuración del puzzle');
@@ -50,7 +49,7 @@ export const puzzleService = {
     },
     registerPuzzleConfig: async (config) => {
         try {
-            const response = await api.post(`${BASE_URL}/games/puzzle/save-config`, config);
+            const response = await api.post(`/games/puzzle/save-config`, config);
             return response.data;
         } catch (error) {
             throw new Error(error.response?.data?.message || 'Error al registrar configuración del puzzle');

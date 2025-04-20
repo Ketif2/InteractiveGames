@@ -21,54 +21,146 @@ const ForestEnd = () => {
         ? Math.round((stats.num_aciertos / (stats.num_aciertos + stats.num_errores)) * 100)
         : stats && stats.completado ? 100 : 0;
 
-    const handleFinishSession = async () => {
-        setLoading(true);
+// Reemplaza la función handleFinishSession en ForestEnd.jsx
+
+const handleFinishSession = async () => {
+    setLoading(true);
+    try {
+        // Verificar que el usuario esté autenticado y exista el paciente
+        if (!user?.id) {
+            throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
+        }
+
+        if (!patientId) {
+            throw new Error('No se pudo encontrar el ID del paciente.');
+        }
+
+        console.log('Creando sesión para paciente:', patientId);
+        
+        // 1. Crear la sesión y extraer ID
+        let sessionId = null;
         try {
-            // Verificar que el usuario esté autenticado y exista el paciente
-            if (!user?.id) {
-                throw new Error('No se pudo encontrar el ID del terapeuta. Por favor inicie sesión nuevamente.');
-            }
-
-            if (!patientId) {
-                throw new Error('No se pudo encontrar el ID del paciente.');
-            }
-
-            await sessionService.createSession({
+            const sessionResponse = await sessionService.createSession({
                 id_paciente: patientId,
-                id_juego: 4, // ID del juego del bosque (ajustar según corresponda en la BD)
+                id_juego: 4, // ID del juego del bosque
                 id_terapeuta: user.id,
                 observaciones_terapeuta: observations
             });
-
-            const id_sesion = await sessionService.getLastSession(patientId);
+            
+            console.log('Respuesta completa de createSession:', JSON.stringify(sessionResponse));
+            
+            // Intentar extraer ID de varias formas posibles
+            if (sessionResponse && typeof sessionResponse === 'object') {
+                if (sessionResponse.id) {
+                    sessionId = sessionResponse.id;
+                } else if (sessionResponse.insertId) {
+                    sessionId = sessionResponse.insertId;
+                } else if (sessionResponse.id_sesion) {
+                    sessionId = sessionResponse.id_sesion;
+                } else if (sessionResponse.data && sessionResponse.data.id) {
+                    sessionId = sessionResponse.data.id;
+                }
+            }
+            
+            console.log('ID extraído de createSession:', sessionId);
+        } catch (createError) {
+            console.error('Error al crear sesión:', createError);
+            throw new Error('Error al crear la sesión');
+        }
+        
+        // 2. Si no obtuvimos el ID, intentar usar el último ID conocido
+        if (!sessionId) {
+            try {
+                console.log('Intentando obtener el último ID conocido desde getAllSessions');
+                const allSessionsResponse = await sessionService.getAllSessions();
+                
+                if (Array.isArray(allSessionsResponse) && allSessionsResponse.length > 0) {
+                    // Ordenar por ID de sesión de forma descendente
+                    const sortedSessions = [...allSessionsResponse].sort((a, b) => 
+                        (b.id_sesion || 0) - (a.id_sesion || 0)
+                    );
+                    
+                    const latestSession = sortedSessions[0];
+                    if (latestSession && latestSession.id_sesion) {
+                        sessionId = latestSession.id_sesion;
+                        console.log('Usando el ID más reciente encontrado:', sessionId);
+                    } else {
+                        console.warn('No se encontraron sesiones con ID válido');
+                    }
+                } else {
+                    console.warn('No se pudieron obtener sesiones o el formato es incorrecto');
+                }
+            } catch (error) {
+                console.error('Error al intentar obtener todas las sesiones:', error);
+            }
+        }
+        
+        // 3. Si aún no tenemos ID, redirigir sin guardar más detalles
+        if (!sessionId) {
+            console.warn('No se pudo obtener un ID de sesión válido, redirección simple');
+            navigate('/new-session', { 
+                state: { 
+                    success: true,
+                    warning: true,
+                    message: 'Sesión guardada, pero no se pudieron registrar estadísticas'
+                }
+            });
+            return;
+        }
+        
+        // 4. Si llegamos aquí, tenemos un ID y podemos intentar guardar estadísticas
+        console.log('Registrando estadísticas con ID de sesión:', sessionId);
+        
+        try {
+            // Registrar estadísticas
             await statsService.registerStats({
-                id_sesion: id_sesion.id_sesion,
+                id_sesion: sessionId,
                 tiempo_transcurrido: stats.totalTime, 
                 num_errores: stats.num_errores,
                 num_aciertos: stats.num_aciertos,
-                num_pausas: stats.totalPauses,
-                num_ayudas: stats.helpCount,
-                completado: stats.completado,
+                num_pausas: stats.totalPauses || 0,
+                num_ayudas: stats.helpCount || 0,
+                completado: stats.completado ? 1 : 0,
                 puntuacion: stats.totalScore || 0 // Guardar la puntuación total
             });
-        
-            // Guardar configuración específica del juego del bosque
+            
+            console.log('Estadísticas registradas correctamente');
+            
+            // Registrar configuración específica del juego del bosque
             await forestService.registerForestConfig({ 
-                id_sesion: id_sesion.id_sesion,
+                id_sesion: sessionId,
                 nivel: config.startingLevel,
                 densidad_objetos: config.objectDensity,
                 numero_rondas: config.rounds,
                 tiempo_limite: config.timeLimit,
             });
-
-            navigate('/new-session');
-        } catch (error) {
-            console.error('Error al guardar la sesión:', error);
-            alert('Ha ocurrido un error al guardar la sesión. Por favor, intente nuevamente.');
-        } finally {
-            setLoading(false);
+            
+            console.log('Configuración registrada correctamente');
+            
+            navigate('/new-session', { 
+                state: { 
+                    success: true,
+                    message: 'Sesión completada y guardada correctamente'
+                }
+            });
+        } catch (statsError) {
+            console.error('Error al registrar estadísticas o configuración:', statsError);
+            
+            navigate('/new-session', { 
+                state: { 
+                    success: true,
+                    warning: true,
+                    message: 'Sesión guardada, pero hubo un problema al registrar estadísticas'
+                }
+            });
         }
-    };
+    } catch (error) {
+        console.error('Error al guardar la sesión:', error);
+        alert('Ha ocurrido un error al guardar la sesión. Por favor, intente nuevamente.');
+    } finally {
+        setLoading(false);
+    }
+};
 
     const handlePlayAgain = () => {
         navigate('/games/forest/config', { 
