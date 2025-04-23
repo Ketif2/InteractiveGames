@@ -26,16 +26,17 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
   
   // Calcular los límites del área de juego con un margen de seguridad
   const getBoundaries = () => {
-    const padding = Math.min(containerWidth, containerHeight) * 0.06; // Margen proporcional
+    // Aumentar el padding general y añadir padding extra a la derecha
+    const padding = Math.min(containerWidth, containerHeight) * 0.08; // 8% en lugar de 6%
+    const paddingRight = padding * 1.5; // 50% más de padding en el lado derecho
     
     return {
-      minX: padding,
-      maxX: containerWidth - padding,
-      minY: padding,
-      maxY: containerHeight - padding
+        minX: padding,
+        maxX: containerWidth - (padding + paddingRight),
+        minY: padding,
+        maxY: containerHeight - padding
     };
-  };
-  
+};
   const boundaries = getBoundaries();
   
   // AJUSTE: Establecer un número fijo y mínimo de objetivos

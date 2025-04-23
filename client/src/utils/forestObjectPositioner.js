@@ -65,12 +65,13 @@ export function findNonOverlappingPosition(baseX, baseY, existingObjects, minDis
     if (!boundaries) {
         // Usar dimensiones de ventana si está disponible
         if (typeof window !== 'undefined') {
-            const padding = 50; // Margen de seguridad para evitar que los objetos toquen los bordes
+            const padding = 80; // Margen aumentado
+            const paddingRight = 100; // Margen adicional para el lado derecho
             const maxHeight = Math.min(window.innerHeight - 180, 800); // Altura máxima del área
             
             boundaries = {
                 minX: padding,
-                maxX: window.innerWidth - padding * 2,
+                maxX: window.innerWidth - (padding * 2 + paddingRight), // Margen extra a la derecha
                 minY: padding,
                 maxY: maxHeight - padding
             };

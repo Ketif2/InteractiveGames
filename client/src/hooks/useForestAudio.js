@@ -59,7 +59,7 @@ export const useForestAudio = () => {
       try {
         if (newState && audioRef.current) {
           // Asignar fuente solo al activar
-          audioRef.current.src = '/audio/forest-ambience.mp3';
+          audioRef.current.src = '/audio/forest-sounds.mp3';
           audioRef.current.play().catch(e => {
             console.log('Error al reproducir audio de fondo:', e);
           });
