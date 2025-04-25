@@ -1,5 +1,5 @@
 // src/pages/games/memory/MemoryGame.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { selectObjectsByDifficultyAndCategory } from '../../../data/memoryObjects';
 import MemoryArea from '../../../components/games/memory/MemoryArea';
@@ -31,6 +31,7 @@ const MemoryGame = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { config, patientId } = location.state || {};
+    const memoryAreaRef = useRef(null);
 
     // Game state
     const [gameState, setGameState] = useState({
@@ -203,13 +204,14 @@ const MemoryGame = () => {
 
     // Game control handlers
     const handleHelp = () => {
-        setGameState(prev => ({
-            ...prev,
-            showItems: true,
-            helpCount: prev.helpCount + 1
-        }));
-        
+        // Si estamos en modo memoria, mantener el comportamiento original
         if (config?.gameMode === 'memoria') {
+            setGameState(prev => ({
+                ...prev,
+                showItems: true,
+                helpCount: prev.helpCount + 1
+            }));
+            
             // Hide items again after viewing period in memory mode
             setTimeout(() => {
                 setGameState(prev => ({ 
@@ -218,6 +220,18 @@ const MemoryGame = () => {
                     memoryShows: prev.memoryShows + 1
                 }));
             }, 5000);
+        } else {
+            // Si no estamos en modo memoria, autocompleta un objeto aleatorio
+            // Incrementa contador de ayuda
+            setGameState(prev => ({
+                ...prev,
+                helpCount: prev.helpCount + 1
+            }));
+            
+            // Invoca la función de autocompletar en MemoryArea a través de la referencia
+            if (memoryAreaRef.current && typeof memoryAreaRef.current.autocompleteRandomItem === 'function') {
+                memoryAreaRef.current.autocompleteRandomItem();
+            }
         }
     };
 
@@ -325,6 +339,7 @@ const MemoryGame = () => {
                 {/* Game area component */}
                 {gameState.items.length > 0 && (
                     <MemoryArea
+                        ref={memoryAreaRef}
                         items={gameState.items}
                         difficulty={config?.difficulty || 'fácil'}
                         gameMode={config?.gameMode || 'normal'}

@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import DraggableWordItem from './DraggableWordItem';
 import DropZone from './DropZone';
 
-const MemoryArea = ({ 
+// El problema es la forma en que estamos usando forwardRef
+// Corregiremos esto siguiendo la sintaxis correcta de React
+const MemoryArea = forwardRef(function MemoryArea({ 
   items, 
   difficulty,
   gameMode,
@@ -11,7 +13,7 @@ const MemoryArea = ({
   onCheckResult,
   onErrorsChange,
   rows = 2
-}) => {
+}, ref) {
   const itemsPerRow = 5;
   
   const [sourceItems, setSourceItems] = useState([]);
@@ -25,6 +27,7 @@ const MemoryArea = ({
   const [successes, setSuccesses] = useState(0);
 
   const [correctOrder, setCorrectOrder] = useState([]);
+  const [autoCompleteAnimation, setAutoCompleteAnimation] = useState(null);
   
   useEffect(() => {
     if (items && items.length > 0) {
@@ -39,6 +42,50 @@ const MemoryArea = ({
       setCorrectOrder(sorted);
     }
   }, [items]);
+  
+  // Exponer funciones al componente padre a través de la referencia
+  useImperativeHandle(ref, () => ({
+    autocompleteRandomItem: () => {
+      // Encontrar posiciones disponibles
+      const availableTargetPositions = targetItems
+        .map((item, index) => item === null ? index : -1)
+        .filter(index => index !== -1);
+      
+      // Si no hay posiciones disponibles, no hacer nada
+      if (availableTargetPositions.length === 0) return;
+      
+      // Seleccionar una posición al azar
+      const randomTargetIndex = availableTargetPositions[
+        Math.floor(Math.random() * availableTargetPositions.length)
+      ];
+      
+      // Encontrar el ítem correcto para esa posición
+      const correctItem = correctOrder[randomTargetIndex];
+      
+      // Buscar el índice del ítem correcto en sourceItems
+      const sourceIndex = sourceItems.findIndex(item => 
+        item && correctItem && item.id === correctItem.id
+      );
+      
+      // Verificar si el ítem ya ha sido colocado
+      if (sourceIndex === -1 || placedItemIndices.has(sourceIndex)) {
+        // Intentar con otro ítem si este ya fue colocado
+        return; // Removemos la llamada recursiva que podría causar problemas
+      }
+      
+      // Animación: Mostrar que se está autocompletando
+      setAutoCompleteAnimation({
+        sourceIndex,
+        targetIndex: randomTargetIndex
+      });
+      
+      // Efectuar el drop después de un breve delay para la animación
+      setTimeout(() => {
+        handleDrop(sourceIndex, randomTargetIndex, correctItem.id);
+        setAutoCompleteAnimation(null);
+      }, 800);
+    }
+  }));
 
   const handleDrop = (sourceIndex, targetIndex, itemId) => {
     const newSourceItems = [...sourceItems];
@@ -174,6 +221,7 @@ const MemoryArea = ({
                 {row.map((item, itemIndex) => {
                   const sourceIndex = (rowIndex * itemsPerRow) + itemIndex;
                   const isDisabled = placedItemIndices.has(sourceIndex);
+                  const isAnimating = autoCompleteAnimation && autoCompleteAnimation.sourceIndex === sourceIndex;
                   
                   return (
                     <DraggableWordItem
@@ -183,6 +231,7 @@ const MemoryArea = ({
                       index={sourceIndex}
                       isInDropZone={false}
                       isDisabled={isDisabled}
+                      isAnimating={isAnimating}
                       onDragStart={() => {}}
                     />
                   );
@@ -203,6 +252,8 @@ const MemoryArea = ({
               {row.map((position) => {
                 if (position >= items.length) return null;
                 
+                const isAnimating = autoCompleteAnimation && autoCompleteAnimation.targetIndex === position;
+                
                 return (
                   <DropZone
                     key={`drop-${position}`}
@@ -210,6 +261,7 @@ const MemoryArea = ({
                     item={targetItems[position]}
                     isEmpty={targetItems[position] === null}
                     isCorrect={correctPositions[position]}
+                    isAnimating={isAnimating}
                     expectedItemId={correctOrder[position]?.id}
                     onDrop={handleDrop}
                     onRemove={handleRemoveFromTarget}
@@ -235,6 +287,9 @@ const MemoryArea = ({
       </div>
     </div>
   );
-};
+});
+
+// Asegúrate de que el nombre del componente sea visible en DevTools
+MemoryArea.displayName = 'MemoryArea';
 
 export default MemoryArea;

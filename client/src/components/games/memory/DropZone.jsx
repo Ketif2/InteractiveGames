@@ -1,6 +1,16 @@
-import React from 'react';
+// DropZone.jsx - Cambios requeridos
 
-const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect, expectedItemId }) => {
+// Modificar la definición del componente para añadir el prop isAnimating
+const DropZone = ({ 
+    index, 
+    item, 
+    onDrop, 
+    onRemove, 
+    isEmpty, 
+    isCorrect, 
+    expectedItemId,
+    isAnimating // Añadir este nuevo prop
+}) => {
     const handleDragOver = (e) => {
         e.preventDefault();
     };
@@ -30,11 +40,13 @@ const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect, expectedI
                 flex items-center justify-center
                 w-full h-12 px-3 rounded-md 
                 transition-all duration-200
-                ${isEmpty 
-                    ? 'bg-gray-100 border-dashed border-2 border-gray-300 cursor-default' 
-                    : isCorrect 
-                        ? 'bg-green-100 border-2 border-green-500 cursor-pointer' 
-                        : 'bg-red-100 border-2 border-red-500 cursor-pointer hover:bg-red-50'}
+                ${isAnimating 
+                    ? 'bg-yellow-100 border-2 border-yellow-500 animate-pulse' // Añadir estos estilos para animación
+                    : isEmpty 
+                        ? 'bg-gray-100 border-dashed border-2 border-gray-300 cursor-default' 
+                        : isCorrect 
+                            ? 'bg-green-100 border-2 border-green-500 cursor-pointer' 
+                            : 'bg-red-100 border-2 border-red-500 cursor-pointer hover:bg-red-50'}
                 shadow-sm
             `}
             data-expected-id={expectedItemId}
@@ -48,8 +60,13 @@ const DropZone = ({ index, item, onDrop, onRemove, isEmpty, isCorrect, expectedI
                 </div>
             )}
             
-            {isEmpty && (
+            {isEmpty && !isAnimating && (
                 <span className="text-gray-400 text-xs">Arrastra aquí</span>
+            )}
+            
+            {/* Añadir mensaje especial durante la animación */}
+            {isEmpty && isAnimating && (
+                <span className="text-yellow-600 text-xs font-medium">Completando...</span>
             )}
         </div>
     );

@@ -18,9 +18,9 @@ const MemoryEnd = () => {
     // Cálculos para estadísticas
     const timeInMinutes = stats ? Math.floor(stats.totalTime / 60) : 0;
     const timeInSeconds = stats ? stats.totalTime % 60 : 0;
-    const successRate = stats && (stats.attempts > 0) 
-        ? Math.round((stats.num_aciertos / (stats.attempts + 1)) * 100)
-        : stats && stats.completado ? 100 : 0;
+    const successRate = stats 
+    ? Math.round((stats.num_aciertos / (stats.num_aciertos + stats.num_errores)) * 100)
+    : 0;
     
     // Obtener el nombre de la categoría
     const getCategoryLabel = (categoryValue) => {
