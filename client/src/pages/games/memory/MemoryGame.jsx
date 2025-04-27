@@ -5,6 +5,7 @@ import { selectObjectsByDifficultyAndCategory } from '../../../data/memoryObject
 import MemoryArea from '../../../components/games/memory/MemoryArea';
 import GameControls from '../../../components/games/memory/GameControls';
 import FeedbackOverlay from '../../../components/games/memory/FeedbackOverlay';
+import GameFeedback from '../../../components/games/puzzle/GameFeedback';
 
 // Agregar estilos CSS globales para animaciones
 const globalStyles = `
@@ -363,6 +364,21 @@ const MemoryGame = () => {
                 onExitConfirm={() => handleFinishGame(false)}
                 onExitCancel={() => setShowExitConfirm(false)}
                 onGameComplete={() => handleFinishGame(true)}
+            />
+
+            {/* Feedback y Overlay */}
+            <GameFeedback 
+                isCorrect={showCorrectFeedback}
+                isWrong={showWrongFeedback}
+                gameCompleted={gameCompleted}
+                onFinish={handleFinishGame}
+                stats={{
+                    successMoves: gameState.num_aciertos,
+                    failedMoves: gameState.num_errores,
+                    helpCount: gameState.helpCount,
+                    totalTime: Math.floor((Date.now() - gameState.startTime - gameState.totalPauseTime) / 1000),
+                    pauseCount: gameState.totalPauses
+                }}
             />
 
             {/* Mensaje de siguiente ronda */}

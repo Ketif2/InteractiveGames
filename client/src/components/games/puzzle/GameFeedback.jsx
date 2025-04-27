@@ -57,7 +57,7 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
     const messages = [
         "¡Excelente trabajo! Tu mente está en forma.",
         "¡Increíble! Cada reto completado fortalece tu cerebro.",
-        "¡Lo lograste! Eres un experto armando rompecabezas."
+        "¡Lo lograste! Eres un experto en este juego."
     ];
     
     const randomMessage = messages[Math.floor(Math.random() * messages.length)];

@@ -10,6 +10,7 @@ import ForestPath from '../../../components/games/forest/ForestPath';
 import ForestInstructions from '../../../components/games/forest/ForestInstructions';
 import ForestAudio from '../../../components/games/forest/ForestAudio';
 import ForestBackground from '../../../components/games/forest/ForestBackground';
+import GameFeedback from '../../../components/games/puzzle/GameFeedback';
 // NUEVO: Importar el componente para mensajes de objetivos
 import ForestNextObjectives from '../../../components/games/forest/ForestNextObjectives';
 
@@ -173,13 +174,7 @@ const ForestGame = () => {
             }}
           >
             {/* Capa de clip para asegurar que nada salga del área */}
-            <div className="absolute inset-0 overflow-hidden">
-              {/* Control de audio */}
-              <ForestAudio
-                audioEnabled={audioEnabled}
-                onToggleAudio={toggleAudio}
-              />
-              
+            <div className="absolute inset-0 overflow-hidden">              
               {/* Fondo del bosque mejorado */}
               <ForestBackground />
               
@@ -233,6 +228,86 @@ const ForestGame = () => {
           message={gameState.instructionsText}
           isNextRound={true}
         />
+      )}
+
+      {/* Feedback para visualización de resultados finales */}
+      <GameFeedback 
+        isCorrect={showCorrectFeedback}
+        isWrong={showWrongFeedback}
+        gameCompleted={gameCompleted}
+        onFinish={() => handleFinishGame(true)}
+        stats={{
+          successMoves: gameState.correctMoves || gameState.objectivesCompleted || 0,
+          failedMoves: gameState.incorrectMoves || gameState.objectivesFailed || 0,
+          helpCount: gameState.helpCount || 0,
+          totalTime: Math.floor((Date.now() - gameState.startTime - (gameState.totalPauseTime || 0)) / 1000),
+          pauseCount: gameState.totalPauses || 0
+        }}
+      />
+
+      
+      {/* Feedback final con confetti */}
+      {gameCompleted && (
+        <>
+          {/* Usar un div con z-index extremadamente alto */}
+          <div className="fixed inset-0 flex items-center justify-center z-[9999]" style={{pointerEvents: 'auto'}}>
+            {/* Confetti - Si tienes react-confetti importado */}
+            {typeof Confetti !== 'undefined' && (
+              <Confetti
+                width={window.innerWidth}
+                height={window.innerHeight}
+                recycle={true}
+                numberOfPieces={200}
+              />
+            )}
+            
+            {/* Modal de felicitación */}
+            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center" style={{position: 'relative', zIndex: 10000}}>
+              <div className="w-20 h-20 mx-auto bg-yellow-100 rounded-full flex items-center justify-center mb-4">
+                <span className="text-yellow-500 text-5xl">🏆</span>
+              </div>
+              <h2 className="text-3xl font-bold text-blue-700 mb-4">
+                ¡Felicidades!
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Has completado el juego. ¡Tu recorrido por el bosque ha sido un éxito!
+              </p>
+              
+              {/* Estrellas */}
+              <div className="flex justify-center mb-6">
+                <span className="text-5xl text-yellow-400 mx-1">⭐</span>
+                <span className="text-5xl text-yellow-400 mx-1">⭐</span>
+                <span className="text-5xl text-yellow-400 mx-1">⭐</span>
+              </div>
+              
+              {/* Estadísticas */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-500">Objetivos completados</p>
+                  <p className="text-xl font-bold text-blue-800">{gameState.correctMoves || gameState.objectivesCompleted || 0}</p>
+                </div>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-500">Tiempo total</p>
+                  <p className="text-xl font-bold text-blue-800">
+                    {Math.floor((Date.now() - gameState.startTime - (gameState.totalPauseTime || 0)) / 1000 / 60)}:
+                    {(Math.floor((Date.now() - gameState.startTime - (gameState.totalPauseTime || 0)) / 1000) % 60).toString().padStart(2, '0')}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Botón de continuar */}
+              <button
+                onClick={() => {
+                  // Navegar a la página de resultados después de un breve retraso
+                  setTimeout(() => handleFinishGame(true), 300);
+                }}
+                className="bg-blue-700 text-white px-6 py-3 rounded-full font-medium hover:bg-blue-800 transition-colors shadow-md hover:shadow-lg"
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );
