@@ -154,14 +154,6 @@ const PuzzleGame = () => {
                 {renderGameLayout()}
             </div>
 
-            <div className={`absolute bottom-3 right-3 transition-opacity duration-300 ${
-                gameState.selectedPieceIndex !== null ? 'opacity-100' : 'opacity-0'
-            }`}>
-                <div className="bg-[#00398A] text-white px-4 py-2 rounded-lg inline-block shadow-md max-w-xs text-sm">
-                    <span className="font-medium">Pieza seleccionada</span> - Haz clic en otra pieza para intercambiarlas
-                </div>
-            </div>
-
             {/* Feedback visual */}
             <GameFeedback 
                 isCorrect={showCorrectFeedback}

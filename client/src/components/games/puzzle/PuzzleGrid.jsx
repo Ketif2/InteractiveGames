@@ -7,11 +7,12 @@ const PuzzleGrid = ({ gridSize, pieces = [], onPieceClick, selectedPieceIndex })
             className="grid gap-1 mx-auto"
             style={{
                 gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
-                width: 'min(90vh, 90%)',
-                height: 'min(90vh, 90%)',
+                width: 'min(85vmin, 95%)',    // Ligeramente reducido para evitar desbordamiento
+                height: 'min(85vmin, 95%)',   // Usar vmin para mejor adaptación
                 aspectRatio: '1',
-                maxWidth: '85vh',
-                maxHeight: '85vh'
+                maxWidth: '85vmin',           // Limitado para evitar cortes
+                maxHeight: '85vmin',          // Asegura que se ajuste completamente
+                margin: '0 auto'              // Centrado horizontal
             }}
             role="grid"
             aria-label="Rompecabezas interactivo"
