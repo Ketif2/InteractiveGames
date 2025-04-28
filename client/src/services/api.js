@@ -32,8 +32,8 @@ api.interceptors.request.use(
     }
     
     // Añadir prefijo /api en producción si la URL no lo incluye ya
-    if (isProd && !config.url.startsWith('/api')) {
-      config.url = `/api${config.url}`;
+    if (isProd && !config.url.startsWith('/api/') && !config.url.startsWith('/api')) {
+      config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
     }
     
     return config;
