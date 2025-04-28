@@ -17,7 +17,7 @@ const api = axios.create({
   timeout: 30000
 });
 
-// Interceptor para peticiones
+// Interceptor para peticiones mejorado
 api.interceptors.request.use(
   (config) => {
     // Si estamos solicitando un blob, quitar Content-Type: application/json
@@ -31,9 +31,16 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Añadir prefijo /api en producción si la URL no lo incluye ya
-    if (isProd && !config.url.startsWith('/api/') && !config.url.startsWith('/api')) {
+    // Evitar modificar URLs absolutas o que ya tienen el prefijo /api
+    const isAbsoluteUrl = /^(https?:)?\/\//.test(config.url);
+    
+    // Añadir prefijo /api en producción si es necesario
+    if (isProd && !isAbsoluteUrl && !config.url.startsWith('/api')) {
+      // Asegurar que hay una barra entre /api y la ruta
       config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
+      
+      // Agregar log para depuración (puedes quitar esto en producción)
+      console.debug(`URL modificada para producción: ${config.url}`);
     }
     
     return config;
