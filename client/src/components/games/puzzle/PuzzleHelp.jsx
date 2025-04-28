@@ -2,14 +2,20 @@ import React from 'react';
 
 const PuzzleHelp = ({ originalImage, showHelp }) => {
     return (
-        <div className="w-1/2 max-w-[600px] aspect-square bg-gray-200 rounded-lg overflow-hidden">
+        <div className={`relative w-full h-full bg-gray-200 rounded-lg overflow-hidden transition-all duration-500 ease-in-out ${
+            showHelp ? 'opacity-100' : 'opacity-0'
+        }`}>
             <img
                 src={originalImage}
-                alt="Imagen original"
-                className={`w-full h-full object-cover transition-opacity duration-300 ${
-                    showHelp ? 'opacity-100' : 'opacity-0'
-                }`}
+                alt="Imagen original de referencia"
+                className="w-full h-full object-contain"
+                aria-hidden={!showHelp}
             />
+            {showHelp && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-center py-2 px-1 text-sm">
+                    Esta imagen desaparecerá automáticamente en 10 segundos
+                </div>
+            )}
         </div>
     );
 };
