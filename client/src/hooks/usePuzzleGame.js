@@ -13,7 +13,8 @@ export const usePuzzleGame = (config, configId, sessionId, puzzleService) => {
         successMoves: 0,
         failedMoves: 0,
         pauseCount: 0,
-        initialPreview: true
+        initialPreview: true,
+        selectedPieceIndex: null // Para almacenar la pieza seleccionada
     });
 
     const [screenOrientation, setScreenOrientation] = useState(
@@ -125,41 +126,65 @@ export const usePuzzleGame = (config, configId, sessionId, puzzleService) => {
         }));
     };
 
-    const handleDragEnd = (event) => {
-        const { active, over } = event;
-        
-        if (!over || active.id === over.id) return;
-
+    const handlePieceClick = (index) => {
         const currentPuzzle = gameState.puzzles[gameState.currentPuzzleIndex];
         
-        const activeId = active.id.toString();
-        const overId = over.id.toString();
-        
-        const activeIdNum = parseInt(activeId.replace('piece-', ''));
-        const overIdNum = parseInt(overId.replace('piece-', ''));
-        
-        const oldIndex = currentPuzzle.pieces.findIndex(piece => piece.id === activeIdNum);
-        const newIndex = currentPuzzle.pieces.findIndex(piece => piece.id === overIdNum);
+        // Si la pieza está fija, no hacer nada
+        if (currentPuzzle.pieces[index].isFixed) {
+            return;
+        }
 
-        if (oldIndex === -1 || newIndex === -1) return;
-        if (currentPuzzle.pieces[newIndex].isFixed) return;
+        // Si no hay pieza seleccionada, seleccionar esta
+        if (gameState.selectedPieceIndex === null) {
+            setGameState(prev => ({
+                ...prev,
+                selectedPieceIndex: index
+            }));
+            return;
+        }
 
+        // Si la misma pieza ya está seleccionada, deseleccionar
+        if (gameState.selectedPieceIndex === index) {
+            setGameState(prev => ({
+                ...prev,
+                selectedPieceIndex: null
+            }));
+            return;
+        }
+
+        // Si se hace clic en una pieza diferente cuando ya hay una seleccionada,
+        // intercambiar las posiciones
+        const selectedIndex = gameState.selectedPieceIndex;
         const newPieces = [...currentPuzzle.pieces];
-        const movingPiece = { ...newPieces[oldIndex] };
-        const targetPiece = { ...newPieces[newIndex] };
+        
+        // Guardar las piezas a intercambiar
+        const selectedPiece = { ...newPieces[selectedIndex] };
+        const targetPiece = { ...newPieces[index] };
 
-        newPieces[newIndex] = {
-            ...movingPiece,
-            currentPosition: newIndex
+        // Si la pieza destino está fija, ignorar el intercambio
+        if (targetPiece.isFixed) {
+            setGameState(prev => ({
+                ...prev,
+                selectedPieceIndex: null  // Deseleccionar de todos modos
+            }));
+            return;
+        }
+
+        // Intercambiar las posiciones actuales
+        newPieces[index] = {
+            ...selectedPiece,
+            currentPosition: index
         };
         
-        newPieces[oldIndex] = {
+        newPieces[selectedIndex] = {
             ...targetPiece,
-            currentPosition: oldIndex
+            currentPosition: selectedIndex
         };
 
-        const isCorrect = movingPiece.correctPosition === newIndex;
+        // Verificar si el movimiento fue correcto (la pieza movida va a su posición correcta)
+        const isCorrect = selectedPiece.correctPosition === index;
 
+        // Mostrar feedback
         if (isCorrect) {
             setShowCorrectFeedback(true);
             setTimeout(() => setShowCorrectFeedback(false), 2000);
@@ -168,6 +193,7 @@ export const usePuzzleGame = (config, configId, sessionId, puzzleService) => {
             setTimeout(() => setShowWrongFeedback(false), 2000);
         }
 
+        // Actualizar el estado del puzzle
         const updatedPuzzles = [...gameState.puzzles];
         updatedPuzzles[gameState.currentPuzzleIndex] = {
             ...currentPuzzle,
@@ -182,7 +208,11 @@ export const usePuzzleGame = (config, configId, sessionId, puzzleService) => {
             }
         };
 
-        const isPuzzleComplete = newPieces.every(piece => piece.correctPosition === piece.currentPosition);
+        // Verificar si el puzzle está completo
+        const isPuzzleComplete = newPieces.every(piece => 
+            piece.correctPosition === piece.currentPosition
+        );
+        
         if (isPuzzleComplete) {
             updatedPuzzles[gameState.currentPuzzleIndex].completed = true;
             
@@ -193,6 +223,7 @@ export const usePuzzleGame = (config, configId, sessionId, puzzleService) => {
                     setGameState(prev => ({
                         ...prev,
                         currentPuzzleIndex: prev.currentPuzzleIndex + 1,
+                        selectedPieceIndex: null,
                         puzzles: updatedPuzzles
                     }));
                 }, 2000);
@@ -201,7 +232,8 @@ export const usePuzzleGame = (config, configId, sessionId, puzzleService) => {
 
         setGameState(prev => ({
             ...prev,
-            puzzles: updatedPuzzles
+            puzzles: updatedPuzzles,
+            selectedPieceIndex: null  // Deseleccionar después del movimiento
         }));
     };
 
@@ -269,7 +301,7 @@ export const usePuzzleGame = (config, configId, sessionId, puzzleService) => {
         showExitConfirm,
         loading,
         error,
-        handleDragEnd,
+        handlePieceClick,
         handleToggleHelp,
         handleTogglePause,
         setShowExitConfirm,

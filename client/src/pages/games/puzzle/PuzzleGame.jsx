@@ -4,9 +4,10 @@ import { AlertTriangle } from 'lucide-react';
 import { usePuzzleGame } from '../../../hooks/usePuzzleGame';
 import { puzzleService } from '../../../services/puzzleService';
 import GameControls from '../../../components/games/puzzle/GameControls';
-import PuzzleGameLayout from '../../../components/games/puzzle/PuzzleGameLayout';
+import PuzzleGrid from '../../../components/games/puzzle/PuzzleGrid';
 import GameFeedback from '../../../components/games/puzzle/GameFeedback';
 import GameOverlay from '../../../components/games/puzzle/GameOverlay';
+import PuzzleHelp from '../../../components/games/puzzle/PuzzleHelp';
 
 const PuzzleGame = () => {
     const location = useLocation();
@@ -22,7 +23,7 @@ const PuzzleGame = () => {
         showExitConfirm,
         loading,
         error,
-        handleDragEnd,
+        handlePieceClick,
         handleToggleHelp,
         handleTogglePause,
         setShowExitConfirm,
@@ -75,6 +76,67 @@ const PuzzleGame = () => {
 
     const gridSize = parseInt(config?.gridSize || 4);
 
+    // Renderizado del layout de juego basado en orientación de pantalla
+    const renderGameLayout = () => {
+        if (screenOrientation === 'landscape') {
+            return (
+                <div className="flex h-full justify-center items-center">
+                    {/* Panel izquierdo - imagen original */}
+                    <div className={`h-full flex items-center justify-center transition-all duration-500 ${
+                        gameState.showHelp || gameState.initialPreview ? 'w-[40%]' : 'w-0 opacity-0'
+                    }`}>
+                        <div className="relative w-full h-full p-1 flex items-center justify-center">
+                            <PuzzleHelp 
+                                originalImage={currentPuzzle.imageUrl} 
+                                showHelp={gameState.showHelp || gameState.initialPreview} 
+                            />
+                        </div>
+                    </div>
+
+                    {/* Rompecabezas */}
+                    <div className={`h-full flex items-center justify-center transition-all duration-500 ${
+                        gameState.showHelp || gameState.initialPreview ? 'w-[60%]' : 'w-full'
+                    }`}>
+                        <PuzzleGrid 
+                            gridSize={gridSize}
+                            pieces={currentPuzzle.pieces || []}
+                            onPieceClick={handlePieceClick}
+                            selectedPieceIndex={gameState.selectedPieceIndex}
+                        />
+                    </div>
+                </div>
+            );
+        } else {
+            return (
+                <div className="flex flex-col h-full">
+                    {/* Rompecabezas */}
+                    <div className={`w-full flex justify-center items-center transition-all duration-500 ${
+                        gameState.showHelp || gameState.initialPreview ? 'h-2/3' : 'h-full'
+                    }`}>
+                        <PuzzleGrid 
+                            gridSize={gridSize}
+                            pieces={currentPuzzle.pieces || []}
+                            onPieceClick={handlePieceClick}
+                            selectedPieceIndex={gameState.selectedPieceIndex}
+                        />
+                    </div>
+                    
+                    {/* Imagen original */}
+                    <div className={`w-full flex justify-center items-center transition-all duration-500 ${
+                        gameState.showHelp || gameState.initialPreview ? 'opacity-100 h-1/3' : 'opacity-0 h-0'
+                    }`}>
+                        <div className="relative w-full h-full p-2 flex items-center justify-center">
+                            <PuzzleHelp 
+                                originalImage={currentPuzzle.imageUrl} 
+                                showHelp={gameState.showHelp || gameState.initialPreview} 
+                            />
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-gray-100">
             {/* Controles del juego */}
@@ -89,14 +151,15 @@ const PuzzleGame = () => {
 
             {/* Área del juego */}
             <div className="absolute inset-0 mt-16 pb-2">
-                <PuzzleGameLayout 
-                    screenOrientation={screenOrientation}
-                    showHelp={gameState.showHelp}
-                    initialPreview={gameState.initialPreview}
-                    currentPuzzle={currentPuzzle}
-                    gridSize={gridSize}
-                    onDragEnd={handleDragEnd}
-                />
+                {renderGameLayout()}
+            </div>
+
+            <div className={`absolute bottom-3 right-3 transition-opacity duration-300 ${
+                gameState.selectedPieceIndex !== null ? 'opacity-100' : 'opacity-0'
+            }`}>
+                <div className="bg-[#00398A] text-white px-4 py-2 rounded-lg inline-block shadow-md max-w-xs text-sm">
+                    <span className="font-medium">Pieza seleccionada</span> - Haz clic en otra pieza para intercambiarlas
+                </div>
             </div>
 
             {/* Feedback visual */}

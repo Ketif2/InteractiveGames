@@ -32,9 +32,9 @@ api.interceptors.request.use(
     }
     
     // Descomentar en DESARROLLO
-    // if (isProd && !config.url.startsWith('/api')) {
-    //   config.url = `/api${config.url}`;
-    // }
+    if (isProd && !config.url.startsWith('/api')) {
+      config.url = `/api${config.url}`;
+    }
     
     return config;
   },

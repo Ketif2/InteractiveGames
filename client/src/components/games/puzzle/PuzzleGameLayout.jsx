@@ -8,7 +8,8 @@ const PuzzleGameLayout = ({
     initialPreview,
     currentPuzzle, 
     gridSize,
-    onDragEnd
+    onPieceClick,
+    selectedPieceIndex
 }) => {
     if (screenOrientation === 'landscape') {
         return (
@@ -17,7 +18,7 @@ const PuzzleGameLayout = ({
                 <div className={`h-full flex items-center justify-center transition-all duration-500 ${
                     showHelp || initialPreview ? 'w-[40%]' : 'w-0 opacity-0'
                 }`}>
-                    <div className="relative w-full h-full p-1 flex items-center justify-center">
+                    <div className="relative w-full h-full p-4 flex items-center justify-center">
                         <PuzzleHelp 
                             originalImage={currentPuzzle.imageUrl} 
                             showHelp={showHelp || initialPreview} 
@@ -29,11 +30,14 @@ const PuzzleGameLayout = ({
                 <div className={`h-full flex items-center justify-center transition-all duration-500 ${
                     showHelp || initialPreview ? 'w-[60%]' : 'w-full'
                 }`}>
-                    <PuzzleGrid 
-                        gridSize={gridSize}
-                        pieces={currentPuzzle.pieces || []}
-                        onDragEnd={onDragEnd}
-                    />
+                    <div className="flex justify-center items-center w-full h-full">
+                        <PuzzleGrid 
+                            gridSize={gridSize}
+                            pieces={currentPuzzle.pieces || []}
+                            onPieceClick={onPieceClick}
+                            selectedPieceIndex={selectedPieceIndex}
+                        />
+                    </div>
                 </div>
             </div>
         );
@@ -44,18 +48,21 @@ const PuzzleGameLayout = ({
                 <div className={`w-full flex justify-center items-center transition-all duration-500 ${
                     showHelp || initialPreview ? 'h-2/3' : 'h-full'
                 }`}>
-                    <PuzzleGrid 
-                        gridSize={gridSize}
-                        pieces={currentPuzzle.pieces || []}
-                        onDragEnd={onDragEnd}
-                    />
+                    <div className="flex justify-center items-center w-full h-full">
+                        <PuzzleGrid 
+                            gridSize={gridSize}
+                            pieces={currentPuzzle.pieces || []}
+                            onPieceClick={onPieceClick}
+                            selectedPieceIndex={selectedPieceIndex}
+                        />
+                    </div>
                 </div>
                 
                 {/* Imagen original */}
                 <div className={`w-full flex justify-center items-center transition-all duration-500 ${
                     showHelp || initialPreview ? 'opacity-100 h-1/3' : 'opacity-0 h-0'
                 }`}>
-                    <div className="relative w-full h-full p-2 flex items-center justify-center">
+                    <div className="relative w-full h-full p-4 flex items-center justify-center">
                         <PuzzleHelp 
                             originalImage={currentPuzzle.imageUrl} 
                             showHelp={showHelp || initialPreview} 
