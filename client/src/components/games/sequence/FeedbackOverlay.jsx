@@ -18,7 +18,7 @@ const FeedbackOverlay = ({
         width: window.innerWidth,
         height: window.innerHeight
     });
-    const [showConfetti, setShowConfetti] = useState(true);
+    // Eliminamos el timeout automático del confeti
     const [showFeedback, setShowFeedback] = useState(false);
 
     useEffect(() => {
@@ -31,17 +31,10 @@ const FeedbackOverlay = ({
 
         window.addEventListener('resize', handleResize);
         
-        if (showCompleted) {
-            const timer = setTimeout(() => {
-                setShowConfetti(false);
-            }, 8000);
-            return () => clearTimeout(timer);
-        }
-        
         return () => {
             window.removeEventListener('resize', handleResize);
         };
-    }, [showCompleted]);
+    }, []);
 
     useEffect(() => {
         if (showCorrect || showWrong) {
@@ -54,16 +47,15 @@ const FeedbackOverlay = ({
     if (showCompleted) {
         return (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                {showConfetti && (
-                    <Confetti 
-                        width={windowDimensions.width}
-                        height={windowDimensions.height}
-                        recycle={true}
-                        numberOfPieces={200}
-                        gravity={0.15}
-                        colors={['#00398A', '#00A8E3', '#7EC3E2', '#FFD700', '#FFA500']}
-                    />
-                )}
+                {/* El confeti permanecerá activo hasta que se presione "Continuar" */}
+                <Confetti 
+                    width={windowDimensions.width}
+                    height={windowDimensions.height}
+                    recycle={true}
+                    numberOfPieces={200}
+                    gravity={0.15}
+                    colors={['#00398A', '#00A8E3', '#7EC3E2', '#FFD700', '#FFA500']}
+                />
                 
                 <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 transform animate-bounceIn text-center">
                     <Trophy className="w-16 h-16 mx-auto text-[#FFD700] mb-2" />
@@ -73,12 +65,10 @@ const FeedbackOverlay = ({
                     </p>
                     
                     <div className="flex justify-center mb-6">
-                        {[...Array(3)].map((_, i) => (
-                            <Star
-                                key={i}
-                                className={`w-12 h-12 ${i < 3 ? 'text-[#FFD700] fill-[#FFD700]' : 'text-gray-300'} mx-1`}
-                            />
-                        ))}
+                        {/* Siempre mostramos 3 estrellas doradas */}
+                        <Star className="w-12 h-12 text-[#FFD700] fill-[#FFD700] mx-1" />
+                        <Star className="w-12 h-12 text-[#FFD700] fill-[#FFD700] mx-1" />
+                        <Star className="w-12 h-12 text-[#FFD700] fill-[#FFD700] mx-1" />
                     </div>
                     
                     <button
@@ -88,29 +78,6 @@ const FeedbackOverlay = ({
                         <Award className="w-5 h-5 mr-2" />
                         Continuar
                     </button>
-                </div>
-            </div>
-        );
-    }
-
-    if (showCompleted) {
-        return (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md mx-4 transform animate-bounceIn text-center">
-                    {stats && (
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="bg-blue-50 p-3 rounded-lg">
-                                <p className="text-sm text-gray-500">Aciertos</p>
-                                <p className="text-xl font-bold text-[#00398A]">{stats.successCount}</p>
-                            </div>
-                            <div className="bg-blue-50 p-3 rounded-lg">
-                                <p className="text-sm text-gray-500">Tiempo total</p>
-                                <p className="text-xl font-bold text-[#00398A]">
-                                    {Math.floor(stats.totalTime / 60)}:{(stats.totalTime % 60).toString().padStart(2, '0')}
-                                </p>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
         );

@@ -8,6 +8,7 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
         width: window.innerWidth,
         height: window.innerHeight
     });
+    // Mantenemos el confeti activo hasta hacer clic en Continuar
     const [showConfetti, setShowConfetti] = useState(true);
 
     useEffect(() => {
@@ -20,12 +21,7 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
 
         window.addEventListener('resize', handleResize);
         
-        if (gameCompleted) {
-            const timer = setTimeout(() => {
-                setShowConfetti(false);
-            }, 8000);
-            return () => clearTimeout(timer);
-        }
+        // Eliminamos el temporizador para que los confetis duren hasta que se pulse Continuar
         
         return () => {
             window.removeEventListener('resize', handleResize);
@@ -40,19 +36,8 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
         }
     }, [isCorrect, isWrong]);
 
-    const calculateStars = () => {
-        if (!stats) return 3;
-        
-        const { successMoves, failedMoves, totalTime } = stats;
-        const totalMoves = successMoves + failedMoves;
-        const successRatio = successMoves / (totalMoves || 1);
-        
-        if (successRatio > 0.8 && totalTime < 180) return 3;
-        if (successRatio > 0.6) return 2;
-        return 1;
-    };
-
-    const stars = calculateStars();
+    // Siempre devuelve 3 estrellas independientemente del rendimiento
+    const stars = 3;
     
     const messages = [
         "¡Excelente trabajo! Tu mente está en forma.",
@@ -85,7 +70,7 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
                         {[...Array(3)].map((_, i) => (
                             <Star
                                 key={i}
-                                className={`w-12 h-12 ${i < stars ? 'text-[#FFD700] fill-[#FFD700]' : 'text-gray-300'} mx-1`}
+                                className="w-12 h-12 text-[#FFD700] fill-[#FFD700] mx-1"
                             />
                         ))}
                     </div>
@@ -106,7 +91,10 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
                     )}
                     
                     <button
-                        onClick={onFinish}
+                        onClick={() => {
+                            setShowConfetti(false);
+                            onFinish();
+                        }}
                         className="bg-[#00398A] text-white px-6 py-3 rounded-full font-medium hover:bg-[#002d6f] transition-colors shadow-md hover:shadow-lg flex items-center justify-center mx-auto"
                     >
                         <Award className="w-5 h-5 mr-2" />

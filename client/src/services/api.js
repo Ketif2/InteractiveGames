@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 // Control para evitar redirecciones múltiples
 let isRedirecting = false;
-const isProd = API_URL.includes('railway.app') || API_URL.includes('netlify.app');
+// const isProd = API_URL.includes('railway.app') || API_URL.includes('netlify.app');
 
 const api = axios.create({
   baseURL: API_URL,
@@ -31,10 +31,10 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Descomentar en DESARROLLO
-    if (isProd && !config.url.startsWith('/api')) {
-      config.url = `/api${config.url}`;
-    }
+    // // Descomentar en DESARROLLO
+    // if (isProd && !config.url.startsWith('/api')) {
+    //   config.url = `/api${config.url}`;
+    // }
     
     return config;
   },
