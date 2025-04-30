@@ -9,7 +9,7 @@ const Register = () => {
         <div className="bg-[#00398A] py-6 px-8 text-center">
           <img
             className="mx-auto h-16 w-auto"
-            src="/src/assets/icons/logoApp.svg"
+            src="/icons/logoApp.svg"
             alt="Recuerda+"
           />
           <h2 className="mt-3 text-3xl font-bold text-white">
@@ -33,7 +33,8 @@ const Register = () => {
           <div className="text-center mt-8 text-sm">
             <Link 
               to="/login"
-              className="text-[#00A8E3] hover:text-[#0085b3] font-medium transition-colors"
+              className="text-[#0057A8] hover:text-[#00398A] font-medium transition-colors"
+              aria-label="Ir a la página de inicio de sesión"
             >
               ¿Ya tiene credenciales? <span className="underline">Iniciar sesión</span>
             </Link>

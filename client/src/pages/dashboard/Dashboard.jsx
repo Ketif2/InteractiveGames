@@ -1,5 +1,5 @@
 // pages/dashboard/Dashboard.jsx
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useState, useEffect } from 'react';
 import Patients from '/icons/patient-icon.png';
@@ -75,7 +75,8 @@ const Dashboard = () => {
               </div>
               <Link 
                 to="/patients"
-                className="block w-full text-center text-blue-600 hover:text-blue-800 font-medium py-2 border border-blue-100 rounded-md hover:bg-blue-50 transition-colors"
+                className="block w-full text-center text-[#0057A8] hover:text-[#00398A] font-medium py-2 border border-blue-100 rounded-md hover:bg-blue-50 transition-colors"
+                aria-label="Acceder a gestión de pacientes"
               >
                 Acceder
               </Link>
@@ -100,7 +101,8 @@ const Dashboard = () => {
               </div>
               <Link 
                 to="/new-session"
-                className="block w-full text-center text-green-600 hover:text-green-800 font-medium py-2 border border-green-100 rounded-md hover:bg-green-50 transition-colors"
+                className="block w-full text-center text-[#007A2E] hover:text-[#006626] font-medium py-2 border border-green-100 rounded-md hover:bg-green-50 transition-colors"
+                aria-label="Iniciar nueva sesión de terapia"
               >
                 Iniciar
               </Link>
@@ -125,7 +127,8 @@ const Dashboard = () => {
               </div>
               <Link 
                 to="/stats"
-                className="block w-full text-center text-purple-600 hover:text-purple-800 font-medium py-2 border border-purple-100 rounded-md hover:bg-purple-50 transition-colors"
+                className="block w-full text-center text-[#7922BC] hover:text-[#6a1ea8] font-medium py-2 border border-purple-100 rounded-md hover:bg-purple-50 transition-colors"
+                aria-label="Visualizar estadísticas y historial"
               >
                 Visualizar
               </Link>

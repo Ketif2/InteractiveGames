@@ -21,20 +21,7 @@ const Login = () => {
         </div>
         
         <div className="p-8">
-          <div className="mb-6 text-center">
-            <h3 className="text-2xl font-medium text-gray-800">Iniciar Sesión</h3>
-          </div>
-          
           <LoginForm />
-          
-          <div className="text-center mt-8 text-sm">
-            <Link 
-              to="/register"
-              className="text-[#00A8E3] hover:text-[#0085b3] font-medium transition-colors"
-            >
-              ¿No tienes cuenta? <span className="underline">Regístrate aquí</span>
-            </Link>
-          </div>
         </div>
       </div>
       
