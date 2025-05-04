@@ -14,7 +14,7 @@ export const memoryObjects = [
     { id: 13, name: 'Lápiz', category: 'Oficina' }, //5 gramos
     { id: 14, name: 'Esfero', category: 'Oficina' }, //6 gramos
     { id: 15, name: 'Cereza', category: 'alimentos' },//7gramos
-    { id: 16, name: 'Moneda de dolar', category: 'Hogar' }, //8 gramos
+    { id: 16, name: 'Moneda de dólar', category: 'Hogar' }, //8 gramos
     { id: 17, name: 'Llave', category: 'Hogar' }, //8gramos
     { id: 18, name: 'Regla', category: 'Oficina' }, //10 gramos
     { id: 19, name: 'Borrador', category: 'Oficina' },
