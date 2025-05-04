@@ -1,141 +1,121 @@
 export const memoryObjects = [
-    { id: 1, name: 'Alfiler', category: 'Hogar' },
-    { id: 2, name: 'Aguja', category: 'Hogar' },
+    { id: 1, name: 'Aguja', category: 'Hogar' },
+    { id: 2, name: 'Alfiler', category: 'Hogar' },
     { id: 3, name: 'Clip', category: 'Oficina' },
     { id: 4, name: 'Botón', category: 'ropa' },
     { id: 5, name: 'Ticket', category: 'Oficina' },
     { id: 6, name: 'Servilleta', category: 'Cocina' },
-    { id: 7, name: 'Pendiente', category: 'ropa' },
-    { id: 8, name: 'Papel', category: 'Oficina' },
-    { id: 9, name: 'Canica', category: 'deportes' },
+    { id: 7, name: 'Papel', category: 'Oficina' },
+    { id: 8, name: 'Sobre', category: 'Oficina' },
+    { id: 9, name: 'Tarjeta de crédito', category: 'Hogar' }, //4 gramos
     { id: 10, name: 'Anillo', category: 'ropa' },
-    { id: 11, name: 'Tapón', category: 'Cocina' },
-    { id: 12, name: 'Tarjeta de crédito', category: 'Hogar' },
-    { id: 13, name: 'Uva', category: 'alimentos' },
-    { id: 14, name: 'Mora', category: 'alimentos' },
-    { id: 15, name: 'Cereza', category: 'alimentos' },
-    { id: 16, name: 'Moneda', category: 'Hogar' },
-    { id: 17, name: 'Bolígrafo', category: 'Oficina' },
-    { id: 18, name: 'Lápiz', category: 'Oficina' },
-    { id: 19, name: 'Pañuelo', category: 'ropa' },
-    { id: 20, name: 'Goma de borrar', category: 'Oficina' },
-    { id: 21, name: 'Sobre', category: 'Oficina' },
-    { id: 22, name: 'Sacapuntas', category: 'Oficina' },
-    { id: 23, name: 'Rotulador', category: 'Oficina' },
-    { id: 24, name: 'Llave', category: 'Hogar' },
-    { id: 25, name: 'Fresa', category: 'alimentos' },
-    { id: 26, name: 'Regla', category: 'Oficina' },
-    { id: 27, name: 'Cepillo de dientes', category: 'Hogar' },
-    { id: 28, name: 'Gafas', category: 'ropa' },
-    { id: 29, name: 'Cucharilla', category: 'Cocina' },
-    { id: 30, name: 'Abrebotellas', category: 'Cocina' },
-    { id: 31, name: 'Calcetines', category: 'ropa' },
-    { id: 32, name: 'Pelota de tenis', category: 'deportes' },
-    { id: 33, name: 'Tenedor', category: 'Cocina' },
-    { id: 34, name: 'Cuchara', category: 'Cocina' },
-    { id: 35, name: 'Kiwi', category: 'alimentos' },
-    { id: 36, name: 'Corbata', category: 'ropa' },
-    { id: 37, name: 'Cuchillo', category: 'Cocina' },
-    { id: 38, name: 'Mandarina', category: 'alimentos' },
-    { id: 39, name: 'Zanahoria', category: 'alimentos' },
-    { id: 40, name: 'Gorra', category: 'ropa' },
-    { id: 41, name: 'Tijeras', category: 'Oficina' },
-    { id: 42, name: 'Espátula', category: 'Cocina' },
-    { id: 43, name: 'Jabón', category: 'Hogar' },
-    { id: 44, name: 'Cinta adhesiva', category: 'Oficina' },
-    { id: 45, name: 'Limón', category: 'alimentos' },
-    { id: 46, name: 'Pimiento', category: 'alimentos' },
-    { id: 47, name: 'Cartera', category: 'ropa' },
-    { id: 48, name: 'Guantes', category: 'ropa' },
-    { id: 49, name: 'Calculadora', category: 'Oficina' },
-    { id: 50, name: 'Tomate', category: 'alimentos' },
-    { id: 51, name: 'Cebolla', category: 'alimentos' },
-    { id: 52, name: 'Plátano', category: 'alimentos' },
-    { id: 53, name: 'Cucharón', category: 'Cocina' },
-    { id: 54, name: 'Ratón de ordenador', category: 'Oficina' },
-    { id: 55, name: 'Pera', category: 'alimentos' },
-    { id: 56, name: 'Manzana', category: 'alimentos' },
-    { id: 57, name: 'Naranja', category: 'alimentos' },
-    { id: 58, name: 'Teléfono', category: 'Hogar' },
-    { id: 59, name: 'Camiseta', category: 'ropa' },
-    { id: 60, name: 'Cinturón', category: 'ropa' },
-    { id: 61, name: 'Bufanda', category: 'ropa' },
-    { id: 62, name: 'Espejo de mano', category: 'Hogar' },
-    { id: 63, name: 'Patata', category: 'alimentos' },
-    { id: 64, name: 'Lapiceros (caja)', category: 'Oficina' },
-    { id: 65, name: 'Blusa', category: 'ropa' },
-    { id: 66, name: 'Libreta', category: 'Oficina' },
-    { id: 67, name: 'Balón de voleibol', category: 'deportes' },
-    { id: 68, name: 'Camisa', category: 'ropa' },
-    { id: 69, name: 'Cuaderno', category: 'Oficina' },
-    { id: 70, name: 'Carpeta', category: 'Oficina' },
-    { id: 71, name: 'Colador', category: 'Cocina' },
-    { id: 72, name: 'Falda', category: 'ropa' },
-    { id: 73, name: 'Taza', category: 'Cocina' },
-    { id: 74, name: 'Agenda', category: 'Oficina' },
-    { id: 75, name: 'Raqueta', category: 'deportes' },
-    { id: 76, name: 'Paraguas', category: 'Hogar' },
-    { id: 77, name: 'Plato', category: 'Cocina' },
-    { id: 78, name: 'Balón de fútbol', category: 'deportes' },
-    { id: 79, name: 'Balón de rugby', category: 'deportes' },
-    { id: 80, name: 'Pantalón', category: 'ropa' },
-    { id: 81, name: 'Toalla', category: 'Hogar' },
+    { id: 11, name: 'Uva', category: 'alimentos' }, // 4gramos
+    { id: 12, name: 'Mora', category: 'alimentos' }, //5gramos
+    { id: 13, name: 'Lápiz', category: 'Oficina' }, //5 gramos
+    { id: 14, name: 'Esfero', category: 'Oficina' }, //6 gramos
+    { id: 15, name: 'Cereza', category: 'alimentos' },//7gramos
+    { id: 16, name: 'Moneda de dolar', category: 'Hogar' }, //8 gramos
+    { id: 17, name: 'Llave', category: 'Hogar' }, //8gramos
+    { id: 18, name: 'Regla', category: 'Oficina' }, //10 gramos
+    { id: 19, name: 'Borrador', category: 'Oficina' },
+    { id: 20, name: 'Fresa', category: 'alimentos' }, // 15 gramos
+    { id: 21, name: 'Pañuelo', category: 'ropa' },
+    { id: 22, name: 'Canica', category: 'deportes' }, //18 gramos
+    { id: 23, name: 'Cepillo de dientes', category: 'Hogar' }, //19gramos
+    { id: 24, name: 'Tapón de cocina', category: 'Cocina' }, //20 gramos
+    { id: 25, name: 'Gafas', category: 'ropa' },    //26gramos
+    { id: 26, name: 'Tijeras', category: 'Oficina' }, //30 gramos
+    { id: 27, name: 'Guantes', category: 'ropa' }, //32gramos
+    { id: 28, name: 'Tenedor', category: 'Cocina' },
+    { id: 29, name: 'Cuchara', category: 'Cocina' }, //41gramos
+    { id: 30, name: 'Par de medias', category: 'ropa' }, //50 gramos
+    { id: 31, name: 'Cinta adhesiva', category: 'Oficina' },
+    { id: 32, name: 'Corbata', category: 'ropa' }, //51 gramos
+    { id: 33, name: 'Pimiento', category: 'alimentos' }, //55gramos
+    { id: 34, name: 'Espejo de mano', category: 'Hogar' },
+    { id: 35, name: 'Bufanda', category: 'ropa' },
+    { id: 36, name: 'Pelota de tenis', category: 'deportes' }, //56gramos
+    { id: 37, name: 'Espátula', category: 'Cocina' }, //60gramos  
+    { id: 38, name: 'Limón', category: 'alimentos' }, //62g  
+    { id: 39, name: 'Carpeta', category: 'Oficina' },
+    { id: 40, name: 'Gorra', category: 'ropa' }, //81gramos
+    { id: 41, name: 'Calculadora', category: 'Oficina' }, //92 gramos
+    { id: 42, name: 'Colador', category: 'Cocina' }, //98gramos
+    { id: 43, name: 'Kiwi', category: 'alimentos' },
+    { id: 44, name: 'Pera', category: 'alimentos' },
+    { id: 45, name: 'Cebolla', category: 'alimentos' }, 
+    { id: 46, name: 'Tomate', category: 'alimentos' }, //120 gramos
+    { id: 47, name: 'Cuchillo', category: 'Cocina' }, //100g
+    { id: 48, name: 'Mandarina', category: 'alimentos' }, //155gramos
+    { id: 49, name: 'Zanahoria', category: 'alimentos' }, //101gramos
+    { id: 50, name: 'Jabón', category: 'Hogar' },
+    { id: 51, name: 'Manzana', category: 'alimentos' }, //120gramos
+    { id: 52, name: 'Cucharón', category: 'Cocina' }, //122gramos
+    { id: 53, name: 'Blusa', category: 'ropa' }, //146gramos
+    { id: 54, name: 'Plátano', category: 'alimentos' }, //146gramos
+    { id: 55, name: 'Camisa', category: 'ropa' },
+    { id: 56, name: 'Cinturón', category: 'ropa' }, //165gramos
+    { id: 57, name: 'Camiseta', category: 'ropa' }, //166gramos
+    { id: 58, name: 'Casco de bicicleta', category: 'deportes' }, //245gramos
+    { id: 59, name: 'Falda', category: 'ropa' },
+    { id: 60, name: 'Naranja', category: 'alimentos' }, //250gramos
+    { id: 61, name: 'Raqueta', category: 'deportes' },
+    { id: 62, name: 'Teléfono', category: 'Hogar' },
+    { id: 63, name: 'Paraguas personal', category: 'Hogar' },// 277gramos
+    { id: 64, name: 'Agenda', category: 'Oficina' }, //302g
+    { id: 65, name: 'Libreta', category: 'Oficina' },
+    { id: 66, name: 'Taza', category: 'Cocina' }, //350
+    { id: 67, name: 'Bandeja', category: 'Cocina' },
+    { id: 68, name: 'Cuaderno', category: 'Oficina' }, //360gramos
+    { id: 69, name: 'Toalla de baño', category: 'Hogar' }, //408 gramos
+    { id: 70, name: 'Plato de porcelana', category: 'Cocina' }, //500gramos
+    { id: 71, name: 'Olla pequeña', category: 'Cocina' }, //504 gramos
+    { id: 72, name: 'Jarra de vidrio', category: 'Cocina' },
+    { id: 73, name: 'Cartera', category: 'ropa' },
+    { id: 74, name: 'Libro', category: 'Hogar' }, //520gramos
+    { id: 75, name: 'Tabla de cortar', category: 'Cocina' }, //570gramos
+    { id: 76, name: 'Balón de fútbol', category: 'deportes' },
+    { id: 77, name: 'Pantalón', category: 'ropa' }, //604g
+    { id: 78, name: 'Sartén', category: 'Cocina' }, //660gramos
+    { id: 79, name: 'Balón de basket', category: 'deportes' },
+    { id: 80, name: 'Mochila', category: 'ropa' }, //700gramos
+    { id: 81, name: 'Almohada', category: 'Hogar' },
     { id: 82, name: 'Cojín', category: 'Hogar' },
-    { id: 83, name: 'Bolso', category: 'ropa' },
-    { id: 84, name: 'Jersey', category: 'ropa' },
-    { id: 85, name: 'Tazón', category: 'Cocina' },
-    { id: 86, name: 'Balón de baloncesto', category: 'deportes' },
-    { id: 87, name: 'Cazo', category: 'Cocina' },
-    { id: 88, name: 'Libro', category: 'Hogar' },
-    { id: 89, name: 'Zapatos', category: 'ropa' },
-    { id: 90, name: 'Tabla de cortar', category: 'Cocina' },
-    { id: 91, name: 'Teclado', category: 'Oficina' },
-    { id: 92, name: 'Mochila', category: 'ropa' },
-    { id: 93, name: 'Almohada', category: 'Hogar' },
-    { id: 94, name: 'Jarra', category: 'Cocina' },
-    { id: 95, name: 'Casco', category: 'deportes' },
-    { id: 96, name: 'Batidora de mano', category: 'Cocina' },
-    { id: 97, name: 'Tetera', category: 'Cocina' },
-    { id: 98, name: 'Bandeja', category: 'Cocina' },
-    { id: 99, name: 'Tostadora', category: 'Cocina' },
-    { id: 100, name: 'Traje', category: 'ropa' },
-    { id: 101, name: 'Sartén', category: 'Cocina' },
-    { id: 102, name: 'Olla', category: 'Cocina' },
-    { id: 103, name: 'Abrigo', category: 'ropa' },
-    { id: 104, name: 'Manta', category: 'Hogar' },
-    { id: 105, name: 'Cafetera', category: 'Cocina' },
-    { id: 106, name: 'Maletín', category: 'Oficina' },
-    { id: 107, name: 'Ordenador portátil', category: 'Oficina' },
-    { id: 108, name: 'Edredón', category: 'Hogar' },
-    { id: 109, name: 'Guitarra', category: 'música' },
-    { id: 110, name: 'Ventilador', category: 'Hogar' },
-    { id: 111, name: 'Maleta', category: 'ropa' },
-    { id: 112, name: 'Lámpara', category: 'Hogar' },
-    { id: 113, name: 'Taburete', category: 'Hogar' },
-    { id: 114, name: 'Monitor', category: 'Oficina' },
-    { id: 115, name: 'Aspiradora', category: 'Hogar' },
-    { id: 116, name: 'Impresora', category: 'Oficina' },
-    { id: 117, name: 'Batería de Cocina', category: 'Cocina' },
-    { id: 118, name: 'Silla', category: 'Hogar' },
-    { id: 119, name: 'Microondas', category: 'Cocina' },
-    { id: 120, name: 'Mesa auxiliar', category: 'Hogar' },
-    { id: 121, name: 'Bicicleta', category: 'deportes' },
-    { id: 122, name: 'Televisor', category: 'Hogar' },
-    { id: 123, name: 'Piano digital', category: 'música' },
-    { id: 124, name: 'Estantería', category: 'Hogar' },
-    { id: 125, name: 'Horno', category: 'Cocina' },
-    { id: 126, name: 'Sillón', category: 'Hogar' },
-    { id: 127, name: 'Secadora', category: 'Hogar' },
-    { id: 128, name: 'Vitrina', category: 'Hogar' },
-    { id: 129, name: 'Escritorio', category: 'Oficina' },
-    { id: 130, name: 'Mesa de comedor', category: 'Hogar' },
-    { id: 131, name: 'Refrigeradora', category: 'Hogar' },
-    { id: 132, name: 'Lavadora', category: 'Hogar' },
-    { id: 133, name: 'Armario', category: 'Hogar' },
-    { id: 134, name: 'Cama', category: 'Hogar' },
-    { id: 135, name: 'Automóvil', category: 'transporte' },
-    { id: 136, name: 'Camioneta', category: 'transporte' },
-    { id: 137, name: 'Avión', category: 'transporte' }
+    { id: 83, name: 'Zapatos', category: 'ropa' }, //780gramos
+    { id: 84, name: 'Licuadora', category: 'Cocina' }, //1.3kg
+    { id: 85, name: 'Olla de presión', category: 'Cocina' }, //1,4kg
+    { id: 86, name: 'Silla de plástico', category: 'Hogar' },
+    { id: 87, name: 'Manta', category: 'Hogar' },
+    { id: 88, name: 'Cafetera', category: 'Cocina' },
+    { id: 89, name: 'Tostadora', category: 'Cocina' },
+    { id: 90, name: 'Guitarra', category: 'música' },
+    { id: 91, name: 'Edredón', category: 'Hogar' },
+    { id: 92, name: 'Ventilador', category: 'Hogar' },
+    { id: 93, name: 'Maleta', category: 'ropa' },
+    { id: 94, name: 'Lámpara', category: 'Hogar' },
+    { id: 95, name: 'Taburete', category: 'Hogar' },
+    { id: 96, name: 'Monitor', category: 'Oficina' },
+    { id: 97, name: 'Aspiradora', category: 'Hogar' },
+    { id: 98, name: 'Impresora', category: 'Oficina' },
+    { id: 99, name: 'Microondas', category: 'Cocina' },
+    { id: 100, name: 'Mesa auxiliar', category: 'Hogar' },
+    { id: 101, name: 'Bicicleta', category: 'deportes' },
+    { id: 102, name: 'Televisor', category: 'Hogar' },
+    { id: 103, name: 'Piano digital', category: 'música' },
+    { id: 104, name: 'Estantería', category: 'Hogar' },
+    { id: 105, name: 'Horno', category: 'Cocina' },
+    { id: 106, name: 'Sillón', category: 'Hogar' },
+    { id: 107, name: 'Secadora', category: 'Hogar' },
+    { id: 108, name: 'Vitrina', category: 'Hogar' },
+    { id: 109, name: 'Escritorio', category: 'Oficina' },
+    { id: 110, name: 'Mesa de comedor', category: 'Hogar' },
+    { id: 111, name: 'Refrigeradora', category: 'Hogar' },
+    { id: 112, name: 'Lavadora', category: 'Hogar' },
+    { id: 113, name: 'Armario', category: 'Hogar' },
+    { id: 114, name: 'Cama', category: 'Hogar' },
+    { id: 115, name: 'Automóvil', category: 'transporte' },
+    { id: 116, name: 'Camioneta', category: 'transporte' },
+    { id: 117, name: 'Avión', category: 'transporte' }
 ];
 
 // Definir las categorías disponibles (sin cambios)

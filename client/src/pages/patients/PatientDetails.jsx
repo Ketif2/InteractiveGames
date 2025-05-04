@@ -482,13 +482,6 @@ const PatientDetails = () => {
                       <div className="text-3xl font-bold text-gray-900">{patient.num_sesiones || 0}</div>
                       <p className="text-sm text-gray-500 mt-1">Sesiones totales</p>
                     </div>
-                    
-                    <div className="mt-4 pt-4 border-t border-gray-200">
-                      <dt className="text-sm font-medium text-gray-500">Última actualización</dt>
-                      <dd className="mt-1 text-sm text-gray-900">
-                        {formatDate(new Date())}
-                      </dd>
-                    </div>
                   </div>
                 </div>
               </div>

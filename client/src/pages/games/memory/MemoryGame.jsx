@@ -26,6 +26,24 @@ const globalStyles = `
 .animate-fadeOut {
   animation: fadeOut 0.3s ease-out forwards;
 }
+
+/* Estilos para accesibilidad */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+*:focus-visible {
+  outline: 2px solid #4299e1;
+  outline-offset: 2px;
+}
 `;
 
 const MemoryGame = () => {
@@ -142,14 +160,22 @@ const MemoryGame = () => {
         }));
     }, []);
 
-    // Función para pasar a la siguiente ronda
+    // Función para pasar a la siguiente ronda - CORREGIDA
     const startNextRound = useCallback(() => {
-        setGameState(prev => ({
-            ...prev,
-            currentRound: prev.currentRound + 1,
-            items: [],
-            currentOrder: []
-        }));
+        setGameState(prev => {
+            // Incrementar currentRound solo si no estamos en la última ronda
+            const nextRound = prev.currentRound + 1;
+            
+            if (nextRound <= prev.totalRounds) {
+                return {
+                    ...prev,
+                    currentRound: nextRound,
+                    items: [],
+                    currentOrder: []
+                };
+            }
+            return prev; // Si ya alcanzamos el máximo, mantenemos el estado
+        });
 
         // Inicializar nueva ronda manteniendo estadísticas acumuladas
         initializeGame(true);
@@ -158,39 +184,41 @@ const MemoryGame = () => {
         setShowNextRoundMessage(false);
     }, []);
 
-    // Handle check result
+    // Handle check result - CORREGIDO
     const handleCheckResult = (isCorrect) => {
         if (isCorrect) {
             // Solo actualizamos el contador de intentos
-            // Los errores y aciertos ya están acumulados mediante handleErrorsChange
             setGameState(prev => ({
                 ...prev,
                 attempts: prev.attempts + 1
             }));
             
-            // Verificar si es la última ronda
-            setGameState(prev => {
-                if (prev.currentRound >= prev.totalRounds) {
-                    // Es la última ronda, mostrar mensaje de juego completado
-                    setShowCorrectFeedback(true);
-                    setGameCompleted(true);
-                    
-                    // Hide feedback after delay and go to results
-                    setTimeout(() => {
-                        setShowCorrectFeedback(false);
-                        handleFinishGame(true);
-                    }, 3000);
-                } else {
-                    // No es la última ronda, mostrar mensaje para siguiente ronda
-                    setShowNextRoundMessage(true);
-                    
-                    // Después de un tiempo, ocultar mensaje y pasar a siguiente ronda
-                    setTimeout(() => {
-                        startNextRound();
-                    }, 3000);
-                }
-                return prev;
-            });
+            // Verificamos usando una variable local para mayor exactitud
+            const currentRoundValue = gameState.currentRound;
+            const totalRoundsValue = gameState.totalRounds;
+            
+            if (currentRoundValue >= totalRoundsValue) {
+                // Es la última ronda, mostrar mensaje de juego completado
+                setShowCorrectFeedback(true);
+                setGameCompleted(true);
+                
+                // Hide feedback after delay and go to results
+                setTimeout(() => {
+                    setShowCorrectFeedback(false);
+                    handleFinishGame(true);
+                }, 3000);
+            } else {
+                // No es la última ronda, mostrar mensaje para siguiente ronda
+                setShowNextRoundMessage(true);
+                
+                // Mostramos mensaje con ronda actual (antes de incrementar)
+                console.log(`Completada ronda ${currentRoundValue} de ${totalRoundsValue}`);
+                
+                // Después de un tiempo, ocultar mensaje y pasar a siguiente ronda
+                setTimeout(() => {
+                    startNextRound();
+                }, 3000);
+            }
         } else {
             setShowWrongFeedback(true);
             setGameState(prev => ({
@@ -317,6 +345,9 @@ const MemoryGame = () => {
                 />
             </div>
 
+            {/* Anunciador para lectores de pantalla */}
+            <div id="game-announcer" className="sr-only" aria-live="assertive" aria-atomic="true"></div>
+
             {/* Main game area */}
             <div className="p-4 pb-20" style={{opacity: gameState.isPaused ? 0.5 : 1, pointerEvents: gameState.isPaused ? 'none' : 'auto'}}>
                 {/* Instructions */}
@@ -325,7 +356,7 @@ const MemoryGame = () => {
                         Ordena los objetos del menos pesado al más pesado
                     </h2>
                     <p className="text-gray-600">
-                        Arrastra las palabras desde arriba hacia los espacios de abajo para ordenarlas
+                        Selecciona las palabras con un clic y luego haz clic en los espacios para ordenarlas
                     </p>
                     {config?.category && config.category !== 'todos' && (
                         <p className="text-blue-600 mt-2">
@@ -364,6 +395,8 @@ const MemoryGame = () => {
                 onExitConfirm={() => handleFinishGame(false)}
                 onExitCancel={() => setShowExitConfirm(false)}
                 onGameComplete={() => handleFinishGame(true)}
+                currentRound={gameState.currentRound}
+                totalRounds={gameState.totalRounds}
             />
 
             {/* Feedback y Overlay */}
@@ -383,18 +416,29 @@ const MemoryGame = () => {
 
             {/* Mensaje de siguiente ronda */}
             {showNextRoundMessage && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto">
+                <div 
+                    className="fixed inset-0 flex items-center justify-center z-50 pointer-events-auto"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="next-round-title"
+                >
                     <div className="bg-white p-8 rounded-lg shadow-xl text-center max-w-md w-full mx-4 animate-fadeIn">
-                        <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                        <div className="w-20 h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4" aria-hidden="true">
                             <span className="text-green-500 text-5xl">✓</span>
                         </div>
-                        <h2 className="text-2xl font-bold text-green-700 mb-4">
+                        <h2 id="next-round-title" className="text-2xl font-bold text-green-700 mb-4">
                             ¡Muy bien!
                         </h2>
                         <p className="text-gray-600 mb-6">
                             Has completado la ronda {gameState.currentRound}. Preparando siguiente ronda...
                         </p>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                        <div 
+                            className="w-full bg-gray-200 rounded-full h-2.5 mb-6" 
+                            role="progressbar" 
+                            aria-valuemin="0" 
+                            aria-valuemax="100" 
+                            aria-valuenow={Math.round((gameState.currentRound / gameState.totalRounds) * 100)}
+                        >
                             <div 
                                 className="bg-green-600 h-2.5 rounded-full" 
                                 style={{ width: `${(gameState.currentRound / gameState.totalRounds) * 100}%` }}

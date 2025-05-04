@@ -69,7 +69,7 @@ export const authService = {
             throw new Error(`Error (${error.response.status}): ${error.message || 'Error al iniciar sesión'}`);
         }
       }
-      throw new Error('No se pudo conectar al servidor. Verifique su conexión');
+      throw new Error('No se pudo conectar al servidor.');
     }
   },
 
