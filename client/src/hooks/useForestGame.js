@@ -97,17 +97,18 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
   // NUEVO: Funciones para formateo de texto en instrucciones
   const formatColor = useCallback((color) => {
     switch (color) {
-      case 'blue': return 'azules';
-      case 'red': return 'rojos';
-      case 'yellow': return 'amarillos';
-      case 'purple': return 'púrpuras';
-      case 'pink': return 'rosas';
-      case 'brown': return 'marrones';
-      case 'green': return 'verdes';
+      case 'blue': return 'azul';
+      case 'red': return 'rojo';
+      case 'yellow': return 'amarillo';
+      case 'purple': return 'morado';
+      case 'pink': return 'rosa';
+      case 'brown': return 'café';
+      case 'green': return 'verde';
       default: return color;
     }
   }, []);
-
+  
+  
   const formatAnimalType = useCallback((species) => {
     switch (species) {
       case 'rabbit': return 'conejos';
@@ -117,86 +118,199 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     }
   }, []);
 
+  const getObjectInfo = useCallback((type) => {
+    switch (type) {
+      case 'flower': 
+        return { 
+          singular: 'flor', 
+          plural: 'flores', 
+          gender: 'f',
+          article: { definite: 'la', definite_plural: 'las', indefinite: 'una' }
+        };
+      case 'mushroom': 
+        return { 
+          singular: 'hongo', 
+          plural: 'hongos', 
+          gender: 'm',
+          article: { definite: 'el', definite_plural: 'los', indefinite: 'un' }
+        };
+      case 'tree': 
+        return { 
+          singular: 'árbol', 
+          plural: 'árboles', 
+          gender: 'm',
+          article: { definite: 'el', definite_plural: 'los', indefinite: 'un' }
+        };
+      default: 
+        return { 
+          singular: 'objeto', 
+          plural: 'objetos', 
+          gender: 'm',
+          article: { definite: 'el', definite_plural: 'los', indefinite: 'un' }
+        };
+    }
+  }, []);
+  
+  // Función para obtener información gramatical de animales
+  const getAnimalInfo = useCallback((species) => {
+    switch (species) {
+      case 'rabbit': 
+        return { 
+          singular: 'conejo', 
+          plural: 'conejos', 
+          gender: 'm',
+          article: { definite: 'el', definite_plural: 'los', indefinite: 'un' }
+        };
+      case 'fox': 
+        return { 
+          singular: 'zorro', 
+          plural: 'zorros', 
+          gender: 'm',
+          article: { definite: 'el', definite_plural: 'los', indefinite: 'un' }
+        };
+      case 'bird': 
+        return { 
+          singular: 'pájaro', 
+          plural: 'pájaros', 
+          gender: 'm',
+          article: { definite: 'el', definite_plural: 'los', indefinite: 'un' }
+        };
+      default: 
+        return { 
+          singular: 'animal', 
+          plural: 'animales', 
+          gender: 'm',
+          article: { definite: 'el', definite_plural: 'los', indefinite: 'un' }
+        };
+    }
+  }, []);
+
   // NUEVO: Función para generar instrucciones dinámicas
   const generateDynamicInstructions = useCallback((level, targetTypes, patternSequence) => {
     if (!targetTypes || targetTypes.length === 0) {
-      return "Busca los objetos objetivo en el bosque.";
+      return "Toque con el dedo los objetos marcados.";
     }
-
+  
     let instructions = "";
     
     switch (level) {
       case 1: // Un solo tipo de objeto
         const targetType = targetTypes[0];
+        
         if (targetType.type === 'animal') {
-          instructions = `Busca todos los ${formatAnimalType(targetType.species)} en el bosque.`;
+          const animalInfo = getAnimalInfo(targetType.species);
+          // Para animales: "Toque con el dedo todos los conejos."
+          instructions = `Toque con el dedo todos ${animalInfo.article.definite_plural} ${animalInfo.plural}.`;
         } else {
-          instructions = `Busca todos los ${targetType.type === 'flower' ? 'flores' : 
-                         targetType.type === 'mushroom' ? 'hongos' : 
-                         targetType.type === 'tree' ? 'árboles' : 'objetos'} 
-                         ${formatColor(targetType.color)} en el bosque.`;
+          const objectInfo = getObjectInfo(targetType.type);
+          // Para objetos: "Toque con el dedo todos los hongos de color rojo."
+          // O: "Toque con el dedo todas las flores de color azul."
+          if (objectInfo.gender === 'f') {
+            instructions = `Toque con el dedo todas ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(targetType.color)}.`;
+          } else {
+            instructions = `Toque con el dedo todos ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(targetType.color)}.`;
+          }
         }
         break;
       
       case 2: // Múltiples tipos de objetos
-        instructions = "Busca ";
-        targetTypes.forEach((type, index) => {
-          if (type.type === 'animal') {
-            instructions += `${index > 0 ? ' y ' : ''}${formatAnimalType(type.species)}`;
+        const type1 = targetTypes[0];
+        const type2 = targetTypes[1] || type1;
+        
+        if (targetTypes.length === 1 || !type2) {
+          // Si solo hay un tipo, usar caso de nivel 1
+          if (type1.type === 'animal') {
+            const animalInfo = getAnimalInfo(type1.species);
+            instructions = `Toque con el dedo todos ${animalInfo.article.definite_plural} ${animalInfo.plural}.`;
           } else {
-            instructions += `${index > 0 ? ' y ' : ''}${type.type === 'flower' ? 'flores' : 
-                            type.type === 'mushroom' ? 'hongos' : 
-                            type.type === 'tree' ? 'árboles' : 'objetos'} 
-                            ${formatColor(type.color)}`;
+            const objectInfo = getObjectInfo(type1.type);
+            if (objectInfo.gender === 'f') {
+              instructions = `Toque con el dedo todas ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type1.color)}.`;
+            } else {
+              instructions = `Toque con el dedo todos ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type1.color)}.`;
+            }
           }
-        });
-        instructions += " en el bosque.";
+        } else {
+          // Formatear instrucción para dos tipos
+          let part1 = "";
+          let part2 = "";
+          
+          if (type1.type === 'animal') {
+            const animalInfo = getAnimalInfo(type1.species);
+            part1 = `todos ${animalInfo.article.definite_plural} ${animalInfo.plural}`;
+          } else {
+            const objectInfo = getObjectInfo(type1.type);
+            if (objectInfo.gender === 'f') {
+              part1 = `todas ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type1.color)}`;
+            } else {
+              part1 = `todos ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type1.color)}`;
+            }
+          }
+          
+          if (type2.type === 'animal') {
+            const animalInfo = getAnimalInfo(type2.species);
+            part2 = `${animalInfo.article.definite_plural} ${animalInfo.plural}`;
+          } else {
+            const objectInfo = getObjectInfo(type2.type);
+            part2 = `${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type2.color)}`;
+          }
+          
+          instructions = `Toque con el dedo ${part1} y ${part2}.`;
+        }
         break;
       
       case 3: // Secuencias
-        instructions = "Sigue la secuencia: ";
+        instructions = "Toque en este orden: ";
+        
         targetTypes.forEach((type, index) => {
+          if (index > 0) {
+            instructions += ", ";
+          }
+          
           if (type.type === 'animal') {
-            instructions += `${index + 1}. ${formatAnimalType(type.species)} `;
+            const animalInfo = getAnimalInfo(type.species);
+            instructions += `${animalInfo.article.definite} ${animalInfo.singular}`;
           } else {
-            instructions += `${index + 1}. ${type.type === 'flower' ? 'flor' : 
-                            type.type === 'mushroom' ? 'hongo' : 
-                            type.type === 'tree' ? 'árbol' : 'objeto'} 
-                            ${formatColor(type.color)} `;
+            const objectInfo = getObjectInfo(type.type);
+            instructions += `${objectInfo.article.definite} ${objectInfo.singular} ${formatColor(type.color)}`;
           }
         });
+        
+        instructions += ".";
         break;
       
       case 4: // Patrones
         if (patternSequence && patternSequence.length > 0) {
-          instructions = "Sigue el patrón: ";
+          instructions = "Toque siguiendo este patrón: ";
+          
           patternSequence.forEach((patternPart, index) => {
+            if (index > 0) {
+              instructions += ", ";
+            }
+            
             const [type, colorOrSpecies] = patternPart.split('-');
             
             if (type === 'animal') {
-              instructions += `${formatAnimalType(colorOrSpecies)}`;
+              const animalInfo = getAnimalInfo(colorOrSpecies);
+              instructions += `${animalInfo.article.definite} ${animalInfo.singular}`;
             } else {
-              instructions += `${type === 'flower' ? 'flor' : 
-                              type === 'mushroom' ? 'hongo' : 
-                              type === 'tree' ? 'árbol' : 'objeto'} 
-                              ${formatColor(colorOrSpecies)}`;
-            }
-            
-            if (index < patternSequence.length - 1) {
-              instructions += " → ";
+              const objectInfo = getObjectInfo(type);
+              instructions += `${objectInfo.article.definite} ${objectInfo.singular} ${formatColor(colorOrSpecies)}`;
             }
           });
+          
+          instructions += " (repitiendo).";
         } else {
-          instructions = "Busca los objetos siguiendo el patrón.";
+          instructions = "Toque los objetos siguiendo el patrón.";
         }
         break;
       
       default:
-        instructions = "Busca los objetos objetivo en el bosque.";
+        instructions = "Toque con el dedo los objetos marcados.";
     }
     
     return instructions;
-  }, [formatAnimalType, formatColor]);
+  }, [getAnimalInfo, getObjectInfo, formatColor]);
 
   // IMPORTANTE: Declaramos handleFinishGame antes de usarlo en otras funciones
   const handleFinishGame = useCallback((completed = false) => {
