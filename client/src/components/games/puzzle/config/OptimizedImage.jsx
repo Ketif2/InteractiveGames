@@ -7,7 +7,8 @@ const OptimizedImage = ({
   width = 300,
   height = 300,
   className = '',
-  loading = 'lazy' 
+  loading = 'eager',
+  fetchPriority = 'high'
 }) => {
   // Simplificar el componente para enfocarnos primero en que funcione
   return (
@@ -17,6 +18,7 @@ const OptimizedImage = ({
       width={width}
       height={height}
       loading={loading}
+      fetchPriority={fetchPriority} 
       className={className}
     />
   );
