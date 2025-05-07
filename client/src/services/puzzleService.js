@@ -3,28 +3,28 @@ import api from './api';
 // Definición de imágenes como JSON
 const PUZZLE_IMAGES = {
     medium: [
-        { id: '1M', name: 'Alpacas', path: 'Alpacas.jpg' },
-        { id: '2M', name: 'Cangrejos', path: 'Cangrejos.jpg' },
-        { id: '3M', name: 'FocaM', path: 'FocaM.jpg' },
-        { id: '4M', name: 'LagunaM', path: 'LagunaM.jpg' },
-        { id: '5M', name: 'MitadMund', path: 'MitadMund.jpg' },
-        { id: '6M', name: 'Pajarito', path: 'Pajarito.jpg' },
-        { id: '7M', name: 'Pajaritos', path: 'Pajaritos.jpg' },
-        { id: '8M', name: 'Signal', path: 'Signal.jpg' },
-        { id: '9M', name: 'Stop', path: 'Stop.jpg' },
-        { id: '10M', name: 'Volcan', path: 'Volcan.jpg' }
+        { id: '1M', name: 'Alpacas', path: 'Alpacas.WebP' },
+        { id: '2M', name: 'Cangrejos', path: 'Cangrejos.WebP' },
+        { id: '3M', name: 'FocaM', path: 'FocaM.WebP' },
+        { id: '4M', name: 'LagunaM', path: 'LagunaM.WebP' },
+        { id: '5M', name: 'MitadMund', path: 'MitadMund.WebP' },
+        { id: '6M', name: 'Pajarito', path: 'Pajarito.WebP' },
+        { id: '7M', name: 'Pajaritos', path: 'Pajaritos.WebP' },
+        { id: '8M', name: 'Signal', path: 'Signal.WebP' },
+        { id: '9M', name: 'Stop', path: 'Stop.WebP' },
+        { id: '10M', name: 'Volcan', path: 'Volcan.WebP' }
     ],
     hard: [
-        { id: '1H', name: 'BanderaECU', path: 'BanderaECU.jpg' },
-        { id: '2H', name: 'Birds', path: 'Birds.jpg' },
-        { id: '3H', name: 'Capillas', path: 'Capillas.jpg' },
-        { id: '4H', name: 'Colibri', path: 'Colibri.jpg' },
-        { id: '5H', name: 'Fin de Año', path: 'FinAnio.jpg' },
-        { id: '6H', name: 'FocaH', path: 'FocaH.jpg' },
-        { id: '7H', name: 'LagunaH', path: 'LagunaH.jpg' },
-        { id: '8H', name: 'Panecillo', path: 'Panecillo.jpg' },
-        { id: '9H', name: 'QuitoCentro', path: 'QuitoCentro.jpg' },
-        { id: '10H', name: 'QuitoCentroD', path: 'QuitoCentroD.jpg' }
+        { id: '1H', name: 'BanderaECU', path: 'BanderaECU.WebP' },
+        { id: '2H', name: 'Birds', path: 'Birds.WebP' },
+        { id: '3H', name: 'Capillas', path: 'Capillas.WebP' },
+        { id: '4H', name: 'Colibri', path: 'Colibri.WebP' },
+        { id: '5H', name: 'Fin de Año', path: 'FinAnio.WebP' },
+        { id: '6H', name: 'FocaH', path: 'FocaH.WebP' },
+        { id: '7H', name: 'LagunaH', path: 'LagunaH.WebP' },
+        { id: '8H', name: 'Panecillo', path: 'Panecillo.WebP' },
+        { id: '9H', name: 'QuitoCentro', path: 'QuitoCentro.WebP' },
+        { id: '10H', name: 'QuitoCentroD', path: 'QuitoCentroD.WebP' }
     ]
 };
 

@@ -106,17 +106,17 @@ export const AppRoutes = () => {
 
      {/* Juego Puzzle -------------------------------------------*/}
      <Route path="/games/puzzle/config" element={
-        <PrivateRoute>
+        // <PrivateRoute>
           <Layout>
             <PuzzleConfig />
           </Layout>
-        </PrivateRoute>
+        // </PrivateRoute>
       } />
 
       <Route path="/games/puzzle/play" element={
-        <PrivateRoute>
+        // <PrivateRoute>
           <PuzzleGame/>
-        </PrivateRoute>
+        // </PrivateRoute>
       } />
 
       <Route path="/games/puzzle/end" element={
@@ -129,17 +129,17 @@ export const AppRoutes = () => {
 
       {/* Juego Sequence */}
       <Route path="/games/sequence/config" element={
-        <PrivateRoute>
+        // <PrivateRoute>
           <Layout>
             <SequenceConfig />
           </Layout>
-        </PrivateRoute>
+        // </PrivateRoute>
       } />
       
       <Route path="/games/sequence/play" element={
-        <PrivateRoute>
+        // <PrivateRoute>
           <SequenceGame/>
-        </PrivateRoute>
+        // </PrivateRoute>
       } />
 
       <Route path="/games/sequence/end" element={
@@ -152,17 +152,17 @@ export const AppRoutes = () => {
 
       {/* Juego Memory */}
       <Route path="/games/memory/config" element={
-        <PrivateRoute>
+        // <PrivateRoute>
           <Layout>
             <MemoryConfig />
           </Layout>
-        </PrivateRoute>
+        // </PrivateRoute>
       } />
       
       <Route path="/games/memory/play" element={
-        <PrivateRoute>
+        // <PrivateRoute>
           <MemoryGame />
-        </PrivateRoute>
+        // </PrivateRoute>
       } />
 
       <Route path="/games/memory/end" element={
@@ -175,17 +175,17 @@ export const AppRoutes = () => {
 
       {/* Juego Forest */}
       <Route path="/games/forest/config" element={
-        <PrivateRoute>
+        // <PrivateRoute>
           <Layout>
             <ForestConfig />
           </Layout>
-        </PrivateRoute>
+        // </PrivateRoute>
       } />
       
       <Route path="/games/forest/play" element={
-        <PrivateRoute>
+        // <PrivateRoute>
           <ForestGame />
-        </PrivateRoute>
+        // </PrivateRoute>
       } />
 
       <Route path="/games/forest/end" element={
