@@ -319,32 +319,120 @@ export function generateObjects(pathPoints, level, difficulty, config, forestPat
     distractorPositions = [];
   }
   
-  // MEJORA: Modificar posiciones de objetivos para mayor aleatoriedad
-  // Y GARANTIZAR SEPARACIÓN POR CUADRANTES
-  const modifyTargetPositions = (positions) => {
-    // Distribuir objetivos por cuadrantes específicos para garantizar separación
+ // Función modifyTargetPositions corregida con manejo de errores
+const modifyTargetPositions = (positions, targets, boundariesParam = null) => {
+  try {
+    // Verifica si los parámetros son válidos
+    if (!positions) positions = [];
+    if (!targets || isNaN(targets)) targets = 3; // Valor por defecto si no es válido
+    
+    // Crear boundaries con valores por defecto si no se proporciona
+    let boundaries = boundariesParam;
+    if (!boundaries || !boundaries.minX || !boundaries.maxX || !boundaries.minY || !boundaries.maxY) {
+      console.log("Boundaries no definido correctamente, usando valores por defecto");
+      
+      // Usar dimensiones de ventana si está disponible o valores por defecto
+      if (typeof window !== 'undefined') {
+        const padding = 100;
+        const containerWidth = Math.max(window.innerWidth - 200, 800);
+        const containerHeight = Math.min(Math.max(window.innerHeight - 200, 400), 700);
+        
+        boundaries = {
+          minX: padding,
+          maxX: containerWidth - padding,
+          minY: padding,
+          maxY: containerHeight - padding
+        };
+      } else {
+        // Valores predeterminados si no hay ventana
+        boundaries = {
+          minX: 100,
+          maxX: 900,
+          minY: 100,
+          maxY: 500
+        };
+      }
+    }
+    
+    console.log("Usando boundaries:", boundaries);
+    
+    // Dividir el área en regiones para distribuir los objetos objetivo
+    const width = boundaries.maxX - boundaries.minX;
+    const height = boundaries.maxY - boundaries.minY;
+    
+    // Crear cuadrantes de distribución
     const quadrants = [
-      { relXMin: 0.05, relXMax: 0.30, offsetYFactor: -1 }, // Arriba-Izquierda
-      { relXMin: 0.35, relXMax: 0.60, offsetYFactor: 1 },  // Abajo-Centro
-      { relXMin: 0.70, relXMax: 0.95, offsetYFactor: -1 }  // Arriba-Derecha
+      // Superior izquierda
+      { xMin: boundaries.minX, xMax: boundaries.minX + width/3, 
+        yMin: boundaries.minY, yMax: boundaries.minY + height/2 },
+      // Superior centro
+      { xMin: boundaries.minX + width/3, xMax: boundaries.minX + 2*width/3, 
+        yMin: boundaries.minY, yMax: boundaries.minY + height/2 },
+      // Superior derecha
+      { xMin: boundaries.minX + 2*width/3, xMax: boundaries.maxX, 
+        yMin: boundaries.minY, yMax: boundaries.minY + height/2 },
+      // Inferior izquierda
+      { xMin: boundaries.minX, xMax: boundaries.minX + width/3, 
+        yMin: boundaries.minY + height/2, yMax: boundaries.maxY },
+      // Inferior centro
+      { xMin: boundaries.minX + width/3, xMax: boundaries.minX + 2*width/3, 
+        yMin: boundaries.minY + height/2, yMax: boundaries.maxY },
+      // Inferior derecha
+      { xMin: boundaries.minX + 2*width/3, xMax: boundaries.maxX, 
+        yMin: boundaries.minY + height/2, yMax: boundaries.maxY },
     ];
     
+    // Asegurarse de tener al menos posiciones para cada objetivo
     const modifiedPositions = [];
     
-    // Distribuir objetivos por cuadrantes para asegurar separación
+    // Distribuir los objetivos por las diferentes regiones
     for (let i = 0; i < targets; i++) {
+      // Seleccionar una región diferente para cada objetivo
       const quadrant = quadrants[i % quadrants.length];
       
+      // Añadir variación dentro de la región
+      const relX = Math.random(); // Posición relativa aleatoria para el mapeo de camino
+      
+      // Calcular offsets para posición en su región
+      // Convertir de coordenadas absolutas a offsets relativos al centro
+      const centerX = (boundaries.minX + boundaries.maxX) / 2;
+      const centerY = (boundaries.minY + boundaries.maxY) / 2;
+      
+      // Posición aleatoria dentro del cuadrante
+      const posX = quadrant.xMin + Math.random() * (quadrant.xMax - quadrant.xMin);
+      const posY = quadrant.yMin + Math.random() * (quadrant.yMax - quadrant.yMin);
+      
+      // Convertir a offsets desde el centro
+      const offsetX = posX - centerX;
+      const offsetY = posY - centerY;
+      
+      // Añadir posición a la lista
       modifiedPositions.push({
-        relX: quadrant.relXMin + Math.random() * (quadrant.relXMax - quadrant.relXMin),
-        offsetX: (Math.random() * 2 - 1) * 50,
-        offsetY: quadrant.offsetYFactor * (30 + Math.random() * 70),
+        relX: relX,
+        offsetX: offsetX,
+        offsetY: offsetY,
         forTarget: true
       });
     }
     
     return modifiedPositions;
-  };
+    
+  } catch (error) {
+    console.error("Error en modifyTargetPositions:", error);
+    
+    // Retornar posiciones seguras en caso de error
+    const safePositions = [];
+    for (let i = 0; i < targets; i++) {
+      safePositions.push({
+        relX: Math.random(),
+        offsetX: (Math.random() * 2 - 1) * 100,
+        offsetY: (Math.random() * 2 - 1) * 100,
+        forTarget: true
+      });
+    }
+    return safePositions;
+  }
+};
   
   // Aplicar modificación especial a las posiciones objetivo
   targetPositions = modifyTargetPositions(targetPositions);
@@ -662,37 +750,63 @@ const ensureTargetSeparation = (objects, minSeparation) => {
     
     if (targetObjs.length <= 1) return objects; // No hay suficientes para separar
     
-    // Verificar distancias entre cada par de objetivos
-    for (let i = 0; i < targetObjs.length; i++) {
-      for (let j = i + 1; j < targetObjs.length; j++) {
-        const target1 = targetObjs[i];
-        const target2 = targetObjs[j];
-        
-        // Calcular distancia euclidiana
-        const dx = target1.x - target2.x;
-        const dy = target1.y - target2.y;
-        const distance = Math.sqrt(dx*dx + dy*dy);
-        
-        // Si están demasiado cerca, reposicionar una de ellas a un área lejana
-        if (distance < minSeparation) {
-          console.log("Separando objetivos que están demasiado cerca");
+    // Crear una copia para no modificar el original
+    const result = JSON.parse(JSON.stringify(objects));
+    const targets = result.filter(obj => obj.isTarget);
+    
+    // Aplicar algoritmo de repulsión para separar objetivos
+    const repulsionIterations = 5; // Cantidad de iteraciones de repulsión
+    const repulsionStrength = minSeparation * 0.5; // Fuerza de repulsión
+    
+    for (let iteration = 0; iteration < repulsionIterations; iteration++) {
+      // Para cada par de objetivos
+      for (let i = 0; i < targets.length; i++) {
+        for (let j = i + 1; j < targets.length; j++) {
+          const target1 = targets[i];
+          const target2 = targets[j];
           
-          // Posicionar el segundo objetivo en un cuadrante opuesto del área de juego
-          const oppositeX = target1.x > boundaries.maxX/2 ? 
-            boundaries.minX + Math.random() * (boundaries.maxX/2 - boundaries.minX) :
-            boundaries.maxX/2 + Math.random() * (boundaries.maxX - boundaries.maxX/2);
+          // Calcular distancia y dirección
+          const dx = target2.x - target1.x;
+          const dy = target2.y - target1.y;
+          const distance = Math.sqrt(dx*dx + dy*dy);
+          
+          // Si están demasiado cerca, aplicar fuerza de repulsión
+          if (distance < minSeparation) {
+            // Calcular la fuerza de repulsión (más fuerte cuanto más cerca)
+            const force = repulsionStrength * (1 - distance/minSeparation);
             
-          const oppositeY = target1.y > boundaries.maxY/2 ? 
-            boundaries.minY + Math.random() * (boundaries.maxY/2 - boundaries.minY) :
-            boundaries.maxY/2 + Math.random() * (boundaries.maxY - boundaries.maxY/2);
-          
-          target2.x = oppositeX;
-          target2.y = oppositeY;
+            // Dirección de la repulsión
+            const dirX = dx / distance || 0;
+            const dirY = dy / distance || 0;
+            
+            // Aplicar repulsión a ambos objetivos en direcciones opuestas
+            target1.x -= dirX * force / 2;
+            target1.y -= dirY * force / 2;
+            target2.x += dirX * force / 2;
+            target2.y += dirY * force / 2;
+          }
+        }
+      }
+      
+      // Asegurar que todos los objetivos estén dentro de los límites
+      for (const target of targets) {
+        target.x = Math.min(Math.max(target.x, boundaries.minX), boundaries.maxX);
+        target.y = Math.min(Math.max(target.y, boundaries.minY), boundaries.maxY);
+      }
+    }
+    
+    // Actualizar los objetos objetivo en la lista original
+    for (let i = 0; i < result.length; i++) {
+      if (result[i].isTarget) {
+        const targetIndex = targets.findIndex(t => t.uniqueId === result[i].uniqueId);
+        if (targetIndex >= 0) {
+          result[i].x = targets[targetIndex].x;
+          result[i].y = targets[targetIndex].y;
         }
       }
     }
     
-    return objects;
+    return result;
   } catch (error) {
     console.error("Error en ensureTargetSeparation:", error);
     return objects;

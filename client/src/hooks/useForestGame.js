@@ -23,15 +23,15 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     currentLevel: config?.startingLevel || 1,
     currentRound: 1,
     totalRounds: config?.rounds || 3,
-    objects: [],           // objetos en el camino
-    pathPoints: [],        // puntos para el camino
-    pathString: '',        // string SVG del camino
-    targetObjects: [],     // objetos objetivo a encontrar
-    patternSequence: [],   // secuencia del patrón a seguir (nivel 4)
-    currentPatternIndex: 0, // índice actual en el patrón
-    selectedPatternId: null, // patrón seleccionado
-    showInstructions: true, // mostrar instrucciones
-    instructionsText: "Busca los objetos objetivo", // texto de instrucciones
+    objects: [],
+    pathPoints: [],
+    pathString: '',
+    targetObjects: [],
+    patternSequence: [],
+    currentPatternIndex: 0,
+    selectedPatternId: null,
+    showInstructions: true,
+    instructionsText: "Busca los objetos objetivo",
     isPaused: false,
     startTime: Date.now(),
     totalPauseTime: 0,
@@ -39,12 +39,14 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     helpCount: 0,
     attempts: 0,
     totalPauses: 0,
-    num_errores: 0,        // contador de errores
-    num_aciertos: 0,       // contador de aciertos
-    remainingTime: config?.timeLimit || 0, // tiempo restante
-    timerActive: config?.timeLimit > 0,    // si hay temporizador activo
+    num_errores: 0,
+    num_aciertos: 0,
+    remainingTime: config?.timeLimit || 0,
+    timerActive: config?.timeLimit > 0,
     completado: false,
-    roundScore: 0          // Puntuación de la ronda actual (interna, no visible)
+    roundScore: 0,
+    // Asegurar que objectDensity siempre sea 'normal'
+    objectDensity: 'normal'
   });
 
   // NUEVO: Estado para almacenar los tipos de objetivos actuales
@@ -188,7 +190,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
   // NUEVO: Función para generar instrucciones dinámicas
   const generateDynamicInstructions = useCallback((level, targetTypes, patternSequence) => {
     if (!targetTypes || targetTypes.length === 0) {
-      return "Toque con el dedo los objetos marcados.";
+      return "Busca los objetos marcados.";
     }
   
     let instructions = "";
@@ -199,16 +201,16 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
         
         if (targetType.type === 'animal') {
           const animalInfo = getAnimalInfo(targetType.species);
-          // Para animales: "Toque con el dedo todos los conejos."
-          instructions = `Toque con el dedo todos ${animalInfo.article.definite_plural} ${animalInfo.plural}.`;
+          // Para animales: "Busca todos los conejos."
+          instructions = `Busca todos ${animalInfo.article.definite_plural} ${animalInfo.plural}.`;
         } else {
           const objectInfo = getObjectInfo(targetType.type);
-          // Para objetos: "Toque con el dedo todos los hongos de color rojo."
-          // O: "Toque con el dedo todas las flores de color azul."
+          // Para objetos: "Busca todos los hongos de color rojo."
+          // O: "Busca todas las flores de color azul."
           if (objectInfo.gender === 'f') {
-            instructions = `Toque con el dedo todas ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(targetType.color)}.`;
+            instructions = `Busca todas ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(targetType.color)}.`;
           } else {
-            instructions = `Toque con el dedo todos ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(targetType.color)}.`;
+            instructions = `Busca todos ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(targetType.color)}.`;
           }
         }
         break;
@@ -221,13 +223,13 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
           // Si solo hay un tipo, usar caso de nivel 1
           if (type1.type === 'animal') {
             const animalInfo = getAnimalInfo(type1.species);
-            instructions = `Toque con el dedo todos ${animalInfo.article.definite_plural} ${animalInfo.plural}.`;
+            instructions = `Busca todos ${animalInfo.article.definite_plural} ${animalInfo.plural}.`;
           } else {
             const objectInfo = getObjectInfo(type1.type);
             if (objectInfo.gender === 'f') {
-              instructions = `Toque con el dedo todas ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type1.color)}.`;
+              instructions = `Busca todas ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type1.color)}.`;
             } else {
-              instructions = `Toque con el dedo todos ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type1.color)}.`;
+              instructions = `Busca todos ${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type1.color)}.`;
             }
           }
         } else {
@@ -255,7 +257,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
             part2 = `${objectInfo.article.definite_plural} ${objectInfo.plural} de color ${formatColor(type2.color)}`;
           }
           
-          instructions = `Toque con el dedo ${part1} y ${part2}.`;
+          instructions = `Busca ${part1} y ${part2}.`;
         }
         break;
       
@@ -306,7 +308,7 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
         break;
       
       default:
-        instructions = "Toque con el dedo los objetos marcados.";
+        instructions = "Busca los objetos marcados.";
     }
     
     return instructions;
@@ -438,8 +440,8 @@ const useForestGame = (config, forestPatterns, forestObjects, onGameComplete, na
     // Generar objetos para este nivel (siempre usando el mismo nivel configurado)
     const objectsResult = generateObjects(
       pathPoints, 
-      config?.startingLevel || 1, // Siempre usar el nivel configurado
-      config?.difficulty || 'medio',
+      config?.startingLevel || 1,
+      'normal',
       config,
       forestPatterns,
       forestObjects
