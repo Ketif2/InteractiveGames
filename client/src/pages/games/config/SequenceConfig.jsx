@@ -155,6 +155,7 @@ const SequenceConfig = () => {
                                 Inicio del Rango
                             </label>
                             <input
+                                title='Inicio del rango'
                                 type="number"
                                 name="startRange"
                                 value={config.startRange}
@@ -171,6 +172,7 @@ const SequenceConfig = () => {
                                 Fin del Rango
                             </label>
                             <input
+                                title='Fin del rango'
                                 type="number"
                                 name="endRange"
                                 value={config.endRange}
@@ -189,6 +191,7 @@ const SequenceConfig = () => {
                             Números a Ocultar
                         </label>
                         <select
+                            title='Números a ocultar'
                             name="numbersToHide"
                             value={config.numbersToHide}
                             onChange={handleConfigChange}
@@ -209,6 +212,7 @@ const SequenceConfig = () => {
                             Modo de Juego
                         </label>
                         <select
+                            title='Modo de juego'
                             name="gameMode"
                             value={config.gameMode}
                             onChange={handleConfigChange}
@@ -228,6 +232,7 @@ const SequenceConfig = () => {
                                 Intervalo de Tiempo (segundos)
                             </label>
                             <select
+                                title='Intervalo de tiempo'
                                 name="timeInterval"
                                 value={config.timeInterval}
                                 onChange={handleConfigChange}

@@ -24,12 +24,11 @@ const SequenceGame = () => {
         failedCount: 0
     });
     
-    // Estado para la ayuda
     const [helpState, setHelpState] = useState({
         showHelp: false,
         currentHelpNumber: null,
-        revealedNumbers: [], // Números que ya fueron correctamente ingresados después de ayuda
-        pendingHelpNumber: null // Número actual que está pendiente de ser ingresado
+        revealedNumbers: [], 
+        pendingHelpNumber: null 
     });
     
     const [showCorrectFeedback, setShowCorrectFeedback] = useState(false);
@@ -46,7 +45,6 @@ const SequenceGame = () => {
     useEffect(() => {
         let intervalId;
         if (config.gameMode === 'revuelto' && !gameState.isPaused) {
-            // Configurar el intervalo para el modo revuelto
             intervalId = setInterval(shuffleNumbers, config.timeInterval * 1000);
         }
         return () => {
@@ -75,7 +73,6 @@ const SequenceGame = () => {
             userAnswers: {}
         }));
         
-        // Resetear estados de respuesta y ayuda
         setIncorrectAnswers([]);
         setCorrectAnswers([]);
         setHelpState({
@@ -93,18 +90,7 @@ const SequenceGame = () => {
         }));
     };
 
-    const handleScroll = (direction) => {
-        if (scrollContainerRef.current) {
-            const scrollAmount = scrollContainerRef.current.clientWidth * 0.8;
-            scrollContainerRef.current.scrollBy({
-                left: direction * scrollAmount,
-                behavior: 'smooth'
-            });
-        }
-    };
-
     const handleAnswerChange = (index, value) => {
-        // Si el valor está vacío, eliminamos esa entrada de userAnswers
         if (value === '') {
             setGameState(prev => {
                 const newAnswers = { ...prev.userAnswers };
@@ -115,7 +101,6 @@ const SequenceGame = () => {
                 };
             });
         } else {
-            // Si tiene valor, lo intentamos convertir a número
             const numValue = parseInt(value);
             if (!isNaN(numValue)) {
                 setGameState(prev => ({
@@ -128,14 +113,12 @@ const SequenceGame = () => {
             }
         }
 
-        // Limpiar los errores cuando el usuario modifica una respuesta
         if (incorrectAnswers.includes(index)) {
             setIncorrectAnswers(prev => prev.filter(i => i !== index));
         }
     };
 
     const handleToggleHelp = () => {
-        // Si ya hay un número pendiente de ser ingresado, mostramos ese mismo
         if (helpState.pendingHelpNumber) {
             setHelpState(prev => ({
                 ...prev,
@@ -143,43 +126,31 @@ const SequenceGame = () => {
                 currentHelpNumber: prev.pendingHelpNumber
             }));
         } else {
-            // Obtenemos los números que faltan por adivinar correctamente
             const remainingNumbers = gameState.hiddenNumbers.filter(num => {
-                // Verificar si este número ya fue revelado como ayuda y usado correctamente
                 if (helpState.revealedNumbers.includes(num)) return false;
                 
-                // Verificar si ya fue respondido correctamente
                 const isAnsweredCorrectly = correctAnswers.some(idx => 
                     gameState.userAnswers[idx] === num
                 );
-                
                 return !isAnsweredCorrectly;
             });
             
-            // Si no hay más números para ayudar, no hacemos nada
             if (remainingNumbers.length === 0) {
                 return;
             }
-            
-            // Seleccionar aleatoriamente un número de los restantes
             const randomIndex = Math.floor(Math.random() * remainingNumbers.length);
             const helpNumber = remainingNumbers[randomIndex];
-            
-            // Actualizar el estado de la ayuda
             setHelpState(prev => ({
                 ...prev,
                 showHelp: true,
                 currentHelpNumber: helpNumber,
-                pendingHelpNumber: helpNumber // Guardamos este número como pendiente
+                pendingHelpNumber: helpNumber 
             }));
         }
-        
         setGameState(prev => ({
             ...prev,
             helpCount: prev.helpCount + 1
         }));
-        
-        // Ocultar la ayuda después de 2 segundos
         setTimeout(() => {
             setHelpState(prev => ({
                 ...prev,
@@ -187,6 +158,14 @@ const SequenceGame = () => {
                 currentHelpNumber: null
             }));
         }, 2000);
+    };
+
+    const handleKeyDown = (event) => {
+        if (event.key === 'ArrowLeft') {
+            handleScroll(-1);
+        } else if (event.key === 'ArrowRight') {
+            handleScroll(1);
+        }
     };
 
     const handleTogglePause = () => {
@@ -211,38 +190,26 @@ const SequenceGame = () => {
     const handleCheck = () => {
         const { userAnswers, hiddenNumbers } = gameState;
         const answers = Object.entries(userAnswers);
-        
-        // Verificar si hay respuestas para evaluar
         if (answers.length === 0) {
             setShowWrongFeedback(true);
             setTimeout(() => setShowWrongFeedback(false), 2000);
             return;
         }
-    
-        // Encontrar respuestas correctas e incorrectas
         const newCorrect = [];
         const newIncorrect = [];
         let correctCount = 0;
         let failedCount = 0;
-        
-        // Evaluar cada respuesta individualmente
         answers.forEach(([indexStr, answer]) => {
             const index = Number(indexStr);
-            
-            // Si ya está marcada como correcta, ignoramos
             if (correctAnswers.includes(index)) return;
-            
-            // Verificar si la respuesta es uno de los números ocultos
             if (hiddenNumbers.includes(answer)) {
                 newCorrect.push(index);
                 correctCount++;
-                
-                // Si este número era el pendiente de ayuda, lo marcamos como revelado
                 if (answer === helpState.pendingHelpNumber) {
                     setHelpState(prev => ({
                         ...prev,
                         revealedNumbers: [...prev.revealedNumbers, answer],
-                        pendingHelpNumber: null // Ya no está pendiente
+                        pendingHelpNumber: null 
                     }));
                 }
                 
@@ -251,19 +218,13 @@ const SequenceGame = () => {
                 failedCount++;
             }
         });
-    
-        // Actualizar listas de respuestas correctas e incorrectas
         setCorrectAnswers(prev => [...prev, ...newCorrect]);
         setIncorrectAnswers(newIncorrect);
-    
-        // Actualizar contadores de aciertos y fallos
         setGameState(prev => ({
             ...prev,
             successCount: prev.successCount + correctCount,
             failedCount: prev.failedCount + failedCount
         }));
-    
-        // Verificar si se completó el juego (todas las respuestas correctas)
         const allAnswered = correctAnswers.length + newCorrect.length === hiddenNumbers.length;
         
         if (allAnswered) {
@@ -271,16 +232,14 @@ const SequenceGame = () => {
             setShowCorrectFeedback(true);
             setTimeout(() => setShowCorrectFeedback(false), 2000);
         } else if (newCorrect.length > 0) {
-            // Mostrar feedback positivo si al menos una respuesta es correcta
             setShowCorrectFeedback(true);
             setTimeout(() => setShowCorrectFeedback(false), 1000);
         } else {
-            // Si ninguna es correcta, mostrar feedback negativo
             setShowWrongFeedback(true);
             setTimeout(() => setShowWrongFeedback(false), 2000);
         }
     };
-    
+
     const handleFinishGame = () => {
         const endTime = Date.now();
         const totalTime = Math.floor(
@@ -296,7 +255,6 @@ const SequenceGame = () => {
             complete: gameCompleted,
         };
 
-        // Navegar a la pantalla de resultados con toda la información necesaria
         navigate('/games/sequence/end', { 
             state: { 
                 stats,
@@ -306,11 +264,9 @@ const SequenceGame = () => {
         });
     };
 
-    // Verificar si se han usado todas las ayudas posibles
     const helpDisabled = gameState.hiddenNumbers.length > 0 && 
         (helpState.revealedNumbers.length === gameState.hiddenNumbers.length);
 
-    // Calcular el porcentaje de ayudas utilizadas
     const helpPercentage = gameState.hiddenNumbers.length > 0 
         ? Math.min(100, (helpState.revealedNumbers.length / gameState.hiddenNumbers.length) * 100)
         : 0;
@@ -324,23 +280,12 @@ const SequenceGame = () => {
                     onExit={() => setShowExitConfirm(true)}
                     isPaused={gameState.isPaused}
                     gameMode={config.gameMode}
-                    helpDisabled={helpDisabled} // Deshabilitar cuando ya se usaron todas las ayudas
-                    helpPercentage={helpPercentage} // Para mostrar una barra de progreso opcional
+                    helpDisabled={helpDisabled} 
+                    helpPercentage={helpPercentage}
                 />
             </div>
     
-            {/* Área principal centrada */}
             <div className="mt-16 h-[calc(100vh-56px-130px)] flex items-center justify-center relative">
-                <div className="absolute left-14 bottom-8 -translate-y-1/2 z-10">
-                    <button
-                        onClick={() => handleScroll(-1)}
-                        className="bg-[#00398A] text-white rounded-full w-12 h-12 
-                                flex items-center justify-center text-2xl pb-1
-                                hover:bg-blue-400 hover:text-black transition-colors shadow-lg"
-                    >
-                        ←
-                    </button>
-                </div>
                 <div className="w-[calc(100%-6rem)] px-4">
                     <div 
                         ref={scrollContainerRef}
@@ -348,6 +293,9 @@ const SequenceGame = () => {
                         style={{
                             scrollBehavior: 'smooth'
                         }}
+                        tabIndex="0"
+                        aria-label="Contenedor de secuencia de números, use las flechas izquierda y derecha para navegar"
+                        onKeyDown={handleKeyDown}
                     >
                         <div className="min-w-max">
                             <NumberGrid 
@@ -359,26 +307,14 @@ const SequenceGame = () => {
                                 correctAnswers={correctAnswers}
                                 userAnswers={gameState.userAnswers}
                                 currentHelpNumber={helpState.currentHelpNumber}
-                                timeInterval={config.timeInterval} // Pasamos el intervalo de tiempo configurado
-                                isPaused={gameState.isPaused} // Pasamos el estado de pausa
+                                timeInterval={config.timeInterval} 
+                                isPaused={gameState.isPaused} 
                             />
                         </div>
                     </div>
                 </div>
-
-                <div className="absolute right-14 bottom-8 -translate-y-1/2 z-10">
-                    <button
-                        onClick={() => handleScroll(1)}
-                        className="bg-[#00398A] text-white rounded-full w-12 h-12
-                                flex items-center justify-center text-2xl pb-1
-                                hover:bg-blue-400 hover:text-black transition-colors shadow-lg"
-                    >
-                        →
-                    </button>
-                </div>
             </div>
                 
-            {/* Área de inputs */}
             <div className="fixed bottom-0 left-0 right-0">
                 <AnswerInputs 
                     hiddenCount={gameState.hiddenNumbers.length}

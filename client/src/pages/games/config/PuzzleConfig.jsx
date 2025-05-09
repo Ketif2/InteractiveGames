@@ -195,7 +195,6 @@ const PuzzleConfig = () => {
                 
                 // Mantener la ruta original sin intentar cambiar la extensión
                 const imageUrl = `/images/puzzle/${difficulty}/${image.path}`;
-                const isPlayed = playedImageIds.includes(image.id);
     
                 return (
                     <div
@@ -212,8 +211,8 @@ const PuzzleConfig = () => {
                             }
                             ${config.useRandomImages ? 'opacity-50 cursor-not-allowed' : ''}
                         `}
-                        role="button"
-                        aria-pressed={isSelected}
+                        role="option"
+                        aria-selected={isSelected}
                         aria-label={`Seleccionar imagen ${image.name}`}
                         tabIndex={config.useRandomImages ? -1 : 0}
                     >

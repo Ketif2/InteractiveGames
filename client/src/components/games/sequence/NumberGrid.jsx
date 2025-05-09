@@ -13,115 +13,85 @@ const NumberGrid = ({
     isPaused = false
 }) => {
     const [displayNumbers, setDisplayNumbers] = useState([...numbers]);
-    const [animatingHelp, setAnimatingHelp] = useState(false);
     const [isTemporarilyHidden, setIsTemporarilyHidden] = useState(false);
+    
+    // Actualizar números cuando cambian
     useEffect(() => {
         setDisplayNumbers([...numbers]);
     }, [numbers]);
-    useEffect(() => {
-        if (showHelp && currentHelpNumber) {
-            setAnimatingHelp(true);
-            const timer = setTimeout(() => {
-                setAnimatingHelp(false);
-            }, 2000);
-            
-            return () => clearTimeout(timer);
-        } else {
-            setAnimatingHelp(false);
-        }
-    }, [showHelp, currentHelpNumber]);
     
+    // Configurar efecto de desvanecimiento para el modo correspondiente
     useEffect(() => {
-        let fadeTimer;
-        let fadeRestoreTimer;
+        if (gameMode !== 'desvanecimiento' || isPaused) return;
         
-        if (gameMode === 'desvanecimiento' && !isPaused) {
-            fadeTimer = setInterval(() => {
-                setIsTemporarilyHidden(true);
-                fadeRestoreTimer = setTimeout(() => {
-                    setIsTemporarilyHidden(false);
-                }, 2000);
-            }, timeInterval * 1000); 
-        } else {
-            setIsTemporarilyHidden(false);
-        }
+        const fadeTimer = setInterval(() => {
+            setIsTemporarilyHidden(true);
+            setTimeout(() => setIsTemporarilyHidden(false), 2000);
+        }, timeInterval * 1000);
         
-        return () => {
-            if (fadeTimer) clearInterval(fadeTimer);
-            if (fadeRestoreTimer) clearTimeout(fadeRestoreTimer);
-        };
+        return () => clearInterval(fadeTimer);
     }, [gameMode, timeInterval, isPaused]);
 
-    const renderNumber = (number) => {
-        const isHidden = hiddenNumbers.includes(number);
-        
-        const isCorrectlyAnswered = correctAnswers.some(idx => {
-            return userAnswers[idx] === number;
-        });
-        
-        const isCurrentHelp = number === currentHelpNumber && showHelp;
-        const shouldShow = !isHidden || showMemoryNumbers || isCorrectlyAnswered || isCurrentHelp;
-        const shouldFade = gameMode === 'desvanecimiento' && 
-                           isTemporarilyHidden && 
-                           !isCorrectlyAnswered && 
-                           !isCurrentHelp;
-
-        let bgColorClass = 'bg-[#00398A] text-white';
-        let animationClass = '';
-        let opacityClass = shouldFade ? 'opacity-0' : 'opacity-100';
-
-        if (isHidden && !shouldShow) {
-            bgColorClass = 'bg-white border-4 border-[#00398A] text-[#00398A]';
-        } else if (isCorrectlyAnswered) {
-            bgColorClass = 'bg-green-500 text-white';
-        } else if (isCurrentHelp) {
-            bgColorClass = 'bg-green-500 text-white';
-            if (animatingHelp) {
-                animationClass = 'animate-bounce';
-            }
-        }
-
-        if (gameMode === 'memoria' && !showMemoryNumbers && !isCurrentHelp && !isCorrectlyAnswered) {
-            opacityClass = 'opacity-0';
-        }
-
-        return (
-            <div
-                className={`
-                    w-28 h-28 flex items-center justify-center text-3xl font-bold
-                    ${bgColorClass}
-                    rounded-xl transition-all duration-300 shadow-md
-                    ${animationClass} ${opacityClass}
-                `}
-            >
-                {isHidden && !shouldShow ? '?' : number}
-            </div>
-        );
-    };
-
+    // Dividir la cuadrícula en filas
     const ROWS = 3;
     const NUMBERS_PER_ROW = Math.ceil(displayNumbers.length / ROWS);
-    
     const grid = Array(ROWS).fill().map((_, rowIndex) => {
         const startIndex = rowIndex * NUMBERS_PER_ROW;
-        const endIndex = startIndex + NUMBERS_PER_ROW;
-        return displayNumbers.slice(startIndex, endIndex);
+        return displayNumbers.slice(startIndex, startIndex + NUMBERS_PER_ROW);
     });
 
-    const shouldCenter = displayNumbers.length <= 40;
-
     return (
-        <div className={`grid grid-rows-4 gap-y-5 ${shouldCenter ? 'mx-auto' : ''}`}>
+        <div className="grid grid-rows-4 gap-y-5 mx-auto">
             {grid.map((row, rowIndex) => (
-                <div key={rowIndex} className={`flex gap-3 ${shouldCenter ? 'justify-center' : 'min-w-max'}`}>
-                    {row.map((number, colIndex) => (
-                        <div 
-                            key={`${number}-${colIndex}`} 
-                            className="transition-all duration-300"
-                        >
-                            {renderNumber(number)}
-                        </div>
-                    ))}
+                <div key={rowIndex} className="flex gap-3 justify-center min-w-max">
+                    {row.map((number, colIndex) => {
+                        // Determinar estado del número
+                        const isHidden = hiddenNumbers.includes(number);
+                        const isCorrectlyAnswered = correctAnswers.some(idx => userAnswers[idx] === number);
+                        const isCurrentHelp = number === currentHelpNumber && showHelp;
+                        
+                        // Determinar clases de Tailwind según el estado
+                        let classes = `
+                            w-28 h-28 flex items-center justify-center text-3xl font-bold
+                            rounded-xl shadow-md transition-all duration-300
+                        `;
+                        
+                        // Aplicar estilos según el estado
+                        if (isHidden) {
+                            if (isCorrectlyAnswered) {
+                                // Número completado correctamente: fondo verde, texto negro
+                                classes += ' bg-green-500 text-black';
+                            } else if (isCurrentHelp) {
+                                // Número mostrado como ayuda: fondo amarillo, texto negro, animación
+                                classes += ' bg-yellow-500 text-white animate-bounce';
+                            } else if (gameMode === 'memoria' && !showMemoryNumbers) {
+                                // Modo memoria, número oculto: cuadro blanco con borde azul
+                                classes += ' bg-white border-4 border-[#00398A] text-transparent';
+                            } else if (gameMode === 'desvanecimiento' && isTemporarilyHidden) {
+                                // Modo desvanecimiento, temporalmente oculto
+                                classes += ' bg-white border-4 border-[#00398A] text-transparent';
+                            } else {
+                                // Número oculto normal: signo de interrogación
+                                classes += ' bg-white border-4 border-[#00398A] text-black]';
+                            }
+                        } else {
+                            classes += ' bg-[#00398A] text-white';
+                            
+                            if (gameMode === 'desvanecimiento' && isTemporarilyHidden) {
+                                classes += ' opacity-0';
+                            }
+                        }
+                        
+                        return (
+                            <div 
+                                key={`${number}-${colIndex}`} 
+                                className={classes}
+                                aria-label={isHidden && !isCorrectlyAnswered && !isCurrentHelp ? 'Número oculto' : `Número ${number}`}
+                            >
+                                {isHidden && !isCorrectlyAnswered && !isCurrentHelp && !showMemoryNumbers ? '?' : number}
+                            </div>
+                        );
+                    })}
                 </div>
             ))}
         </div>

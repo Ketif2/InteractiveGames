@@ -8,7 +8,6 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
         width: window.innerWidth,
         height: window.innerHeight
     });
-    // Mantenemos el confeti activo hasta hacer clic en Continuar
     const [showConfetti, setShowConfetti] = useState(true);
 
     useEffect(() => {
@@ -20,8 +19,6 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
         };
 
         window.addEventListener('resize', handleResize);
-        
-        // Eliminamos el temporizador para que los confetis duren hasta que se pulse Continuar
         
         return () => {
             window.removeEventListener('resize', handleResize);
@@ -36,9 +33,6 @@ const GameFeedback = ({ isCorrect, isWrong, gameCompleted, onFinish, stats }) =>
         }
     }, [isCorrect, isWrong]);
 
-    // Siempre devuelve 3 estrellas independientemente del rendimiento
-    const stars = 3;
-    
     const messages = [
         "¡Excelente trabajo! Tu mente está en forma.",
         "¡Increíble! Cada reto completado fortalece tu cerebro.",

@@ -16,21 +16,21 @@ const GameControls = ({
             <div className="flex gap-2 md:gap-3">
                 <button
                     onClick={onHelp}
-                    className="bg-[#00A8E3] px-3 md:px-5 py-2 rounded-lg text-white font-medium shadow hover:bg-[#0096cc] transition-colors text-base md:text-lg flex items-center justify-center min-w-[100px]"
+                    className="bg-[#00A8E3] px-3 md:px-5 py-2 rounded-lg text-black font-medium shadow hover:bg-[#0096cc] transition-colors text-base md:text-lg flex items-center justify-center min-w-[100px]"
                     aria-label="Ver imagen original"
                 >
                     Ver Imagen
                 </button>
                 <button
                     onClick={onPause}
-                    className="bg-[#00A8E3] px-3 md:px-5 py-2 rounded-lg text-white font-medium shadow hover:bg-[#0096cc] transition-colors text-base md:text-lg flex items-center justify-center min-w-[100px]"
+                    className="bg-[#00A8E3] px-3 md:px-5 py-2 rounded-lg text-black font-medium shadow hover:bg-[#0096cc] transition-colors text-base md:text-lg flex items-center justify-center min-w-[100px]"
                     aria-label={isPaused ? "Reanudar juego" : "Pausar juego"}
                 >
                     {isPaused ? 'Reanudar' : 'Pausar'}
                 </button>
                 <button
                     onClick={onExit}
-                    className="bg-red-500 px-3 md:px-5 py-2 rounded-lg text-white font-medium shadow hover:bg-red-600 transition-colors text-base md:text-lg flex items-center justify-center min-w-[100px]"
+                    className="bg-red-500 px-3 md:px-5 py-2 rounded-lg text-black font-medium shadow hover:bg-red-600 transition-colors text-base md:text-lg flex items-center justify-center min-w-[100px]"
                     aria-label="Terminar juego"
                 >
                     Terminar
