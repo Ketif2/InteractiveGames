@@ -285,7 +285,7 @@ const SequenceGame = () => {
                 />
             </div>
     
-            <div className="mt-16 h-[calc(100vh-56px-130px)] flex items-center justify-center relative">
+            <div className="mt-8 h-[calc(100vh-130px)] flex items-center justify-center relative">
                 <div className="w-[calc(100%-6rem)] px-4">
                     <div 
                         ref={scrollContainerRef}
