@@ -13,7 +13,7 @@ const ForestConfig = () => {
     const [config, setConfig] = useState({
         difficulty: 'fácil',       // fácil, medio, difícil
         startingLevel: 1,          // nivel inicial (1-4)
-        objectDensity: 'normal',   // baja, normal, alta (cantidad de distractores)
+        objectDensity: 'normal',   // Este valor ahora es fijo como 'normal'
         rounds: 3,                 // número de rondas por sesión
         timeLimit: 60,             // tiempo límite por nivel en segundos (0 = sin límite)
     });
@@ -152,26 +152,7 @@ const ForestConfig = () => {
                         </p>
                     </div>
                     
-                    {/* Densidad de objetos */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700">
-                            Densidad de Objetos
-                        </label>
-                        <select
-                            name="objectDensity"
-                            value={config.objectDensity}
-                            onChange={handleConfigChange}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 
-                                     focus:border-[#00398A] focus:ring focus:ring-[#00398A] focus:ring-opacity-50"
-                        >
-                            <option value="baja">Baja (Pocos objetos)</option>
-                            <option value="normal">Normal (Cantidad moderada)</option>
-                            <option value="alta">Alta (Muchos objetos)</option>
-                        </select>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Define la cantidad de objetos que aparecerán en el sendero
-                        </p>
-                    </div>
+                    {/* Se eliminó la sección de Densidad de Objetos */}
                     
                     {/* Número de rondas */}
                     <div className="space-y-2">

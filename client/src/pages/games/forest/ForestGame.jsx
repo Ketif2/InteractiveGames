@@ -156,7 +156,13 @@ const ForestGame = () => {
           currentRound={gameState.currentRound}
           totalRounds={gameState.totalRounds}
           showInstructions={gameState.showInstructions}
-          instructionsText={gameState.instructionsText} // NUEVO: Pasar instrucciones dinámicas
+          instructionsText={gameState.instructionsText} // Texto de instrucciones mejorado
+          onClose={() => {
+            setGameState(prev => ({
+              ...prev,
+              showInstructions: false
+            }));
+          }}
         />
         
         {/* Área del juego con límites claros */}
