@@ -90,6 +90,16 @@ const SequenceGame = () => {
         }));
     };
 
+    const handleScroll = (direction) => {
+        if (scrollContainerRef.current) {
+            const scrollAmount = scrollContainerRef.current.clientWidth * 0.8;
+            scrollContainerRef.current.scrollBy({
+                left: direction * scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    };
+
     const handleAnswerChange = (index, value) => {
         if (value === '') {
             setGameState(prev => {
@@ -272,27 +282,25 @@ const SequenceGame = () => {
         : 0;
 
     return (
-        <div className="fixed inset-0 bg-gray-100">
-            <div className="fixed top-0 left-0 right-0 z-50">
+        <div className="h-screen flex flex-col bg-gray-100 overflow-hidden">
+            <div className="flex-none">
                 <GameControls 
                     onHelp={handleToggleHelp}
                     onPause={handleTogglePause}
                     onExit={() => setShowExitConfirm(true)}
                     isPaused={gameState.isPaused}
                     gameMode={config.gameMode}
-                    helpDisabled={helpDisabled} 
+                    helpDisabled={helpDisabled}
                     helpPercentage={helpPercentage}
                 />
             </div>
-    
-            <div className="mt-8 h-[calc(100vh-130px)] flex items-center justify-center relative">
-                <div className="w-[calc(100%-6rem)] px-4">
+            
+            <div className="flex-1 flex flex-col justify-between overflow-hidden py-8 px-6 sm:px-8 md:px-10 lg:px-12">
+                <div className="flex-1 flex items-center justify-center overflow-hidden px-4 sm:px-6 md:px-8 lg:px-10">
                     <div 
                         ref={scrollContainerRef}
-                        className="overflow-x-auto hide-scrollbar"
-                        style={{
-                            scrollBehavior: 'smooth'
-                        }}
+                        className="overflow-x-auto mt-10 hide-scrollbar w-full"
+                        style={{ scrollBehavior: 'smooth' }}
                         tabIndex="0"
                         aria-label="Contenedor de secuencia de números, use las flechas izquierda y derecha para navegar"
                         onKeyDown={handleKeyDown}
@@ -307,27 +315,27 @@ const SequenceGame = () => {
                                 correctAnswers={correctAnswers}
                                 userAnswers={gameState.userAnswers}
                                 currentHelpNumber={helpState.currentHelpNumber}
-                                timeInterval={config.timeInterval} 
-                                isPaused={gameState.isPaused} 
+                                timeInterval={config.timeInterval}
+                                isPaused={gameState.isPaused}
                             />
                         </div>
                     </div>
                 </div>
-            </div>
                 
-            <div className="fixed bottom-0 left-0 right-0">
-                <AnswerInputs 
-                    hiddenCount={gameState.hiddenNumbers.length}
-                    answers={gameState.userAnswers}
-                    onChange={handleAnswerChange}
-                    config={config}
-                    isPaused={gameState.isPaused}
-                    incorrectAnswers={incorrectAnswers}
-                    correctAnswers={correctAnswers}
-                    onCheck={handleCheck}
-                />
+                <div className="flex-none">
+                    <AnswerInputs 
+                        hiddenCount={gameState.hiddenNumbers.length}
+                        answers={gameState.userAnswers}
+                        onChange={handleAnswerChange}
+                        config={config}
+                        isPaused={gameState.isPaused}
+                        incorrectAnswers={incorrectAnswers}
+                        correctAnswers={correctAnswers}
+                        onCheck={handleCheck}
+                    />
+                </div>
             </div>
-    
+            
             <FeedbackOverlay 
                 showCorrect={showCorrectFeedback}
                 showWrong={showWrongFeedback}

@@ -34,30 +34,16 @@ const AnswerInputs = ({
             e.preventDefault();
             onCheck();
         }
-        
-        if (e.key === 'Tab' && !e.shiftKey) {
-            const nextInputIndex = inputs.findIndex(i => 
-                !correctAnswers.includes(i) && i > index
-            );
-            
-            if (nextInputIndex !== -1) {
-                const nextInput = document.getElementById(`answer-input-${inputs[nextInputIndex]}`);
-                if (nextInput) {
-                    e.preventDefault();
-                    nextInput.focus();
-                }
-            }
-        }
     };
     
     return (
-        <div className="bg-white py-5 px-6 shadow-lg rounded-t-3xl">
+        <div className="bg-white py-3 sm:py-4 px-4 shadow-lg rounded-b-3xl">
             <div className="flex flex-col items-center">
-                <p className="text-[#00398A] font-semibold mb-6 text-xl" id="inputsLabel">
+                <p className="text-[#00398A] font-semibold mb-2 sm:mb-4 text-base sm:text-lg md:text-xl" id="inputsLabel">
                     Completa los números que faltan en la secuencia:
                 </p>
                 
-                <div className="flex flex-wrap gap-6 justify-center mb-8 w-full max-w-4xl mx-auto"
+                <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 justify-center mb-3 sm:mb-4 md:mb-6 w-full"
                      role="group" 
                      aria-labelledby="inputsLabel">
                     {inputs.map((index) => {
@@ -87,10 +73,11 @@ const AnswerInputs = ({
                                     disabled={isPaused}
                                     aria-label={`Número faltante ${index + 1}`}
                                     className={`
-                                        w-24 h-24 text-center text-3xl font-bold 
+                                        w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 
+                                        text-center text-xl sm:text-2xl md:text-3xl font-bold 
                                         ${isIncorrect 
                                             ? 'border-4 border-red-500 focus:border-red-500' 
-                                            : 'border-3 border-[#00398A] focus:border-[#00A8E3]'
+                                            : 'border-2 border-[#00398A] focus:border-[#00A8E3]'
                                         }
                                         rounded-lg outline-none shadow-md
                                     `}
@@ -105,11 +92,13 @@ const AnswerInputs = ({
                     onClick={onCheck}
                     disabled={isPaused}
                     className="
-                        bg-[#00398A] text-white px-10 py-4 rounded-full
-                        font-semibold text-xl hover:bg-[#002d6f] 
-                        transition-colors focus:outline-none focus:ring-2
-                        focus:ring-[#00A8E3] disabled:opacity-50
-                        shadow-lg
+                        bg-[#00398A] text-white 
+                        px-6 py-2 sm:px-8 sm:py-3 md:px-10 md:py-4 
+                        rounded-full font-semibold 
+                        text-base sm:text-lg md:text-xl 
+                        hover:bg-[#002d6f] transition-colors 
+                        focus:outline-none focus:ring-2 focus:ring-[#00A8E3] 
+                        disabled:opacity-50 shadow-lg
                     "
                 >
                     Revisar
