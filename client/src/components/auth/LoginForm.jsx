@@ -126,9 +126,6 @@ const LoginForm = () => {
               <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
             </div>
             <div className="ml-3">
-              <p className="text-sm text-red-700 font-medium">
-                {error}
-              </p>
               <p className="text-xs text-red-600 mt-1" id="email-error password-error">
                 Verifique que su correo y contraseña sean correctos.
               </p>
